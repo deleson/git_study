@@ -9,9 +9,46 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     
     nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
-    ],
+      {
+        text: 'Python',
+        items: [
+          { text: 'Python 语法', link: '/python/python' },
+          {
+            text: 'Python Web',
+            items: [
+              {
+                text: 'Django',
+                items: [
+                  { text: 'Django 基础', link: '/python/django' },
+                  { text: 'Django REST Framework（DRF）', link: '/python/drf' }
+                ]
+              }
+            ]
+          },
+          {
+            text: 'Python AI',
+            items: [
+              { text: 'PyTorch', link: '/python/pytorch' }
+            ]
+          },
+          { text: 'PyQt5', link: '/python/pyqt5' }
+        ],
+      },
+      {
+        text:'前端学习',
+        items:[
+          {text:"html",link='/font-end/html'},
+          {text:"css",link='/font-end/css'},
+          {text:"javascript",link='/font-end/js'},
+        ]
+      },
+      {
+        text:"书籍阅读",
+        items:[
+          {text:"利用python进行数据分析",link='/'}
+        ]
+      }
+    ]
 
     /*sidebar: [
       {
