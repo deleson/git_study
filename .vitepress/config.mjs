@@ -37,18 +37,18 @@ export default defineConfig({
       {
         text:'前端学习',
         items:[
-          {text:"html",link='/font-end/html'},
-          {text:"css",link='/font-end/css'},
-          {text:"javascript",link='/font-end/js'},
+          {text:"html",link:'/font-end/html'},
+          {text:"css",link:'/font-end/css'},
+          {text:"javascript",link:'/font-end/js'},
         ]
       },
       {
         text:"书籍阅读",
         items:[
-          {text:"利用python进行数据分析",link='/'}
+          {text:"利用python进行数据分析",link:'/'}
         ]
       }
-    ]
+    ],
 
     /*sidebar: [
       {
