@@ -330,7 +330,19 @@ path('user/<str:dt>/',views.InfoView.as_view()), #drf
 
 
 
+在机器学习中，我们经常使用损失函数（或成本函数）来衡量模型的性能。常见的损失函数包括均方误差（MSE）和交叉熵损失（Cross Entropy Loss）。其中，均方误差损失函数的公式为：
 
+$$
+\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+$$
+
+而交叉熵损失函数的公式为：
+
+$$
+\text{Cross Entropy Loss} = -\sum_{i=1}^{n} y_i \log(\hat{y}_i)
+$$
+
+其中，$y_i$ 是真实标签，$\hat{y}_i$ 是模型预测的标签。通过最小化损失函数，我们可以优化模型的参数，使其更好地拟合数据。
 
 
 
