@@ -20,7 +20,7 @@ export default defineConfig({
                 text: 'Python Web',
                 items: [
                     {text: 'Django基础', link: '/study_directory/python/django'},
-                    {text: 'Django REST Framework（DRF）', link: '/study_directory/python/drf'},
+                    {text: 'Django REST Framework（DRF）', link: '/python/django/drf/drf'},
                 ]
             },
 
