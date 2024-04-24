@@ -21,6 +21,7 @@ export default defineConfig({
                 items: [
                     {text: 'Django基础', link: '/study_directory/python/django'},
                     {text: 'Django REST Framework（DRF）', link: '/python/django/drf/drf'},
+                    {text: 'DRF源码解析', link: '/python/django/drf/drf_origin'},
                 ]
             },
 

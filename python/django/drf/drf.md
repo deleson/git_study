@@ -282,6 +282,71 @@ path('user/<str:dt>/',views.InfoView.as_view()), #drf
 > 1.首先访问地址/user/123 => pk = 123
 >
 > 2.访问视图类的as_view(通常继承View类)
+>
+> 3.as_view函数内部的view函数
+>
+> 4.在view函数内部又传递给dispatch函数
+>
+> 5.在dispatch函数内部，通过getattr方法反射得到了要调用的方法（get、post等）
+>
+> 6.传递给请求方法参数并返回
+
+
+
+其次是drf的URL传递过程
+
+> 1.首先访问地址/user/xxx => dt = xxx
+>
+> 2.访问视图类的as_view(通常继承APIView类)
+>
+> 3.APIView内部访问as_view函数
+>
+> 4.as_view函数包含了对于父类view的as_view方法调用
+>
+> 5.在父类as_view中的view函数内部又传递给dispatch函数（这里是APIView的dispatch）
+>
+> 6.在dispatch函数内部，通过getattr方法反射得到了要调用的方法（get、post等），并进行了其他相关处理
+>
+> 7.传递给请求方法参数并返回
+
+
+
+再来对比django和drf的request
+
+- django：requst是请求相关的所有数据
+- drf： request是需要经过一层处理，即接受到的request不一样
+
+> 请求相关的所有数据 - --->经过initialize_request处理
+>
+> 再传入到相关的方法（get、post）
+
+具体的区别在于：
+
+| django的request                | drf的request                                                 |
+| ------------------------------ | ------------------------------------------------------------ |
+| 包含requst.GET、request.POST等 | 其中request._request = django的request。此外还封装了其他内容 |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -289,5 +354,5 @@ path('user/<str:dt>/',views.InfoView.as_view()), #drf
 $$
 y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]
 $$
-$$
+
 
