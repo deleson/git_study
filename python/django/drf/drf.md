@@ -105,8 +105,6 @@ class InfoView(APIView):
 
 
 
-![drf源码](../../../public/md_img/drf/\drf源码.png)
-
 
 
 
@@ -552,3 +550,252 @@ def initialize_request(self, request, *args, **kwargs):
 ```
 
 request中的参数**kwargs，其实是url中的< int:v1 >传入的
+
+![request源码](../../../public/md_img/drf/\request源码.png)
+
+
+
+
+
+
+
+## 1.4 drf认证
+
+
+
+### 1.4.1 认证使用
+
+用户授权
+
+实现
+
+- 编写类（一个类就是一个认证组件
+- 应用组件
+
+```python
+from rest_framework.authentication import BaseAuthentication
+
+class MyAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        # 去做获取或用认证：
+        # 1.读取请求传递的token
+        # 2.校验合法性
+        # 3.返回值有三种
+        # 	3.1 返回元组		认证成功 	request.user request.auth
+        #	3.2 抛出异常		认证失败	返回错误信息
+        #	3.3	返回None		 多个认证类   [类1,类2,...]   - > 匿名用户
+        pass
+```
+
+
+
+示例1
+
+```python
+class MyAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        # 去做获取或用认证：
+        # 1.读取请求传递的token
+        # 2.校验合法性
+        # 3.返回值有三种
+        #  3.1 返回元组      认证成功   request.user request.auth
+        #  3.2 抛出异常      认证失败   返回错误信息
+        #  3.3    返回None     多个认证类   [类1,类2,...]   - > 匿名用户
+        token = request.query_params.get("token")
+        if token:
+            return "king",token
+        # raise AuthenticationFailed("认证失败")
+        raise AuthenticationFailed({"code":2000,'error':"认证失败"})
+
+
+#不需要登录
+class LoginView(APIView):
+    authentication_classes = []
+    def get(self,request):
+        return Response("LoginView")
+
+
+#需要登录
+class UserView(APIView):
+    authentication_classes = [MyAuthentication,]
+    def get(self,request):
+        return Response("UserView")
+
+class OrderView(APIView):
+    authentication_classes = [MyAuthentication, ]
+    def get(self,request):
+        return Response("OrderView")
+```
+
+
+
+示例2（全局配置视图类）
+
+```
+#drf配置
+REST_FRAMEWORK = {
+    "UNAUTHENTICATED_USER":lambda:"xxx",
+    # "值":["认证组件路径"]
+    "DEFAULT_AUTHENTICATION_CLASSES":["api.views.MyAuthentication",]
+}
+
+
+#不需要登录
+class LoginView(APIView):
+    authentication_classes = []
+    def get(self,request):
+        return Response("LoginView")
+
+
+#需要登录（默认带有）
+class UserView(APIView):
+    def get(self,request):
+        return Response("UserView")
+
+class OrderView(APIView):
+    def get(self,request):
+        return Response("OrderView")
+```
+
+优先从全局搜索、再到局部搜索。
+
+ps：认证组件不能写在view视图中。（全局，出现了循环引用）
+
+
+
+
+
+### 1.4.2 认证面向对象-继承
+
+```python
+class APIView(object):
+    authentication_classes = 读取配置文件中的列表
+    
+    def dispatch(self):
+        self.authentication_classes
+        
+class UserView(APIView):
+    authentication_classes = [11,22,33]
+    
+obj = UserView()
+obj.dispatch()
+```
+
+
+
+
+
+
+
+
+
+
+
+### 1.4.3 认证组件源码
+
+![认证源码](../../../public/md_img/drf/\认证源码.png)
+
+```python
+class Request:
+    def __init__(self,request,authenticators = None,...):
+        self._request = request
+        self.suthenticators = authenticators or ()
+    
+    @property
+    def user(self):
+        if not hasattr(self, '_user'):
+            with wrap_attributeerrors():
+                self._authenticate()
+        return self._user
+
+    @user.setter
+    def user(self, value):
+        self._user = value
+        self._request.user = value
+    
+    def _authenticate(self):
+        #读取每个认证组件的对象，执行authenticators方法，self为request对象
+        for authenticator in self.authenticators:
+            try:
+                user_auth_tuple = authenticator.authenticate(self)
+            except exceptions.APIException:
+                self._not_authenticated()
+                raise
+
+            if user_auth_tuple is not None:
+                self._authenticator = authenticator
+                self.user, self.auth = user_auth_tuple
+                return
+            
+    def _not_authenticated(self):
+        self._authenticator = None
+
+        if api_settings.UNAUTHENTICATED_USER:
+            self.user = api_settings.UNAUTHENTICATED_USER()
+        else:
+            self.user = None
+
+        if api_settings.UNAUTHENTICATED_TOKEN:
+            self.auth = api_settings.UNAUTHENTICATED_TOKEN()
+        else:
+            self.auth = None       
+            
+    
+class APIView(view):
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASS
+    
+    def perform_authentication(self,request):
+        request.user
+    
+    #简化
+    def initial(self,request,*args,**kwargs):
+        self.perform_authentication(request)
+        self.check_premissions(request)
+        self.check_throttles(request)
+    
+    def get_authenticators(self):
+        #[认证类的对象,认证类的对象,认证类的对象,...]
+        return [auth() for auth in self.authentication_classes]
+    
+    def initialize_request(self,request,*args,**kwargs):
+        parser_context = self.get_parser_context(request)
+        
+        return Request(
+        	request,
+        	parsets = self.get_parsers(),
+            authenticators = self.get_authenticators(),
+            negotiator = self.get_content_negotiator(),
+            parser_context = parser_context
+        )
+    
+    #简化
+    def dispatch(self,request,*args,**kwargs):
+        #第一步 请求的封装（django的request对象+authenticators认证组件） -  > 加载认证组件的过程
+        self.args = args
+        self.kwargs = kwargs
+        request = self.initialize_request(request, *args, **kwargs)
+        self.request = request
+        self.headers = self.default_response_headers
+        
+        #第二步
+        self.initial(request,*args,**kwargs)
+        handler = getattr(self,request.method.lower(),self.http_method_not_allowed)
+        response = handler(request,*args,**kwargs)
+		
+        self.response = self.finalize_response(request,response,*args,**kwargs)
+        return self.response
+    
+ 
+
+class UserView(APIView):
+    authentication_classes =[类1,...]
+    def get(self,request):
+        return Response("UserView")
+```
+
+
+
+认证组件源码：
+
+- 加载认证组件，本质就是实例化每个认证类的对象，并封装到request对象
+
