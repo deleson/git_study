@@ -631,7 +631,7 @@ class OrderView(APIView):
 
 示例2（全局配置视图类）
 
-```
+```python
 #drf配置
 REST_FRAMEWORK = {
     "UNAUTHENTICATED_USER":lambda:"xxx",
