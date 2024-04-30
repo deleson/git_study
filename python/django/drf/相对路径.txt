@@ -1,1 +1,2 @@
 ../../../public/md_img/django/
+../../../public/md_img/drf/
