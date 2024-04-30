@@ -7,7 +7,8 @@ export default defineConfig({
     description: "A VitePress Site",
     themeConfig: {
         // https://vitepress.dev/reference/default-theme-config
-
+        outlineTitle:"目录",
+        outline:[2,6],
         nav: [
             {
                 text: 'Python',
