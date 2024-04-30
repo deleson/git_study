@@ -551,7 +551,7 @@ def initialize_request(self, request, *args, **kwargs):
 
 request中的参数**kwargs，其实是url中的< int:v1 >传入的
 
-![request源码](../../../public/md_img/drf/\request源码.png)
+![request源码](../../../public/md_img/drf/request源码.png)
 
 
 
@@ -693,7 +693,7 @@ obj.dispatch()
 
 ### 1.4.3 认证组件源码
 
-![认证源码](../../../public/md_img/drf/\认证源码.png)
+![认证源码](../../../public/md_img/drf/认证源码.png)
 
 ```python
 class Request:
