@@ -105,6 +105,8 @@ class InfoView(APIView):
 
 
 
+![drf源码](../../../public/md_img/drf/\drf源码.png)
+
 
 
 
@@ -328,43 +330,225 @@ path('user/<str:dt>/',views.InfoView.as_view()), #drf
 
 
 
+### 1.2.4 纯净项目
+
+app要适当进行删除内容
+
+```python
+INSTALLED_APPS = [
+    # 'django.contrib.admin',
+    # 'django.contrib.auth',
+    # 'django.contrib.contenttypes',
+    # 'django.contrib.sessions',
+    # 'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',               #template/static
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    # 'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'day2.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                # 'django.contrib.auth.context_processors.auth',
+                # 'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+再进行setting的drf配置
+
+```python
+#drf配置
+REST_FRAMEWORK = {
+    "UNAUTHENTICATED_USER":lambda:"xxx"
+}
+```
 
 
-在机器学习中，我们经常使用损失函数（或成本函数）来衡量模型的性能。常见的损失函数包括均方误差（MSE）和交叉熵损失（Cross Entropy Loss）。其中，均方误差损失函数的公式为：
-
-$$
-\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
-$$
-
-而交叉熵损失函数的公式为：
-
-$$
-\text{Cross Entropy Loss} = -\sum_{i=1}^{n} y_i \log(\hat{y}_i)
-$$
-
-其中，$y_i$ 是真实标签，$\hat{y}_i$ 是模型预测的标签。通过最小化损失函数，我们可以优化模型的参数，使其更好地拟合数据。
 
 
 
+## 1.3 drf的request对象
+
+drf的request是在django上的基础上进一层进行包裹的request
+
+
+
+本内容以两个方面进行讲解
+
+- oop知识
+- drf请求流程
+
+
+
+### 1.3.1 oop
+
+1. 类中的getattr方法如何触发？
+
+```
+obj = Foo("king",19)
+获取成员的两种方式
+obj.name
+
+v1 = getattr(obj,"name")
+```
+
+除了上述内容之外，还可以在类中定义__ getattr __ 方法（不会影响上述两个方法使用）
+
+```
+class Foo(object):
+    def __init__(self,age,name):
+        self.age = age
+        self.name = name
+
+    def show(self):
+        return 123
+
+    def __getattr__(self, item):
+        print("this is {}".format(item))
+        return 999
+
+obj = Foo("波冈",1)
+print(obj.xxx)
+
+
+输出内容
+this is xxx
+999
+```
+
+由上述内容可以知道，__ getattr __ 触发是在访问类**不存在的成员**时触发
+
+
+
+2. 在面向对象中的getattribute方法，什么情况执行？
+
+```python
+def __getattribute__(self, item):
+    print("this is {}".format(item))
+    return 996
+    
+print(obj.name)
+print(obj.age)
+
+输出
+this is name
+996
+this is age
+996
+```
+
+即无论类中是否有调用的成员函数，都有去使用getattribute方法，并在这个方法下进行执行。
+
+object有自身的getattribute方法，可以自行分情况执行，逻辑如下：
+
+- 对象中有这个成员，直接返回值
+- 对象中没有这个成员，直接报错
+
+
+
+3. 类分析
+
+```python
+class HttpRequest(object):
+    def __int__(self):
+        pass
+
+    def v1(selfs):
+        print("v1")
+
+    def v2(selfs):
+        print("v2")
+
+
+class Request(object):
+    def __init__(self,req,xx):
+        self._request = req
+        self.xx = xx
+
+    #对象中自己有的成员不会触发，没有的成员会触发
+    def __getattr__(self, item):
+        #item就是传入的调用成员名
+        try:
+            return getattr(self._request,item)          #相当于执行self._request.yyy
+        except AttributeError:
+            return self.__getattribute__(item)
+
+
+req = HttpRequest()
+req.v1()
+req.v2()
+
+request = Request(req,111)
+request.xx
+request._request
+
+
+request.v1()
+request.yyy
+
+
+# request._request.v1()
+# request._request.v2()
+```
+
+drf的request封装django的request对象逻辑如上述所示
+
+```
+request = HttpRequest()				#django
+req = DrfRequest(request,123)		#drf
+
+req
+req._request
+#不通过getattribute方法
+req._request.method()
+req._request.paht_into()
+#通过getattribute方法
+req.method()
+req.paht_into()
+```
 
 
 
 
 
+### 1.3.2 request源码和参数
 
+```python
+def initialize_request(self, request, *args, **kwargs):
+    """
+    Returns the initial request object.
+    """
+    parser_context = self.get_parser_context(request)
 
+    return Request(
+        request,
+        parsers=self.get_parsers(),
+        authenticators=self.get_authenticators(),
+        negotiator=self.get_content_negotiator(),
+        parser_context=parser_context
+    )
+    
+#此处的return就是drf的request，而参数request就是django的request对象
+```
 
-
-
-
-
-
-
-
-
-
-$$
-y[n] = \sum_{k=-\infty}^{\infty} x[k] \cdot h[n-k]
-$$
-
-
+request中的参数**kwargs，其实是url中的< int:v1 >传入的
