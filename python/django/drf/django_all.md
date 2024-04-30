@@ -175,7 +175,7 @@ app01
 
 
 
-![django流程.drawio](C:\Users\86183\Downloads\django流程.drawio.png)
+![django流程.drawio](../../../public/md_img/django/\django流程.drawio.png)
 
 ## 6.请求和响应
 
@@ -204,7 +204,7 @@ app01
 - mysql数据库+pymysql
 - django开发操作数据库，可以通过内部的ORM框架（而不是通过pymysql）
 
-![orm介绍.drawio](C:\Users\86183\Downloads\orm介绍.drawio.png)
+![orm介绍.drawio](../../../public/md_img/django/\orm介绍.drawio.png)
 
 
 
