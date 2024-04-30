@@ -9,11 +9,11 @@ pip install django
 - django 框架源码
 - django-admin.exe 工具，用于创建django项目中的文件和文件夹
 
+
+
 ## 2.创建项目
 
 > django项目中会有一些默认的文件和默认的文件夹
-
-
 
 在终端
 
@@ -23,46 +23,42 @@ pip install django
 
 - 执行命令创建项目
 
-  ...\django-admin.exe startproject 项目名称
-
-  ```终端
-  django-admin startproject mysite
-  ```
-
-  
+  > ...\django-admin.exe startproject 项目名称
+  >
+  > ```终端
+  > django-admin startproject mysite
+  > ```
+  >
+  > 
 
 在pycharm
 
 - 直接选择创建
 
+> 特殊说明：
+>
+> - 命令行：创建的项目是标准的
+> - pycharm，在标准的基础上默认加了东西
+>   - templates目录
+>   - setting.py文件中添加了东西
+>
+
+> 默认项目的文件介绍
+>
+> ```
+> project_name
+> 	manage.py		【项目的管理、启动项目、创建app、数据管理】
+> 	project_name
+> 		__init__.py
+> 		settings.py	【项目配置文件】【经常操作】
+> 		urls.py		【URL和函数的对应关系】【经常操作】
+> 		asgi.py		【接收网络请求】【不要动】
+> 		wsgi.py		【接受网络请求】【不要动】
+> 
+> ```
+>
 
 
-
-
-特殊说明：
-
-- 命令行：创建的项目是标准的
-- pycharm，在标准的基础上默认加了东西
-  - templates目录
-  - setting.py文件中添加了东西
-
-
-
-
-
-默认项目的文件介绍
-
-```
-project_name
-	manage.py		【项目的管理、启动项目、创建app、数据管理】
-	project_name
-		__init__.py
-		settings.py	【项目配置文件】【经常操作】
-		urls.py		【URL和函数的对应关系】【经常操作】
-		asgi.py		【接收网络请求】【不要动】
-		wsgi.py		【接受网络请求】【不要动】
-
-```
 
 ## 3.APP
 
@@ -83,8 +79,6 @@ project_name
 python manage.py startapp app01
 ```
 
-
-
 app目录文件介绍
 
 ```
@@ -99,9 +93,9 @@ app01
 	views.py			【重要，视图函数】
 ```
 
+
+
 ## 4.快速上手
-
-
 
 下面必须确保
 
@@ -155,6 +149,8 @@ app01
 
 - 静态文件默认在app里面的static中。
 - 静态文件引入一般使用{%load static%}
+
+
 
 ## 5.模板语法
 
@@ -238,8 +234,6 @@ ORM 可以帮助我们做两件事：
 
 上述操作应该在models.py文件中
 
-
-
 创建表步骤如下：
 
 注意：app需要事先注册，否则不会提交数据库
@@ -268,11 +262,7 @@ create table app01_userinfo(
    1. 生成迁移文件 python manage.py makemigrations
    2. 应用迁移文件 python manage.py migrate
 
-
-
-对于数据库表的删除字段和删除表，可以对类直接注释
-
-但是如果是在类中进行字段添加，需要有一定的限制（下面有三种选择）
+对于数据库表的删除字段和删除表，可以对类直接注释，但是如果是在类中进行字段添加，需要有一定的限制（下面有三种选择）
 
 - 命令行设置所有值（手动写
 - 添加默认值（代码default
