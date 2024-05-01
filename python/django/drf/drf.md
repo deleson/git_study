@@ -389,34 +389,36 @@ REST_FRAMEWORK = {
 
 > 在 Django 和 Django REST Framework (DRF) 中，请求（request）对象是核心组件之一，它封装了客户端发送到服务器的所有HTTP请求信息。这些对象在处理Web请求时起到至关重要的作用，它们帮助开发者访问请求数据、方法、用户信息等，以实现丰富的应用逻辑。
 >
-> ### Django 的 Request 对象
+> **Django 的 Request 对象**
 >
-> #### 什么是 Django 的 Request 对象？
+> **什么是 Django 的 Request 对象？**
 >
 > Django 的 Request 对象是一个 Python 类的实例，它封装了HTTP请求的所有细节。这个对象由 Django 在每个请求的处理过程中自动创建，并作为第一个参数传递给视图函数或方法。
 >
-> #### 为什么会有这个？
+> **为什么会有这个？**
 >
 > Django 的 Request 对象的存在是为了提供一个简单的接口，通过这个接口，开发者可以访问关于请求的所有信息，如请求方法（GET、POST等）、上传的文件、已解析的数据、HTTP头部等等。这样的设计可以使得开发者更加方便地处理请求数据，而不必每次都从底层的环境变量中手动提取和解析这些数据。
 >
-> #### 作用
+> **作用**
 >
 > - **数据访问**：开发者可以通过 `request.GET` 和 `request.POST` 访问 GET 和 POST 参数。
 > - **状态维护**：通过 `request.session` 来维护用户会话。
 > - **用户信息**：通过 `request.user` 访问当前请求的用户对象。
 > - **元数据访问**：如 `request.META` 访问请求的元数据，如HTTP头部信息。
 >
-> ### DRF 的 Request 对象
+> 
 >
-> #### 什么是 DRF 的 Request 对象？
+> **DRF 的 Request 对象**
+>
+> **什么是 DRF 的 Request 对象？**
 >
 > DRF 的 Request 对象继承自 Django 的 HttpRequest，然后加上了一些额外的功能，使其更适合用于构建API。DRF的 Request 对象包装了 Django 的 HttpRequest，并提供了额外的解析和认证功能。
 >
-> #### 为什么会有这个？
+> **为什么会有这个？**
 >
 > 在构建API时，常常需要处理不同格式的数据（如JSON、XML等），而 Django 的 HttpRequest 主要是设计来处理表单数据的。DRF 扩展了这一功能，使其能够更好地处理各种媒体类型的数据，同时也提供了更灵活的认证和权限管理工具。
 >
-> #### 作用
+> **作用**
 >
 > - **数据解析**：DRF 的 Request 对象使用 pluggable parsers 来解析进来的请求数据，支持多种数据格式。
 > - **灵活的认证**：支持多种认证方式，如Token认证、OAuth等。
@@ -593,7 +595,40 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 
 ![request源码](../../../public/md_img/drf/request源码.png)
 
-
+> 在 Django REST Framework（DRF）中，处理HTTP请求的方式稍有不同于标准的Django处理方式，主要是因为它使用了一个定制的`Request`对象来提供一些额外功能，特别是针对API开发的需求。以下是DRF中`Request`对象的调用和初始化过程：
+>
+> 1. **请求进入**
+>
+> 当一个HTTP请求到达Django服务器时，首先由Django的中间件和URL路由系统处理。如果请求被指派给一个使用了DRF的视图，处理流程则开始转入DRF特定的逻辑。
+>
+> 2. **封装为DRF `Request`对象**
+>
+> 在视图层之前，DRF将标准的Django `HttpRequest`对象封装到DRF的`Request`对象中。这个封装过程是由DRF的视图或视图集（例如`APIView`或`ViewSet`类）的初始处理阶段触发的，具体如下：
+>
+> - 当请求到达DRF视图时，`APIView`的`as_view()`方法会首先被调用。
+> - 随后调用的`dispatch`方法负责实例化DRF的`Request`对象，并将原始的Django `HttpRequest`对象作为参数传递给它。
+> - DRF的`Request`对象在初始化时接受这个Django的`HttpRequest`对象，并在内部保存为`_request`属性。同时，它会添加一些特定于API的功能，比如更复杂的解析器逻辑和内容协商。
+>
+> 3. **认证和权限检查**
+>
+> 在请求被完全处理之前，`APIView`的`initial`方法会被调用：
+>
+> - 认证：通过调用`perform_authentication`方法，该方法进一步调用`Request`对象的`.user`访问器，它会触发所有配置的认证类，试图认证当前请求。
+> - 权限和节流：在认证后，DRF会检查配置的权限和节流器（throttles）是否允许这个请求继续进行。
+>
+> 4. **请求处理**
+>
+> 一旦请求通过了认证和权限检查，控制权就交给了视图函数。此时，开发者可以通过DRF的`Request`对象访问请求数据：
+>
+> - 使用`request.data`来访问解析后的请求体，这对于处理JSON或其他非表单格式的数据特别有用。
+> - 使用`request.query_params`来访问查询参数。
+> - 使用`request.files`来访问上传的文件等等。
+>
+> 5. **响应返回**
+>
+> 视图处理完请求后，通常会返回一个`Response`对象。DRF接管这个响应，并使用合适的渲染器将数据转换为客户端请求的格式（如JSON、XML等），最后将其发送回客户端。
+>
+> 这个过程展示了DRF如何提供一个强大且灵活的机制来处理API请求，通过封装和扩展Django的`HttpRequest`对象，增加了许多对API开发非常有用的功能。
 
 
 
@@ -835,8 +870,8 @@ class UserView(APIView):
         return Response("UserView")
 ```
 
-> ### 调用流程
->
+调用流程
+
 > 以下是 `authenticate` 方法调用的详细流程：
 >
 > 1. **请求到达**：当一个 HTTP 请求到达 DRF 后，框架首先将请求封装到 `Request` 对象中。
@@ -852,7 +887,7 @@ class UserView(APIView):
 >    - 如果所有认证类都不能认证用户（都返回 `None`），则请求被视为匿名用户的请求。
 >    - 如果任何一个认证类抛出了 `AuthenticationFailed` 异常，则该请求将直接返回对应的错误响应（通常是 401 或 403）。
 >
-> ### 总结
+> 总结
 >
 > `authenticate` 方法是在视图层处理之前被调用的，作为请求处理链中的一个重要部分，它决定了用户的认证状态，从而影响到权限控制和后续的请求处理。这个机制确保了在处理业务逻辑之前，用户的身份和权限已经得到了妥当的验证和确认
 
