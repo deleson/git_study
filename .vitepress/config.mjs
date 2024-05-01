@@ -8,7 +8,7 @@ export default defineConfig({
     themeConfig: {
         // https://vitepress.dev/reference/default-theme-config
         outlineTitle:"目录",
-        outline:[2,6],
+        outline:[1,6],
         nav: [
             {
                 text: 'Python',
