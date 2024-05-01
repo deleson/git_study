@@ -1077,7 +1077,7 @@ class UserView(APIView):
 
 
 
-### 1.4.5认证-状态码一致问题
+### 1.4.5 认证-状态码一致问题
 
 ```python
 class MyAuthentication(BaseAuthentication):
@@ -1257,9 +1257,7 @@ class News(Foo):
 
 
 
-
-
-### 1.创建用户表（model.py
+**1.创建用户表（model.py**
 
 ```python
 class UserInfo(models.Moel):
@@ -1270,13 +1268,13 @@ class UserInfo(models.Moel):
     token = models.CharField(verbose_name="TOKEN",max_length=64,null=True,blank=True)
 ```
 
-### 2.数据库迁移
+**2.数据库迁移**
 
 ​	` python manage.py makemigrations`
 
 ​	`python manage.py migrate`
 
-### 3.写url路由和view视图类
+**3.写url路由和view视图类**
 
 ``` python
 #不需要登录
@@ -1288,9 +1286,9 @@ class LoginView(APIView):
         return Response("LoginView:post")
 ```
 
-### 4.使用postman进行post请求模拟
+**4.使用postman进行post请求模拟**
 
-### 5.编写视图类的post处理
+**5.编写视图类的post处理**
 
 ```python
 # 不需要登录
@@ -1315,5 +1313,127 @@ class LoginView(APIView):
         return Response({"status":True,"data": token})
 ```
 
-### 6.其他视图类的认证（配置认证组件，authenticate）
+**6.其他视图类的认证（配置认证组件，authenticate）**
+
+```python
+#URL中
+class QueryParamsAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        token = request.query_params.get("token")
+        user_object = models.UserInfo.objects.filter(token=token).first()
+        if user_object:
+            return user_object, token #request.user = 用户对象；requst.auth=token
+        return
+
+    def authenticate_header(self, request):
+        return "API"
+
+#请求头中
+class HeaderAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        token = request.META.get("HTTP_AUTHORIZATION")
+        user_object = models.UserInfo.objects.filter(token=token).first()
+        if user_object:
+            return user_object, token #request.user = 用户对象；requst.auth=token
+        return
+
+    def authenticate_header(self, request):
+        return "API"
+
+
+
+class NoAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        raise AuthenticationFailed({"status":False,"msg":"认证失败"})
+
+    def authenticate_header(self, request):
+        return "API"
+```
+
+```python
+"DEFAULT_AUTHENTICATION_CLASSES":[
+    "ext.auth.QueryParamsAuthentication",
+    "ext.auth.HeaderAuthentication",
+    "ext.auth.NoAuthentication",
+]
+```
+
+
+
+
+
+
+
+
+
+## 1.6 权限
+
+### 1.6.1 权限概述
+
+认证组件 = [认证类，认证类，认证类]			-> 	执行每个认证类中的authenticate方法
+
+- 认证成功或失败，不会在执行后续的认证类
+- 返回None，执行后续的认证类
+
+
+
+权限组件 = [权限类，权限类，权限类]			-> 	执行每个认证类中的has_permission方法
+
+- 执行所有的权限类，返回True通过，返回False表示不通过
+
+默认情况下，保证所有的权限类中的has_permission方法都返回True(就是且的关系)，
+
+但是也可以手动修改，变成部分或的关系。（学会源码流程，扩展+自定义）
+
+
+
+
+
+### 1.6.2 快速使用
+
+**1.编写权限类**
+
+```python
+import random
+
+from rest_framework.permissions import BasePermission
+
+class MyPermission(BasePermission):
+    def has_permission(self, request, view):
+        #获取请求中的数据，然后进行校验...
+        v1 = random.randint(1,3)
+        if v1 == 2:
+            return True
+        return False
+```
+
+
+
+**2.应用权限类**
+
+- 方法一：局部权限类添加permission_classes = [权限类]
+
+- 方法二：全局setting配置DEFAULT_PERMISSION_CLASSES
+
+  ```python
+      "DEFAULT_PERMISSION_CLASSES": [
+          "ext.per.MyPermission",
+      ]
+  ```
+
+  
+
+
+
+
+
+### 1.6.3 权限错误信息和多个权限类
+
+{"detail": "You do not have permission to perform this action."}，是默认的错误信息。
+
+本节学习如何自定义权限错误信息。
+
+<br>
+
+测试
 
