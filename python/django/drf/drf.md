@@ -387,6 +387,46 @@ REST_FRAMEWORK = {
 
 ## 1.3 drf的request对象
 
+> 在 Django 和 Django REST Framework (DRF) 中，请求（request）对象是核心组件之一，它封装了客户端发送到服务器的所有HTTP请求信息。这些对象在处理Web请求时起到至关重要的作用，它们帮助开发者访问请求数据、方法、用户信息等，以实现丰富的应用逻辑。
+>
+> ### Django 的 Request 对象
+>
+> #### 什么是 Django 的 Request 对象？
+>
+> Django 的 Request 对象是一个 Python 类的实例，它封装了HTTP请求的所有细节。这个对象由 Django 在每个请求的处理过程中自动创建，并作为第一个参数传递给视图函数或方法。
+>
+> #### 为什么会有这个？
+>
+> Django 的 Request 对象的存在是为了提供一个简单的接口，通过这个接口，开发者可以访问关于请求的所有信息，如请求方法（GET、POST等）、上传的文件、已解析的数据、HTTP头部等等。这样的设计可以使得开发者更加方便地处理请求数据，而不必每次都从底层的环境变量中手动提取和解析这些数据。
+>
+> #### 作用
+>
+> - **数据访问**：开发者可以通过 `request.GET` 和 `request.POST` 访问 GET 和 POST 参数。
+> - **状态维护**：通过 `request.session` 来维护用户会话。
+> - **用户信息**：通过 `request.user` 访问当前请求的用户对象。
+> - **元数据访问**：如 `request.META` 访问请求的元数据，如HTTP头部信息。
+>
+> ### DRF 的 Request 对象
+>
+> #### 什么是 DRF 的 Request 对象？
+>
+> DRF 的 Request 对象继承自 Django 的 HttpRequest，然后加上了一些额外的功能，使其更适合用于构建API。DRF的 Request 对象包装了 Django 的 HttpRequest，并提供了额外的解析和认证功能。
+>
+> #### 为什么会有这个？
+>
+> 在构建API时，常常需要处理不同格式的数据（如JSON、XML等），而 Django 的 HttpRequest 主要是设计来处理表单数据的。DRF 扩展了这一功能，使其能够更好地处理各种媒体类型的数据，同时也提供了更灵活的认证和权限管理工具。
+>
+> #### 作用
+>
+> - **数据解析**：DRF 的 Request 对象使用 pluggable parsers 来解析进来的请求数据，支持多种数据格式。
+> - **灵活的认证**：支持多种认证方式，如Token认证、OAuth等。
+> - **请求数据的不可变性**：标准 Django 的 `request.POST` 和 `request.FILES` 是可变的，而 DRF 的 `request.data` 提供一个不可变的接口来访问解析后的请求数据。
+> - **更详细的请求内容**：比如 `request.query_params` 代替了 Django 的 `request.GET`，提供了更清晰的API使用上下文。
+>
+> 通过提供这些封装和功能，DRF 的 Request 对象使得开发RESTful API更加直接和便捷，同时也保持了与 Django 本身的良好兼容性。
+
+
+
 drf的request是在django上的基础上进一层进行包裹的request
 
 
@@ -777,9 +817,11 @@ class APIView(view):
         self.request = request
         self.headers = self.default_response_headers
         
-        #第二步
+        #第二步:request
         self.initial(request,*args,**kwargs)
         handler = getattr(self,request.method.lower(),self.http_method_not_allowed)
+        
+        #第三步:执行视图函数
         response = handler(request,*args,**kwargs)
 		
         self.response = self.finalize_response(request,response,*args,**kwargs)
@@ -793,9 +835,173 @@ class UserView(APIView):
         return Response("UserView")
 ```
 
-
+> ### 调用流程
+>
+> 以下是 `authenticate` 方法调用的详细流程：
+>
+> 1. **请求到达**：当一个 HTTP 请求到达 DRF 后，框架首先将请求封装到 `Request` 对象中。
+> 2. **中间件处理**：请求经过配置的各种中间件处理，尚未进入到具体的视图（view）层。
+> 3. **视图处理前**：在请求达到具体的视图之前，DRF 的调度机制会先进行认证处理。这一步骤是通过视图的 `dispatch` 方法或者通过 DRF 提供的装饰器和权限类实现的。
+> 4. **认证方法调用**：
+>    - DRF 通过 `APIView` 或者任何继承自 `APIView` 的类的 `initial` 方法调用认证逻辑。
+>    - `initial` 方法会依次调用 `perform_authentication`，该方法再调用 `request.user` 访问器。
+>    - `request.user` 的获取逻辑中，DRF 会检查是否已经认证过用户。如果没有，它会通过 `request._authenticate` 方法触发具体的 `authenticate` 方法。
+> 5. **执行认证类**：
+>    - 在 `request._authenticate` 方法中，DRF 会遍历在视图或全局设置中指定的 `authentication_classes`，调用每个认证类的 `authenticate` 方法。
+>    - 如果一个认证类返回了一个用户（通常是一个用户对象和认证信息的元组），则认证过程停止，且该用户被视为请求的发起者。
+>    - 如果所有认证类都不能认证用户（都返回 `None`），则请求被视为匿名用户的请求。
+>    - 如果任何一个认证类抛出了 `AuthenticationFailed` 异常，则该请求将直接返回对应的错误响应（通常是 401 或 403）。
+>
+> ### 总结
+>
+> `authenticate` 方法是在视图层处理之前被调用的，作为请求处理链中的一个重要部分，它决定了用户的认证状态，从而影响到权限控制和后续的请求处理。这个机制确保了在处理业务逻辑之前，用户的身份和权限已经得到了妥当的验证和确认
 
 认证组件源码：
 
 - 加载认证组件，本质就是实例化每个认证类的对象，并封装到request对象
+
+
+
+### 1.4.4 多个认证类
+
+1. 都返回None，都没有认证成功，视图是否会被执行？
+
+   视图函数会执行，只不过self.user 和self.auth为None
+
+   ```python
+   class URLAuthentication(BaseAuthentication):
+       def authenticate(self, request):
+           token = request.query_params.get("token")
+           if token:
+               return "king",token
+           return
+   
+   #请求头    
+   class HeaderAuthentication(BaseAuthentication):
+       def authenticate(self, request):
+           token = request.meta.get("token")
+           if token:
+               return "king",token
+           return
+   
+   #请求体     
+   class BodyAuthentication(BaseAuthentication):
+       def authenticate(self, request):
+           token = request.data.get("token")
+           if token:
+               return "king",token
+           return
+       
+   class NoAuthentication(BaseAuthentication):
+       def authenticate(self, request):
+           raise "异常认证失败"
+       
+   class OrderView(APIView):
+   	authentication_class= [URLAuthentication,HeaderAuthentication,BodyAuthentication,NoAuthentication]
+       def get(self,request):
+           return Response("OrderView")
+   
+   ```
+
+
+
+
+
+### 1.4.5认证-状态码一致问题
+
+```python
+class MyAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        token = request.query_params.get("token")
+        if token:
+            return "king",token
+        # raise AuthenticationFailed("认证失败")
+        raise AuthenticationFailed({"code":2000,'error':"认证失败"})
+    
+    def authenticate_header(self,request):
+        return "token"
+```
+
+```python
+#APIView中
+
+def handle_exception(self, exc):
+    """
+    Handle any exception that occurs, by returning an appropriate response,
+    or re-raising the error.
+    """
+    if isinstance(exc, (exceptions.NotAuthenticated,
+                        exceptions.AuthenticationFailed)):
+        # WWW-Authenticate header for 401 responses, else coerce to 403
+        #执行get_authenticate_header方法
+        auth_header = self.get_authenticate_header(self.request)
+
+        if auth_header:
+            exc.auth_header = auth_header
+        else:
+            exc.status_code = status.HTTP_403_FORBIDDEN
+
+    exception_handler = self.get_exception_handler()
+
+    context = self.get_exception_handler_context()
+    response = exception_handler(exc, context)
+
+    if response is None:
+        self.raise_uncaught_exception(exc)
+
+    response.exception = True
+    return response
+
+
+
+def get_authenticate_header(self, request):
+    authenticators = self.get_authenticators()
+    if authenticators:
+        return authenticators[0].authenticate_header(request)
+```
+
+> ### 为什么选择 `authenticators[0]` 的 `authenticate_header`？
+>
+> 当没有认证成功时（即所有的认证类都未能认证该请求），DRF 需要决定返回什么样的 `WWW-Authenticate` 头部来指示客户端如何进行认证。这个头部在客户端显示的401 Unauthorized响应中是非常重要的，因为它告诉客户端应该如何响应认证失败。
+>
+> 在DRF的默认实现中，`get_authenticate_header` 方法仅从第一个认证类 (`authenticators[0]`) 获取 `authenticate_header`。这是因为：
+>
+> 1. **简化和清晰**：假设有多个认证方式，理论上需要发送多个 `WWW-Authenticate` 值。然而，实际上，客户端可能会对多个值感到困惑，不清楚优先采用哪种方式。选择第一个认证类作为主要提示可以简化客户端的处理逻辑。
+> 2. **优先顺序**：认证类在 `authentication_classes` 中的顺序代表了它们的优先级。通常，开发者会将最常用或最优先的认证方式放在列表的前面。
+
+
+
+
+
+
+
+### 1.4.6 认证扩展-子类约束
+
+本节内容与drf无关，是python开发常见内容
+
+
+
+```python
+class Foo(object):
+    def f1(self):
+        raise NotImplementedError("...")
+
+class News(Foo):
+    def f1(self):
+        print("1234")
+```
+
+对于写了raise NotImplementedError的方法，继承后**必须重写并实现**
+
+> ### 为什么使用 `NotImplementedError`？
+>
+> 1. **明确接口要求**：通过在方法中加入 `raise NotImplementedError`，可以清楚地告诉其他开发者这个方法是一个接口，需要在子类中进行具体实现。这样做有助于维护代码的整洁性和一致性。
+> 2. **促进良好的设计**：这种模式鼓励使用抽象基类（abstract base class, ABC）来定义类的基本功能和接口。这是软件开发中常用的设计模式，有助于减少代码的重复并提高代码的可维护性。
+> 3. **提高代码的安全性**：如果子类没有实现必要的方法而试图使用它，Python 会抛出错误。这有助于在开发过程中早期发现问题，避免在生产环境中因为接口实现不完整而导致的错误。
+
+
+
+## 1.5 案例-用户登录和认证
+
+
 
