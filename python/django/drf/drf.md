@@ -926,7 +926,7 @@ class Request:
         self._request.user = value
     
     def _authenticate(self):
-        #读取每个认证组件的对象，执行authenticators方法，self为request对象
+        #读取每个认证组件的对象，执行authenticate方法，self为request对象
         for authenticator in self.authenticators:
             try:
                 user_auth_tuple = authenticator.authenticate(self)
@@ -1068,7 +1068,7 @@ class UserView(APIView):
        
    class NoAuthentication(BaseAuthentication):
        def authenticate(self, request):
-           raise "异常认证失败"
+           raise AuthenticationFailed("认证失败的具体原因")
        
    class OrderView(APIView):
    	authentication_class= [URLAuthentication,HeaderAuthentication,BodyAuthentication,NoAuthentication]
@@ -1452,3 +1452,121 @@ class MyPermission(BasePermission):
 
 
 ### 1.6.4 权限源码流程
+
+> 在 Django REST Framework (DRF) 中，权限系统是通过权限类来实现的，这些类定义了是否允许用户执行特定的操作。这里我将介绍权限检查的执行流程，以及如何通过源代码来理解这一过程。
+>
+> **权限代码的执行过程**
+>
+> 1. **请求处理**：
+>    - 当一个请求到达 DRF 的视图时，首先通过视图的 `dispatch` 方法进行初步的处理。这是处理任何请求的入口点，无论是 GET、POST 还是其他 HTTP 方法。
+> 2. **调用 `.initial()` 方法**：
+>    - 在 `dispatch` 方法中，会首先调用 `.initial()` 方法，该方法负责设置一些初始状态并进行初步的安全检查，包括认证和权限检查。
+> 3. **执行认证**：
+>    - `.initial()` 方法会调用 `.perform_authentication()`，该方法通过认证类（如 TokenAuthentication, SessionAuthentication 等）来确认请求的用户。
+> 4. **权限检查**：
+>    - 认证完成后，`.initial()` 方法接着调用 `.check_permissions()`。这个方法遍历视图设置的所有权限类实例（如 IsAuthenticated, IsAdminUser 等），调用它们的 `.has_permission()` 方法。
+> 5. **详细的权限方法**：
+>    - `.has_permission()` 方法通常需要两个参数：请求 (`request`) 和视图 (`view`)。每个权限类根据这些信息判断是否允许请求继续执行。
+> 6. **决定响应**：
+>    - 如果任何一个 `.has_permission()` 方法返回 `False`，DRF 会抛出一个 `PermissionDenied` 异常，该请求会被终止，并返回适当的 HTTP 状态码（通常是 403 Forbidden）。
+>    - 如果所有的权限检查都通过，则请求会继续执行相应的视图方法（如 `get()`, `post()` 等）。
+>
+> **源码分析**
+>
+> 以下是 DRF 源码中相关部分的一个简化版本，帮助理解权限检查是如何实现的：
+>
+> ```
+> pythonCopy code# 在 views.py 中
+> class APIView:
+>     def dispatch(self, request, *args, **kwargs):
+>         # 初始化，包括认证和权限检查
+>         self.initial(request, *args, **kwargs)
+>         # 根据 HTTP 方法调用相应的处理函数
+>         handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+>         response = handler(request, *args, **kwargs)
+>         return self.finalize_response(request, response, *args, **kwargs)
+> 
+>     def initial(self, request, *args, **kwargs):
+>         # 执行认证
+>         self.perform_authentication(request)
+>         # 检查权限
+>         self.check_permissions(request)
+> 
+>     def check_permissions(self, request):
+>         for permission in self.get_permissions():
+>             if not permission.has_permission(request, self):
+>                 self.permission_denied(request)
+> 
+> # 在 permissions.py 中
+> class IsAuthenticated(BasePermission):
+>     def has_permission(self, request, view):
+>         return request.user and request.user.is_authenticated
+> ```
+>
+> **总结**
+>
+> DRF 的权限系统设计得非常模块化，允许你轻松地添加或修改权限逻辑。权限类通过 `.has_permission()` 方法独立决定是否接受或拒绝请求，这提供了很大的灵活性来定义复杂的访问控制逻辑。理解这些内部工作原理有助于开发者更好地利用 DRF 构建安全且强大的 API。
+
+<br>
+
+权限执行过程涉及函数
+
+```python
+class APIView(View):
+    permission_classes=全局配置
+    def dispatch(self, request, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        request = self.initialize_request(request, *args, **kwargs)
+        self.request = request
+        self.headers = self.default_response_headers  # deprecate?
+
+        try:
+            self.initial(request, *args, **kwargs)
+            # Get the appropriate handler method
+            if request.method.lower() in self.http_method_names:
+                handler = getattr(self, request.method.lower(),
+                                  self.http_method_not_allowed)
+            else:
+                handler = self.http_method_not_allowed
+
+            response = handler(request, *args, **kwargs)
+
+        except Exception as exc:
+            response = self.handle_exception(exc)
+
+        self.response = self.finalize_response(request, response, *args, **kwargs)
+        return self.response
+    
+    
+    def initial(self, request, *args, **kwargs):
+        # 执行认证，循环执行每个authticate方法，失败抛出异常；成功给request.user/auth赋值
+        self.perform_authentication(request)
+        # 检查权限，
+        self.check_permissions(request) 
+		self.check_throttles(request)
+        
+    def check_permissions(self, request):
+        for permission in self.get_permissions():
+            if not permission.has_permission(request, self):
+                self.permission_denied(
+                    request,
+                    message=getattr(permission, 'message', None),
+                    code=getattr(permission, 'code', None)
+                )
+
+    def get_permissions(self):
+        return [permission() for permission in self.permission_classes] 
+   
+    def permission_denied(self, request, message=None, code=None):
+        if request.authenticators and not request.successful_authenticator:
+            raise exceptions.NotAuthenticated()
+        raise exceptions.PermissionDenied(detail=message, code=code)
+                
+        
+
+class OrderView(APIView):
+    permission_classes = [per.MyPermission]
+    def get(self, request):
+        return Response({"status":True,"data":[11,22,33,44]})
+```
