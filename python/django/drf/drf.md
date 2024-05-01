@@ -1,6 +1,141 @@
+# 0.前置基础
+
+<span style="font-size: 24px;">**HTTP相关知识**</span>
+
+> HTTP（HyperText Transfer Protocol）是用于从Web服务器传输超文本到本地浏览器的传输协议。它是互联网数据交换的基础，并支持Web的交互式和无缝访问。HTTP协议定义了客户端（用户的浏览器或应用）如何与服务器进行通信的规则。
+>
+> **HTTP的工作方式**
+>
+> HTTP是一个无状态协议，意味着服务器不会保留任何数据（状态）关于客户端请求过的用户。每次请求之间都是独立的，这使得协议更简单和快速。不过，为了克服这一限制，Web应用通常使用如cookie之类的机制来维护用户状态。
+>
+> **HTTP请求的格式**
+>
+> 一个HTTP请求由以下几个部分组成：
+>
+> 1. **请求行**：包括方法（如GET、POST等）、请求的URL、以及HTTP版本。例如: `GET /index.html HTTP/1.1`。
+>
+> 2. 请求头
+>
+>    ：包括客户端环境信息、请求主体的格式等关键信息。请求头由关键字/值对组成，每对之间用冒号分隔。例如:
+>
+>    ```
+>    makefileCopy codeAccept: text/html
+>    User-Agent: Mozilla/5.0
+>    Host: www.example.com
+>    ```
+>
+> 3. **空行**：请求头和请求体之间的空行。
+>
+> 4. **请求体**（可选）：数据部分，仅在POST和PUT请求中使用，用于提交表单数据或上传文件。
+>
+> **HTTP响应的格式**
+>
+> HTTP服务器响应的格式与请求类似，包括：
+>
+> 1. **状态行**：包括HTTP版本、状态码（如200、404）、以及状态消息（如OK、Not Found）。例如: `HTTP/1.1 200 OK`。
+>
+> 2. 响应头
+>
+>    ：类似请求头，包含有关服务器信息、响应体格式等。例如:
+>
+>    ```
+>    lessCopy codeContent-Type: text/html
+>    Content-Length: 345
+>    ```
+>
+> 3. **空行**：分隔响应头和响应体。
+>
+> 4. **响应体**：服务器返回的实际数据。
+>
+> **常见的HTTP请求头**
+>
+> 以下是一些常见的HTTP请求头：
+>
+> - **Accept**：指定客户端能接收的内容类型（如`text/html`）。
+> - **Content-Type**：发送数据到服务器时，体的内容类型（如`application/json`）。
+> - **User-Agent**：标识请求发送者的浏览器类型。
+> - **Authorization**：认证信息，通常用于验证HTTP请求的访问权限。
+> - **Cookie**：服务器发送到用户浏览器并保存的小数据片段，随后由浏览器在每次请求时返回给服务器。
+> - **Host**：指定请求的服务器的域名。
+> - **Referer**：指出请求来源的页面地址。
+>
+> HTTP协议简单而强大，是现代网络通信的基石之一。它支持多种类型的数据交互，并能够通过各种扩展和安全措施适应广泛的网络需求。
+
+<span style="font-size: 24px;">**HTTP请求例子**</span>
+
+> 假设你想从一个网站获取某个网页的内容，比如请求 `http://www.example.com/index.html` 页面。下面是这个HTTP GET请求的典型格式：
+>
+> **HTTP请求示例**
+>
+> ```
+> vbnetCopy codeGET /index.html HTTP/1.1
+> Host: www.example.com
+> User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36
+> Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+> Accept-Language: en-US,en;q=0.5
+> Connection: keep-alive
+> Cookie: userID=12345; sessionToken=abcde
+> ```
+>
+> 这里是该HTTP请求的各部分解释：
+>
+> 1. **请求行**：
+>    - **GET** - HTTP方法/动词，表示获取资源。
+>    - **/index.html** - 请求的资源路径。
+>    - **HTTP/1.1** - 使用的HTTP协议版本。
+> 2. **请求头**：
+>    - **Host**: 指明服务器的域名（必需头，在HTTP/1.1中）。
+>    - **User-Agent**: 标识发出请求的浏览器和操作系统信息。
+>    - **Accept**: 告诉服务器客户端能接受哪些媒体类型，按优先级排序。
+>    - **Accept-Language**: 表明客户端偏好的语言。
+>    - **Connection**: 控制不再需要请求或响应后是否关闭网络连接。
+>    - **Cookie**: 包含此网站设置的任何cookie。
+>
+> **请求无体的原因**
+>
+> 这个示例中的GET请求没有包含请求体，因为GET方法一般用于请求数据，而不是提交数据。请求体通常包含在如POST或PUT方法的请求中，这些方法常用于提交表单数据或上传文件。
+>
+> **响应示例**
+>
+> 服务器响应可能看起来像这样：
+>
+> ```
+> phpCopy codeHTTP/1.1 200 OK
+> Date: Tue, 18 Apr 2024 12:00:00 GMT
+> Server: Apache/2.4.18 (Ubuntu)
+> Content-Type: text/html; charset=UTF-8
+> Content-Length: 6789
+> Connection: close
+> 
+> <html>
+> <head>
+> <title>An Example Page</title>
+> </head>
+> <body>
+> Hello, this is a sample HTML response.
+> </body>
+> </html>
+> ```
+>
+> 响应的每个部分包括：
+>
+> 1. **状态行**：
+>    - **HTTP/1.1** - 响应使用的HTTP版本。
+>    - **200 OK** - 状态码及其描述，表示请求成功。
+> 2. **响应头**：
+>    - **Date**: 生成和发送响应的日期和时间。
+>    - **Server**: 生成响应的服务器软件和版本。
+>    - **Content-Type**: 响应体的媒体类型。
+>    - **Content-Length**: 响应体的长度，以字节为单位。
+>    - **Connection**: 表示服务器完成响应后将关闭连接。
+> 3. **响应体**：
+>    - 包含实际返回给客户端的HTML内容。
+>
+> 这个例子展示了一个完整的HTTP请求和响应的过程，希望这有助于你更好地理解HTTP通信的基本结构和工作方式。
+
+
+
 本笔记是基于b站视频所作
-
-
 
 前置问题
 
@@ -1038,5 +1173,147 @@ class News(Foo):
 
 ## 1.5 案例-用户登录和认证
 
+> 在 Django 和 Django REST Framework（DRF）中，处理请求对象的方式有所不同，因为 DRF 在标准的 Django `HttpRequest` 对象之上提供了额外的封装和功能。这使得 DRF 更适用于构建 RESTful APIs。以下是两者获取请求数据的详细方法：
+>
+> **Django 中获取请求数据**
+>
+> 在 Django 中，请求数据通过 `HttpRequest` 对象访问，该对象在视图函数或类中作为第一个参数传入。以下是常用方法来获取请求数据：
+>
+> 1. **GET 数据**：通过 `request.GET` 访问，这是一个类似字典的对象，包含所有的 HTTP GET 参数。通常用于查询字符串参数。
+>
+>    ```
+>    pythonCopy codedef my_view(request):
+>        search_query = request.GET.get('search', '')
+>        # process search_query
+>    ```
+>
+> 2. **POST 数据**：通过 `request.POST` 访问，这也是一个类似字典的对象，包含所有 HTTP POST 参数。通常用于表单数据。
+>
+>    ```
+>    pythonCopy codedef my_view(request):
+>        username = request.POST.get('username', '')
+>        password = request.POST.get('password', '')
+>        # process form data
+>    ```
+>
+> 3. **请求体（Raw Data）**：通过 `request.body` 访问，这返回请求的原始数据。需要自己解析这些数据（如 JSON）。
+>
+>    ```
+>    pythonCopy codeimport json
+>    
+>    def my_view(request):
+>        data = json.loads(request.body)
+>        # use data
+>    ```
+>
+> 4. **文件**：通过 `request.FILES` 访问，这是一个类似字典的对象，包含所有上传的文件。
+>
+>    ```
+>    pythonCopy codedef my_view(request):
+>        uploaded_file = request.FILES.get('file')
+>        # handle file
+>    ```
+>
+> 5. **其他属性**：如 `request.method` 来检查请求类型（GET, POST, 等等），`request.user` 来获取当前登录的用户。
+>
+> **Django REST Framework 中获取请求数据**
+>
+> DRF 使用扩展了的 `Request` 对象，提供了额外的解析功能和对请求数据的灵活处理。以下是在 DRF 中获取请求数据的方法：
+>
+> 1. **请求数据（Data）**：通过 `request.data` 访问，这适用于访问解析后的请求内容，不论是来自 JSON、XML 还是表单数据。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.decorators import api_view
+>    
+>    @api_view(['POST'])
+>    def my_view(request):
+>        username = request.data.get('username', '')
+>        # handle data
+>    ```
+>
+> 2. **查询参数（Query Params）**：通过 `request.query_params` 访问，类似于 Django 的 `request.GET`。
+>
+>    ```
+>    pythonCopy code@api_view(['GET'])
+>    def my_view(request):
+>        search_query = request.query_params.get('search', '')
+>        # process query params
+>    ```
+>
+> 3. **文件**：与 Django 相同，通过 `request.FILES` 访问。
+>
+>    ```
+>    pythonCopy code@api_view(['POST'])
+>    def my_view(request):
+>        uploaded_file = request.FILES.get('file')
+>        # handle file
+>    ```
+>
+> 4. **请求方法**：通过 `request.method` 来检查请求的类型。
+>
+> **总结**
+>
+> 尽管 Django 和 DRF 都提供了访问 HTTP 请求数据的机制，但 DRF 的 `request` 对象更适合于构建 API，因为它自动处理不同内容类型的数据解析，并提供了更一致的接口来访问这些数据。这使得在构建 API 时，可以更容易地处理来自客户端的各种数据格式。
 
+
+
+
+
+### 1.创建用户表（model.py
+
+```python
+class UserInfo(models.Moel):
+    #用户表
+    username = models.CharField(verbose_name="用户名",max_length=32)
+    password = models.CharField(verbose_name="密码",max_length=64)
+    #临时方式，jwt
+    token = models.CharField(verbose_name="TOKEN",max_length=64,null=True,blank=True)
+```
+
+### 2.数据库迁移
+
+​	` python manage.py makemigrations`
+
+​	`python manage.py migrate`
+
+### 3.写url路由和view视图类
+
+``` python
+#不需要登录
+class LoginView(APIView):
+    authentication_classes = []
+    def post(self,request):
+        #1.接受用户提交的用户名和密码
+        #2.数据库校验是否存在
+        return Response("LoginView:post")
+```
+
+### 4.使用postman进行post请求模拟
+
+### 5.编写视图类的post处理
+
+```python
+# 不需要登录
+class LoginView(APIView):
+    authentication_classes = []
+
+    def post(self, request):
+        # 1.接受用户提交的用户名和密码
+        # print(request.query_params) #获取url参数
+        user = request.data.get("username")
+        pwd = request.data.get("password")
+
+        # 2.数据库校验是否存在
+        user_object = models.UserInfo.objects.filter(username=user, password=pwd).first()
+        if not user_object:
+            return Response({"code": code.ERROR_CODE, "msg": "用户名或密码错误"})
+
+        # 3.正确，生成token
+        token = str(uuid.uuid4())
+        user_object.token = token
+        user_object.save()
+        return Response({"status":True,"data": token})
+```
+
+### 6.其他视图类的认证（配置认证组件，authenticate）
 
