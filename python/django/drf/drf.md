@@ -61,6 +61,8 @@
 >
 > HTTP协议简单而强大，是现代网络通信的基石之一。它支持多种类型的数据交互，并能够通过各种扩展和安全措施适应广泛的网络需求。
 
+<br>
+
 <span style="font-size: 24px;">**HTTP请求例子**</span>
 
 > 假设你想从一个网站获取某个网页的内容，比如请求 `http://www.example.com/index.html` 页面。下面是这个HTTP GET请求的典型格式：
@@ -133,6 +135,8 @@
 >
 > 这个例子展示了一个完整的HTTP请求和响应的过程，希望这有助于你更好地理解HTTP通信的基本结构和工作方式。
 
+<br><br>
+
 
 
 本笔记是基于b站视频所作
@@ -200,11 +204,9 @@
 
 
 
-
+<br><br>
 
 # 1.drf初步了解
-
-
 
 ## 1.1 drf初步使用
 
@@ -240,9 +242,9 @@ class InfoView(APIView):
 
 
 
+<br>
 
-
-
+<br>
 
 ## 1.2 FBV和CBV
 
@@ -290,7 +292,7 @@ FBV和CBV本身django就支持，同时drf也有，但是有所区别
 >
 >    - CBV 具有很多内置的类视图，可以简化常见的任务，同时也支持更复杂的场景和自定义逻辑。
 
-
+<br>
 
 ### 1.2.1django的FBV和CBV
 
@@ -379,7 +381,7 @@ def UserView(View):
 
 
 
-
+<br>
 
 ### 1.2.2drf的FBV和CBV
 
@@ -401,7 +403,7 @@ def UserView(View):
 - def as_view(...)  -> 免除了csrf认证
 - def dispatch()      -> 视图执行钱、反射执行视图、视图后处理
 
-
+<br>
 
 ### 1.2.3CBV的URL参数和request对象分析
 
@@ -461,7 +463,7 @@ path('user/<str:dt>/',views.InfoView.as_view()), #drf
 | ------------------------------ | ------------------------------------------------------------ |
 | 包含requst.GET、request.POST等 | 其中request._request = django的request。此外还封装了其他内容 |
 
-
+<br>
 
 ### 1.2.4 纯净项目
 
@@ -516,9 +518,9 @@ REST_FRAMEWORK = {
 }
 ```
 
+<br>
 
-
-
+<br>
 
 ## 1.3 drf的request对象
 
@@ -573,7 +575,7 @@ drf的request是在django上的基础上进一层进行包裹的request
 - oop知识
 - drf请求流程
 
-
+<br>
 
 ### 1.3.1 oop
 
@@ -704,7 +706,7 @@ req.paht_into()
 
 
 
-
+<br>
 
 ### 1.3.2 request源码和参数
 
@@ -767,7 +769,7 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 
 
 
-
+<br><br>
 
 ## 1.4 drf认证
 
@@ -873,7 +875,7 @@ ps：认证组件不能写在view视图中。（全局，出现了循环引用�
 
 
 
-
+<br>
 
 ### 1.4.2 认证面向对象-继承
 
@@ -899,7 +901,7 @@ obj.dispatch()
 
 
 
-
+<br>
 
 ### 1.4.3 认证组件源码
 
@@ -1030,6 +1032,8 @@ class UserView(APIView):
 
 - 加载认证组件，本质就是实例化每个认证类的对象，并封装到request对象
 
+<br>
+
 
 
 ### 1.4.4 多个认证类
@@ -1073,7 +1077,7 @@ class UserView(APIView):
    
    ```
 
-
+<br>
 
 
 
@@ -1139,7 +1143,7 @@ def get_authenticate_header(self, request):
 > 1. **简化和清晰**：假设有多个认证方式，理论上需要发送多个 `WWW-Authenticate` 值。然而，实际上，客户端可能会对多个值感到困惑，不清楚优先采用哪种方式。选择第一个认证类作为主要提示可以简化客户端的处理逻辑。
 > 2. **优先顺序**：认证类在 `authentication_classes` 中的顺序代表了它们的优先级。通常，开发者会将最常用或最优先的认证方式放在列表的前面。
 
-
+<br>
 
 
 
@@ -1169,7 +1173,7 @@ class News(Foo):
 > 2. **促进良好的设计**：这种模式鼓励使用抽象基类（abstract base class, ABC）来定义类的基本功能和接口。这是软件开发中常用的设计模式，有助于减少代码的重复并提高代码的可维护性。
 > 3. **提高代码的安全性**：如果子类没有实现必要的方法而试图使用它，Python 会抛出错误。这有助于在开发过程中早期发现问题，避免在生产环境中因为接口实现不完整而导致的错误。
 
-
+<br><br>
 
 ## 1.5 案例-用户登录和认证
 
@@ -1360,7 +1364,7 @@ class NoAuthentication(BaseAuthentication):
 
 
 
-
+<br><br>
 
 
 
@@ -1387,7 +1391,7 @@ class NoAuthentication(BaseAuthentication):
 
 
 
-
+<br>
 
 ### 1.6.2 快速使用
 
@@ -1421,7 +1425,7 @@ class MyPermission(BasePermission):
       ]
   ```
 
-  
+  <br>
 
 
 
@@ -1435,5 +1439,16 @@ class MyPermission(BasePermission):
 
 <br>
 
-测试
+在权限类中添加类变量message = {}，即可自定义权限认证的错误信息
 
+`message = {"status":False,"msg":"无权访问"}`
+
+对于多个权限类而言，依次进行权限判断，如果有一个不返回True（默认），则不会执行视图类中的函数（如get函数、post函数）
+
+<br>
+
+
+
+
+
+### 1.6.4 权限源码流程
