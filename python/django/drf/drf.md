@@ -1,5 +1,7 @@
 # 0.前置基础
 
+## 0.1 HTTP介绍
+
 <span style="font-size: 24px;">**HTTP相关知识**</span>
 
 > HTTP（HyperText Transfer Protocol）是用于从Web服务器传输超文本到本地浏览器的传输协议。它是互联网数据交换的基础，并支持Web的交互式和无缝访问。HTTP协议定义了客户端（用户的浏览器或应用）如何与服务器进行通信的规则。
@@ -134,6 +136,22 @@
 >    - 包含实际返回给客户端的HTML内容。
 >
 > 这个例子展示了一个完整的HTTP请求和响应的过程，希望这有助于你更好地理解HTTP通信的基本结构和工作方式。
+
+<br>
+
+## 0.2 django缓存
+
+> django的缓存系统是什么？
+>
+> 为什么需要缓存系统？
+>
+> 通常怎么实现？
+>
+> 缓存里面存储什么？
+>
+> redis有什么关系？
+
+
 
 <br><br>
 
@@ -1433,7 +1451,7 @@ class MyPermission(BasePermission):
 
 ### 1.6.3 权限错误信息和多个权限类
 
-{"detail": "You do not have permission to perform this action."}，是默认的错误信息。
+`{"detail": "You do not have permission to perform this action."}`，是默认的错误信息。
 
 本节学习如何自定义权限错误信息。
 
@@ -1558,6 +1576,7 @@ class APIView(View):
     def get_permissions(self):
         return [permission() for permission in self.permission_classes] 
    
+	#抛出的异常被dispatch的try捕获
     def permission_denied(self, request, message=None, code=None):
         if request.authenticators and not request.successful_authenticator:
             raise exceptions.NotAuthenticated()
@@ -1570,3 +1589,415 @@ class OrderView(APIView):
     def get(self, request):
         return Response({"status":True,"data":[11,22,33,44]})
 ```
+
+
+
+
+
+应用场景：经理角色、当前订单时他手下创建
+
+默认权限组件：必须满足所有条件
+
+
+
+<br>
+
+### 1.6.5 权限组件的扩展
+
+功能整改：满足任意条件（就是改且变成或 A || B ||  C）
+
+修改代码：check_permission (默认是循环所有权限组件)
+
+```python
+def check_permissions(self, request):
+    no_permission_objects = []
+    for permission in self.get_permissions():
+        # 如果存在任意：权限满足条件，则直接return
+        if permission.has_permission(request, self):
+           return
+    	else:
+            no_permission_objects.append(permission)
+   	self.permission_denied(
+                    request,
+                    message=getattr(no_permission_objects[0], 'message', None),
+                    code=getattr(permission, 'code', None)
+                )
+
+```
+
+推荐将其写到自己的视图类中，因为视图类继承了APIView，重写check_permissions方法，可以针对不同的视图类进行权限校验逻辑。
+
+如果想在多个视图类中批量使用这种权限校验逻辑，可以仿写类似bootstrap的方式，在一个新py文件中写一个继承APIView的工具类，而在想要使用这种逻辑的视图类，直接继承这个工具类，而不继承APIView
+
+```python
+from rest_framework.views import APIView
+
+
+class NbApiView(APIView):
+    def check_permissions(self, request):
+        no_permission_objects = []
+        for permission in self.get_permissions():
+            # 如果存在任意：权限满足条件，则直接return
+            if permission.has_permission(request, self):
+                return
+            else:
+                no_permission_objects.append(permission)
+
+        self.permission_denied(
+            request,
+            message=getattr(no_permission_objects[0], 'message', None),
+            code=getattr(permission, 'code', None)
+        )
+        
+        
+ from ext.view import NbApiView
+
+class OrderView(NbApiView):
+    permission_classes = [MyPermission1,MyPermission2,MyPermission3]
+    def get(self, request):
+        return Response({"status":True,"data":[11,22,33,44]})       
+```
+
+
+
+<br>
+
+
+
+### 1.6.6 案例：权限处理
+
+1.定义模型类
+
+```python
+class UserInfo(models.Model):
+    #用户表
+    role     = models.IntegerField(verbose_name="角色",choices=((1,"总监"),(1,"经理"),(3,"员工")),default=3)
+    username = models.CharField(verbose_name="用户名",max_length=32)
+    password = models.CharField(verbose_name="密码",max_length=64)
+    #临时方式，jwt
+    token = models.CharField(verbose_name="TOKEN",max_length=64,null=True,blank=True)
+```
+
+2.设置权限组件
+
+```python
+from rest_framework.permissions import BasePermission
+
+class UserPermission(BasePermission):
+    message = {"status":False,"msg":"无权访问1"}
+    def has_permission(self, request, view):
+        print(request.user)
+        if request.user.role == 3:
+            return True
+        return False
+
+class ManagerPermission(BasePermission):
+    message = {"status":False,"msg":"无权访问2"}
+    def has_permission(self, request, view):
+        if request.user.role == 2:
+            return True
+        return False
+
+
+class BossPermission(BasePermission):
+    message = {"status":False,"msg":"无权访问3"}
+    def has_permission(self, request, view):
+        if request.user.role == 1:
+            return True
+        return False
+```
+
+3.重写check_permission方法
+
+```python
+from rest_framework.views import APIView
+
+
+class NbApiView(APIView):
+    def check_permissions(self, request):
+        no_permission_objects = []
+        for permission in self.get_permissions():
+            # 如果存在任意：权限满足条件，则直接return
+            if permission.has_permission(request, self):
+                return
+            else:
+                no_permission_objects.append(permission)
+
+        self.permission_denied(
+            request,
+            message=getattr(no_permission_objects[0], 'message', None),
+            code=getattr(permission, 'code', None)
+        )
+```
+
+4.视图函数编写
+
+```python
+class UserView(NbApiView):
+    #员工、经理、总监
+    permission_classes = [per.UserPermission,per.ManagerPermission,per.BossPermission]
+    def get(self, request):
+        return Response("UserView")
+
+
+class OrderView(NbApiView):
+    #总监、经理
+    permission_classes = [per.ManagerPermission,per.BossPermission]
+    def get(self, request):
+        return Response({"status":True,"data":[11,22,33,44]})
+
+class AvaterView(NbApiView):
+    #总监、员工
+    permission_classes = [per.BossPermission,per.UserPermission]
+```
+
+5.url路由编写
+
+```python
+path('order/',views.OrderView.as_view()),
+path('user/', views.UserView.as_view()),
+path('avater/', views.AvaterView.as_view()),
+```
+
+经过上述五步处理，可以划分不同用户访问不同页面的不同权限。
+
+<br>
+<br>
+
+问题1：如果开发过程中发现drf的request对象不好用，换成另外一个request对象要如何处理？
+
+回答1：可以自定义dispatch中的initialize_request方法，具体操作是在自己视图类中重写该方法
+
+<br>
+
+问题2：drf的认证、权限组件与django的中间件有什么关系？
+
+回答2：drf的认证、权限组件的执行时间后于中间件处理，前者的执行在中间件process_view执行之后
+
+> 在 Django REST Framework (DRF) 中，认证和权限组件与 Django 的中间件系统虽然都是处理请求的关键部分，但它们在架构和执行流程中的角色和作用不同。了解它们之间的差异有助于更好地设计和理解 Web 应用的安全和访问控制机制。
+>
+> 认证和权限组件
+>
+> **认证** 和 **权限** 组件在 DRF 中是专门用于处理 API 请求安全性的。它们分别负责确认请求者的身份（认证）和确定请求者是否有权执行特定操作或访问特定资源（权限）。
+>
+> 1. **认证组件**：在 DRF 中，认证组件主要通过在视图或视图集中设置 `authentication_classes` 来定义。这些认证类负责解析请求中的信息（如令牌、cookies、HTTP头等）以确定请求者的身份。认证过程通常在视图的初始处理阶段进行，即在视图的具体逻辑执行之前。
+> 2. **权限组件**：权限检查则通过在视图中设置 `permission_classes` 来定义。每当请求达到视图层时，权限组件会根据认证的结果来判断请求者是否有足够的权限执行请求的操作。如果权限检查失败，DRF 会拒绝请求并返回相应的 HTTP 状态码。
+>
+> Django 中间件
+>
+> **中间件** 是 Django 请求/响应处理的一个可插拔系统，可以在请求从 URL 路由到视图之前以及从视图返回响应之后进行处理。中间件对所有请求都起作用，是请求处理流程中的全局处理层。
+>
+> - **作用范围广**：中间件可以影响 Django 应用中的每个请求和响应。常见用途包括请求预处理、安全控制（如跨站请求伪造保护）、用户会话管理、内容渲染处理等。
+> - **处理流程**：在 Django 的请求处理架构中，中间件的执行顺序非常重要，因为中间件可以在请求进入视图之前以及响应返回给客户端之前执行代码。
+>
+> 认证、权限与中间件的关系
+>
+> 虽然认证和权限组件以及中间件都是请求处理的一部分，但它们在请求生命周期中的职责和执行时间点有所不同：
+>
+> - **执行时间**：中间件可以在请求到达任何视图之前执行，而认证和权限检查通常是在请求到达特定视图时才进行的。
+> - **目标和范围**：中间件通常用于处理跨应用的全局任务，如安全性、会话管理等。而认证和权限组件专注于为特定的视图或操作提供安全性和访问控制。
+> - **灵活性和特定性**：DRF 的认证和权限组件提供了针对 REST API 特别定制的安全性功能，允许在视图级别细粒度控制。而中间件则提供了一种影响整个应用请求和响应流程的方式。
+>
+> 总之，认证和权限组件专注于保护特定的视图和操作，确保只有适当授权的用户可以访问和执行操作。而中间件则提供了一个更为广泛的框架，适用于处理请求的前期和后期，影响整个应用的请求和响应。在设计 API 和 Web 应用时，这两者可以互补使用，以增强应用的安全性和效率。
+
+<br>
+
+> 在 Python 中，类方法是一种特殊的方法，它是定义在类内部的，但并不是操作特定实例的属性。类方法绑定到类本身而不是类的实例。这意味着类方法可以在没有创建类的实例的情况下调用，它的第一个参数通常是指向类的引用，习惯上命名为 `cls`。
+>
+> **类方法的定义和用途**
+>
+> 类方法通过在方法定义前使用 `@classmethod` 装饰器来标识。这个装饰器是 Python 的内置装饰器之一，它修改方法的调用方式，使得方法第一个参数是类本身而非类的实例。
+>
+> 类方法用于执行与整个类相关的操作，而不是操作类的某个特定实例的数据。这些操作包括：
+>
+> 1. **工厂方法**：类方法常用作工厂方法。这种方法利用类方法创建类的实例，可能基于不同的输入参数返回不同类的实例。
+> 2. **配置类**：可以用类方法修改或配置整个类的状态或行为，例如修改类属性。
+> 3. **访问类属性**：类方法可以用来访问和修改类级别的属性。
+>
+> **示例代码**
+>
+> 下面是一个包含类方法的简单 Python 类的例子：
+>
+> ```
+> pythonCopy codeclass Person:
+>     species = "Homo sapiens"
+> 
+>     def __init__(self, name, age):
+>         self.name = name
+>         self.age = age
+> 
+>     @classmethod
+>     def get_species(cls):
+>         return cls.species
+> 
+>     @classmethod
+>     def create_toddler(cls, name):
+>         return cls(name, age=2)
+> 
+> # 使用类方法
+> print(Person.get_species())  # 输出: Homo sapiens
+> 
+> # 使用类方法创建实例
+> toddler = Person.create_toddler("John")
+> print(toddler.name, toddler.age)  # 输出: John 2
+> ```
+>
+> 在这个例子中：
+>
+> - `get_species` 是一个类方法，它返回类属性 `species`。注意它是如何使用 `cls` 来访问类属性的。
+> - `create_toddler` 也是一个类方法，用作工厂方法来创建 `Person` 类的实例，它为创建的实例指定了固定的 `age` 值。
+>
+> **类方法 vs 静态方法 vs 实例方法**
+>
+> - **实例方法**：需要一个类的实例作为其第一个参数（习惯上命名为 `self`），并且可以访问和修改对象的状态。
+> - **类方法**：需要类本身作为其第一个参数（习惯上命名为 `cls`），可以访问和修改类的状态。
+> - **静态方法**：不需要类或实例的引用作为参数（使用 `@staticmethod` 装饰器），主要用于命名空间内的函数，它既不需要访问类属性也不需要访问实例属性。
+
+
+
+
+
+<br><br>
+
+
+
+## 1.7 限流
+
+### 1.7.1基本逻辑
+
+开发过程中，某个接口不想让用户访问过于频繁，限流机制。 例如：平台显示1小时发10次、ip限制、验证码、防止爬虫
+
+限制访问频率：
+
+- 已登录用户：用户信息主键、ID、用户名
+- 未登录用户：IP唯一标识符+算法js
+
+如何限制？（假如10分钟三次
+
+“919295”：[16:46,16:45,16:41,16:40]    #标识和访问时间
+
+1. 获取当前时间 16:45
+2. 当前时间-10分钟=计数开始时间 16:35
+3. 删除小于16:35
+4. 计算长度
+   - 超过，错误
+   - 未超，访问
+
+
+
+
+
+
+
+### 1.7.2 快速使用
+
+同样需要创建限流组件，继承限流类（BaseThrottle、SimpleRateThrottle...)
+
+```python
+class BaseThrottle:
+	#核心
+    def allow_request(self, request, view):
+        raise NotImplementedError('.allow_request() must be overridden')
+
+    #获取唯一表示（ip
+    def get_ident(self, request):
+        ...
+
+    def wait(self):
+        return None
+    
+    
+    
+ class SimpleRateThrottle(BaseThrottle):
+    cache = default_cache
+    timer = time.time
+    cache_format = 'throttle_%(scope)s_%(ident)s'
+    scope = None
+    THROTTLE_RATES = api_settings.DEFAULT_THROTTLE_RATES
+
+    def __init__(self):...
+
+    def get_cache_key(self, request, view):
+        raise NotImplementedError('.get_cache_key() must be overridden')
+
+    def get_rate(self):
+        if not getattr(self, 'scope', None):
+            msg = ("You must set either `.scope` or `.rate` for '%s' throttle" %
+                   self.__class__.__name__)
+            raise ImproperlyConfigured(msg)
+
+        try:
+            return self.THROTTLE_RATES[self.scope]
+        except KeyError:
+            msg = "No default throttle rate set for '%s' scope" % self.scope
+            raise ImproperlyConfigured(msg)
+
+    def parse_rate(self, rate):
+        if rate is None:
+            return (None, None)
+        num, period = rate.split('/')
+        num_requests = int(num)
+        duration = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}[period[0]]
+        return (num_requests, duration)
+
+    def allow_request(self, request, view):
+        if self.rate is None:
+            return True
+
+        self.key = self.get_cache_key(request, view)
+        if self.key is None:
+            return True
+
+        self.history = self.cache.get(self.key, [])
+        self.now = self.timer()
+
+        while self.history and self.history[-1] <= self.now - self.duration:
+            self.history.pop()
+        if len(self.history) >= self.num_requests:
+            return self.throttle_failure()
+        return self.throttle_success()
+
+    def throttle_success(self):
+        self.history.insert(0, self.now)
+        self.cache.set(self.key, self.history, self.duration)
+        return True
+
+    def throttle_failure(self):
+        return False
+
+    def wait(self):
+        if self.history:
+            remaining_duration = self.duration - (self.now - self.history[-1])
+        else:
+            remaining_duration = self.duration
+
+        available_requests = self.num_requests - len(self.history) + 1
+        if available_requests <= 0:
+            return None
+
+        return remaining_duration / float(available_requests)
+    
+    
+ 
+class MyThrottle(SimpleRateThrottle):
+    scope = "xxx"
+    def get_cache_key(self, request, view):
+        if request.user:
+            ident = request.user.pk         #用户ID
+        else:
+            ident = self.get_ident(request) #获取请求用户IP(去reqeuest中找请求头
+			#cache_format = 'throttle_%{scope}s_%{ident}s'
+            return self.cache_format %{'scope':self.scope,'ident':ident}
+```
+
+限流组件应用(写在视图类中)
+
+`throttle_classes = [throttle.MyThrottle]`
+
+配置访问频率(写在限流组件中，也可以配置到全局)
+
+` THROTTLE_RATES = {"xxx":"5/m"}`
+
+设置缓存（导入django.core.cache 里面的cache，在限流组件中写）
+
+` cache = default_cache`
