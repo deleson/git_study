@@ -297,9 +297,7 @@
 
 
 
-
-
-<br><br>
+<br><br><br>
 
 # 1.drf初步了解
 
@@ -1964,7 +1962,7 @@ path('avater/', views.AvaterView.as_view()),
 
 
 
-
+<br>
 
 ### 1.7.2 快速使用
 
@@ -2097,7 +2095,7 @@ CACHES = {
 
 6.postman测试login视图
 
-![限流测试](../../../public/md_img/drf/限流测试.PNG)
+![限流测试](../../../public/md_img/drf/限流测试.png)
 
 频率也可以全局配置
 
