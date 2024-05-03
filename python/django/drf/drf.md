@@ -151,7 +151,84 @@
 >
 > redis有什么关系？
 
-
+> ​	1**.缓存系统的基本概念**
+>
+> 缓存（Cache）是一个临时存储区，用来存放经常访问的数据或文件。在 web 开发中，缓存的主要目的是加快数据的访问速度，并减轻主数据库的负载。例如，当用户请求一个网页时，如果这个网页的内容已经缓存在内存中，服务器就可以直接从内存中读取这个网页，而不是每次都从数据库中查询和重新生成，这大大提高了响应速度。
+>
+> 2. 为什么需要缓存系统
+>
+> - **提高响应速度**：从内存中读取数据远比从硬盘或远程数据库读取要快。
+> - **减少数据库的压力**：对于热门数据（如常被访问的页面或常见查询结果），使用缓存可以减少对数据库的直接访问，从而减少数据库操作的压力。
+> - **提高可扩展性**：缓存使得应用能够处理更多的用户请求，这对于用户基数大或访问量高的应用尤为重要。
+>
+> 3. Django 中的缓存实现
+>
+> 在 Django 中，缓存可以通过多种方式实现，具体取决于选择的缓存后端。Django 支持以下几种缓存方式：
+>
+> - **内存缓存**：数据存储在 Django 服务器的内存中。
+> - **文件缓存**：数据存储在文件系统中。
+> - **数据库缓存**：数据存储在数据库表中。
+> - **使用 Memcached 或 Redis**：这是使用外部缓存服务器来存储数据，适用于大型网站或需要共享缓存的场景。
+>
+> **设置缓存**
+>
+> 在 `settings.py` 文件中配置缓存。例如，配置 Redis 作为缓存后端的步骤如下：
+>
+> ```
+> CACHES = {
+>     'default': {
+>         'BACKEND': 'django_redis.cache.RedisCache',
+>         'LOCATION': 'redis://127.0.0.1:6379/1',  # Redis服务器的地址和数据库索引
+>         'OPTIONS': {
+>             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+>             'PASSWORD': 'your_password',  # 如果设置了Redis密码
+>         }
+>     }
+> }
+> ```
+>
+> 这段配置定义了默认的缓存系统，使用了 Redis 作为后端存储。
+>
+> 使用缓存
+>
+> 在 Django 应用中使用缓存通常涉及以下步骤：
+>
+> - 存储数据到缓存
+>
+>   ：
+>
+>   ```
+>   pythonCopy codefrom django.core.cache import cache
+>   cache.set('my_key', 'my_value', timeout=1000)  # 存储键值对到缓存，超时时间1000秒
+>   ```
+>
+> - 从缓存获取数据
+>
+>   ：
+>
+>   ```
+>   python
+>   Copy code
+>   value = cache.get('my_key')  # 从缓存获取键对应的值
+>   ```
+>
+> - 删除缓存中的数据
+>
+>   ：
+>
+>   ```
+>   python
+>   Copy code
+>   cache.delete('my_key')  # 删除缓存中的指定键
+>   ```
+>
+> 4. **Redis 和 Django 缓存**
+>
+> Redis 是一个开源的键值数据库，它支持数据结构如字符串、哈希、列表、集合等。由于其高性能特性（数据存储在内存中），Redis 非常适合作为缓存系统。在 Django 中，Redis 可以用作缓存后端来提高数据处理速度和应用性能。
+>
+> **总结**
+>
+> 理解和实现缓存是提升 Web 应用性能的关键步骤之一。在 Django 中，通过配置缓存系统，你可以显著提高应用的响应速度和效率。选择合适的缓存后端（如 Redis）并合理地使用缓存，可以帮助你的应用更好地扩展并处理更多的用户请求。这不仅改善了用户体验，还有助于降低基础设施成本。
 
 <br><br>
 
@@ -1891,7 +1968,7 @@ path('avater/', views.AvaterView.as_view()),
 
 ### 1.7.2 快速使用
 
-同样需要创建限流组件，继承限流类（BaseThrottle、SimpleRateThrottle...)
+1.同样需要创建限流组件，继承限流类（BaseThrottle、SimpleRateThrottle...)
 
 ```python
 class BaseThrottle:
@@ -1990,14 +2067,440 @@ class MyThrottle(SimpleRateThrottle):
             return self.cache_format %{'scope':self.scope,'ident':ident}
 ```
 
-限流组件应用(写在视图类中)
+2.限流组件应用(写在视图类中)
 
 `throttle_classes = [throttle.MyThrottle]`
 
-配置访问频率(写在限流组件中，也可以配置到全局)
+3.配置访问频率(写在限流组件中，也可以配置到全局)
 
 ` THROTTLE_RATES = {"xxx":"5/m"}`
 
-设置缓存（导入django.core.cache 里面的cache，在限流组件中写）
+4.设置缓存（导入django.core.cache 里面的cache，在限流组件中写）
 
 ` cache = default_cache`
+
+5.设置redis配置（setting中）
+
+```python
+#配置文件中的redis的缓存的配置
+CACHES = {
+    "default":{
+        "BACKEND":"django_redis.cache.RedisCache",
+        "LOCATION":"redis://127.0.0.1:6379",
+        "OPTIONS":{
+            "CLIENT_CLASS":"django_redis.client.DefaultClient",
+            "PASSWORD":""
+        }
+    }
+}
+```
+
+6.postman测试login视图
+
+ ![限流测试](../../../public/md_img/drf/限流测试.PNG)
+
+频率也可以全局配置
+
+```python
+"DEFAYKT_THROTTLE_RATES":{
+    "xxx":"5/m",
+    "x1":"3/m"
+}
+```
+
+ps:为什么使用redis，主要是出于性能等方面的考虑，如果不设置cahce为redis配置，那么默认使用内存
+
+
+
+简化使用流程
+
+- 编写类
+  1. 编写类
+  2. 安装django-redis配置->settings.py
+  3.  安装django-redis
+  4. 启动redis服务
+- 应用类
+  5. 局部应用
+
+
+
+<br>
+
+### 1.7.3 限流源码和具体实现
+
+
+
+> 在 Django REST Framework (DRF) 中，限流（throttling）是一种用于控制客户端对 API 访问速率的机制。这个机制旨在保护 API 免受过度使用或滥用，并且能够确保服务的稳定性和可靠性。下面我将详细介绍 DRF 中限流的执行过程和涉及的代码。
+>
+> **1.限流的配置**
+>
+> 首先，在 DRF 中配置限流器，你需要在 settings.py 文件中定义 `DEFAULT_THROTTLE_CLASSES` 和 `DEFAULT_THROTTLE_RATES`：
+>
+> ```
+> pythonCopy codeREST_FRAMEWORK = {
+>     'DEFAULT_THROTTLE_CLASSES': [
+>         'rest_framework.throttling.AnonRateThrottle',
+>         'rest_framework.throttling.UserRateThrottle'
+>     ],
+>     'DEFAULT_THROTTLE_RATES': {
+>         'anon': '100/day',
+>         'user': '1000/day'
+>     }
+> }
+> ```
+>
+> 这里配置了两种限流器：一种针对匿名用户，一种针对认证用户，并分别设定了每日的请求限额。
+>
+> **2. 限流器类的实现**
+>
+> 限流器通常继承自 `BaseThrottle` 类，并实现以下方法：
+>
+> - `allow_request(self, request, view)`: 决定是否允许当前请求。
+> - `wait(self)`: 如果请求被限流，返回客户端应等待的秒数，直到下一次请求可能被允许。
+>
+> 以下是一个简单的自定义限流器示例：
+>
+> ```
+> pythonCopy codefrom rest_framework.throttling import SimpleRateThrottle
+> 
+> class MyThrottle(SimpleRateThrottle):
+>     scope = 'mythrottle'
+> 
+>     def get_cache_key(self, request, view):
+>         if request.user.is_authenticated:
+>             ident = request.user.pk
+>         else:
+>             ident = self.get_ident(request)
+>         return f"{self.scope}_{ident}"
+> ```
+>
+> 在 settings.py 中配置此限流器的频率：
+>
+> ```
+> pythonCopy codeREST_FRAMEWORK = {
+>     'DEFAULT_THROTTLE_RATES': {
+>         'mythrottle': '10/min'
+>     }
+> }
+> ```
+>
+> **3. 限流的执行流程**
+>
+> 当 API 请求到达 DRF 时，请求会经过以下步骤处理：
+>
+> - **请求分发**: 请求被分发到相应的视图。
+> - **前置检查**: 在视图的 `dispatch` 方法中，调用 `initial()` 方法进行一些前置检查，包括权限检查、认证和限流。
+> - **限流检查**: 在 `initial()` 方法中，会调用 `check_throttles()` 方法，此方法遍历视图指定的所有限流器，调用每个限流器的 `allow_request()` 方法来决定是否允许当前请求。
+>
+> 如果任何限流器的 `allow_request()` 方法返回 `False`，则生成 `429 Too Many Requests` 响应，请求不会进一步处理。如果所有限流器都允许请求，请求才会继续到达视图方法进行处理。
+>
+> **4. 限流数据的存储**
+>
+> DRF 使用 Django 的缓存框架来存储限流数据，通常这些数据是以时间戳或请求计数的形式存储在后端缓存（如 Redis）中。每次请求都会更新这些缓存数据。
+>
+> 在 Django REST Framework (DRF) 中，限流（throttling）是一种用于控制客户端对 API 访问速率的机制。这个机制旨在保护 API 免受过度使用或滥用，并且能够确保服务的稳定性和可靠性。下面我将详细介绍 DRF 中限流的执行过程和涉及的代码。
+>
+> **1. 限流的配置**
+>
+> 首先，在 DRF 中配置限流器，你需要在 settings.py 文件中定义 `DEFAULT_THROTTLE_CLASSES` 和 `DEFAULT_THROTTLE_RATES`：
+>
+> ```
+> pythonCopy codeREST_FRAMEWORK = {
+>     'DEFAULT_THROTTLE_CLASSES': [
+>         'rest_framework.throttling.AnonRateThrottle',
+>         'rest_framework.throttling.UserRateThrottle'
+>     ],
+>     'DEFAULT_THROTTLE_RATES': {
+>         'anon': '100/day',
+>         'user': '1000/day'
+>     }
+> }
+> ```
+>
+> 这里配置了两种限流器：一种针对匿名用户，一种针对认证用户，并分别设定了每日的请求限额。
+>
+> **2. 限流器类的实现**
+>
+> 限流器通常继承自 `BaseThrottle` 类，并实现以下方法：
+>
+> - `allow_request(self, request, view)`: 决定是否允许当前请求。
+> - `wait(self)`: 如果请求被限流，返回客户端应等待的秒数，直到下一次请求可能被允许。
+>
+> 以下是一个简单的自定义限流器示例：
+>
+> ```
+> pythonCopy codefrom rest_framework.throttling import SimpleRateThrottle
+> 
+> class MyThrottle(SimpleRateThrottle):
+>     scope = 'mythrottle'
+> 
+>     def get_cache_key(self, request, view):
+>         if request.user.is_authenticated:
+>             ident = request.user.pk
+>         else:
+>             ident = self.get_ident(request)
+>         return f"{self.scope}_{ident}"
+> ```
+>
+> 在 settings.py 中配置此限流器的频率：
+>
+> ```
+> pythonCopy codeREST_FRAMEWORK = {
+>     'DEFAULT_THROTTLE_RATES': {
+>         'mythrottle': '10/min'
+>     }
+> }
+> ```
+>
+> **3. 限流的执行流程**
+>
+> 当 API 请求到达 DRF 时，请求会经过以下步骤处理：
+>
+> - **请求分发**: 请求被分发到相应的视图。
+> - **前置检查**: 在视图的 `dispatch` 方法中，调用 `initial()` 方法进行一些前置检查，包括权限检查、认证和限流。
+> - **限流检查**: 在 `initial()` 方法中，会调用 `check_throttles()` 方法，此方法遍历视图指定的所有限流器，调用每个限流器的 `allow_request()` 方法来决定是否允许当前请求。
+>
+> 如果任何限流器的 `allow_request()` 方法返回 `False`，则生成 `429 Too Many Requests` 响应，请求不会进一步处理。如果所有限流器都允许请求，请求才会继续到达视图方法进行处理。
+>
+> **4. 限流数据的存储**
+>
+> DRF 使用 Django 的缓存框架来存储限流数据，通常这些数据是以时间戳或请求计数的形式存储在后端缓存（如 Redis）中。每次请求都会更新这些缓存数据。
+>
+> **总结**
+>
+> 限流的执行涉及多个组件和步骤，从设置限流策略、实现限流器，到请求的实际检查和决策处理。通过灵活地配置和实现限流器，可以有效地管理和保护 API 资源。理解这一流程有助于设计更健壮、更可靠的 API 服务。
+>
+> 限流的执行涉及多个组件和步骤，从设置限流策略、实现限流器，到请求的实际检查和决策处理。通过灵活地配置和实现限流器，可以有效地管理和保护 API 资源。理解这一流程有助于设计更健壮、更可靠的 API 服务。
+
+
+
+<br>
+
+![限流源码](../../../public/md_img/drf/限流源码.png)
+
+<br>
+
+1. 对象加载
+
+   获取每个限流类的对象，初始化（读取限制的配置，获取到时间间隔和访问次数）---> num_request,duration
+
+2. allow_request是否限流
+
+```python
+class SimpleRateThrottle(BaseThrottle):
+    cache = default_cache
+    timer = time.time
+    cache_format = 'throttle_%(scope)s_%(ident)s'
+    scope = None
+    #这个是配置文件里面找
+    THROTTLE_RATES = api_settings.DEFAULT_THROTTLE_RATES
+
+
+    def __init__(self):
+        if not getattr(self, 'rate', None):
+            # self.rate = "5/m"
+            self.rate = self.get_rate()
+         #5=5    m=60
+        self.num_requests, self.duration = self.parse_rate(self.rate)
+
+    def get_cache_key(self, request, view):
+        raise NotImplementedError('.get_cache_key() must be overridden')
+
+    def get_rate(self):
+        if not getattr(self, 'scope', None):
+            msg = ("You must set either `.scope` or `.rate` for '%s' throttle" %
+                   self.__class__.__name__)
+            raise ImproperlyConfigured(msg)
+
+        try:
+            # THROTTLE_RATES = {"xxx":"5/m"} --> 5/m
+            return self.THROTTLE_RATES[self.scope]
+        except KeyError:
+            msg = "No default throttle rate set for '%s' scope" % self.scope
+            raise ImproperlyConfigured(msg)
+
+    def parse_rate(self, rate):
+        if rate is None:
+            return (None, None)
+        num, period = rate.split('/')
+        num_requests = int(num)
+        duration = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}[period[0]]
+        return (num_requests, duration)
+
+    def allow_request(self, request, view):
+        if self.rate is None:
+            return True
+		
+        #获取用户的唯一标识，这里是自己定义的继承该类的子类（即限流组件）
+        self.key = self.get_cache_key(request, view)
+        if self.key is None:
+            return True
+
+        #获取历史访问记录[16:45,...]
+        self.history = self.cache.get(self.key, [])
+        #获取当前的时间戳
+        self.now = self.timer()
+		
+        #判断当前是否存在历史并且历史最后一个记录是不是在当前时间-允许的时间范围内
+        while self.history and self.history[-1] <= self.now - self.duration:
+            self.history.pop()
+        #如果历史中的记录大于等于允许访问的次数
+        if len(self.history) >= self.num_requests:
+            return self.throttle_failure()
+        return self.throttle_success()
+
+    def throttle_success(self):
+        self.history.insert(0, self.now)
+        self.cache.set(self.key, self.history, self.duration)
+        return True
+
+    def throttle_failure(self):
+        return False
+
+    def wait(self):
+        if self.history:
+            #还要等待多久
+            remaining_duration = self.duration - (self.now - self.history[-1])
+        else:
+            remaining_duration = self.duration
+
+        available_requests = self.num_requests - len(self.history) + 1
+        if available_requests <= 0:
+            return None
+
+        return remaining_duration / float(available_requests)
+    
+     def throttled(self, request, wait):
+        raise exceptions.Throttled(wait)
+    
+
+
+
+class MyThrottle(SimpleRateThrottle):
+    scope = "xxx"
+    THROTTLE_RATES = {"xxx":"5/m"}
+    cache = default_cache
+    def get_cache_key(self, request, view):
+        print(request.user)
+        if request.user:
+            ident = request.user.pk         #用户ID
+        else:
+            ident = self.get_ident(request) #获取请求用户IP(去reqeuest中找请求头
+        print(ident)
+        return self.cache_format %{'scope':self.scope,'ident':ident}
+
+
+
+Class APIView(View):
+    permission_classes = 全局配置
+    
+    def get_throttles(self):
+        #throttle_classes=[MyThrottle,]
+        return [throttle() for throttle in self.throttle_classes]    
+    
+    def check_throttles(self, request):
+        throttle_durations = []
+        #循环每个对象
+        for throttle in self.get_throttles():
+            #执行父类的allow_request，如果返回True则进行下一个限流类
+            if not throttle.allow_request(request, self):
+                throttle_durations.append(throttle.wait())
+        if throttle_durations:
+            durations = [
+                duration for duration in throttle_durations
+                if duration is not None
+            ]
+			#得到所有限流里面最大的限流时间
+            duration = max(durations, default=None)
+            #下面这个代码是抛出异常
+            self.throttled(request, duration)
+                
+                
+    def initial(self, request, *args, **kwargs):
+        self.perform_authentication(request)
+        self.check_permissions(request)
+        self.check_throttles(request)
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        request = self.initialize_request(request, *args, **kwargs)
+        self.request = request
+        self.headers = self.default_response_headers  # deprecate?
+
+        try:
+            self.initial(request, *args, **kwargs)
+
+            # Get the appropriate handler method
+            if request.method.lower() in self.http_method_names:
+                handler = getattr(self, request.method.lower(),
+                                  self.http_method_not_allowed)
+            else:
+                handler = self.http_method_not_allowed
+
+            response = handler(request, *args, **kwargs)
+
+        except Exception as exc:
+            response = self.handle_exception(exc)
+
+        self.response = self.finalize_response(request, response, *args, **kwargs)
+        return self.response
+    
+    
+```
+
+如果想要定制错误信息可以仿照Throttled类中的内容进行类的重写
+
+```python
+class Throttled(APIException):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    default_detail = _('Request was throttled.')
+    extra_detail_singular = _('Expected available in {wait} second.')
+    extra_detail_plural = _('Expected available in {wait} seconds.')
+    default_code = 'throttled'
+
+    def __init__(self, wait=None, detail=None, code=None):
+        if detail is None:
+            detail = force_str(self.default_detail)
+        if wait is not None:
+            wait = math.ceil(wait)
+            detail = ' '.join((
+                detail,
+                force_str(ngettext(self.extra_detail_singular.format(wait=wait),
+                                   self.extra_detail_plural.format(wait=wait),
+                                   wait))))
+        self.wait = wait
+        super().__init__(detail, code)
+```
+
+
+
+<br>
+
+关于wait方法我有问题？
+
+> ```python
+> def wait(self):
+>     if self.history:
+>         #还要等待多久
+>         remaining_duration = self.duration - (self.now - self.history[-1])
+>     else:
+>         remaining_duration = self.duration
+> 
+>     available_requests = self.num_requests - len(self.history) + 1
+>     if available_requests <= 0:
+>         return None
+> 
+>     return remaining_duration / float(available_requests)
+> ```
+>
+> 这个wait方法有些奇怪？几个问题？
+>
+> 1. if self.history里面的else什么情况下会触发
+> 2. available_requests 这个参数一般情况都是1？小于等于0的情况，我想到的只有固定设置num_requests为负数的时候（怎么回事？
+> 3. 最后返回的为什么要除以float(availabel_requests)，这个值除了小于等于0、等于1，大于1的情况我不理解？
+
+<br>
+
+### 1.7.4 限流案例
+
