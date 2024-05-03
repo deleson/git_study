@@ -2276,7 +2276,7 @@ ps:为什么使用redis，主要是出于性能等方面的考虑，如果不设
 
 <br>
 
-![限流源码](../../../public/md_img/drf/限流源码.png)
+![认证源码](../../../public/md_img/drf/认证源码.png)
 
 <br>
 
