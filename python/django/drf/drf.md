@@ -2500,4 +2500,29 @@ class Throttled(APIException):
 
 ### 1.7.4 限流案例
 
-pass 
+- 无登录，限流1分钟10次
+- 已登录，限流1分钟5次
+
+步骤如下：
+
+1. 设置两个限流类组件
+2. 在相应的视图进行应用
+
+
+
+```python
+class IPThrottle(SimpleRateThrottle):
+    scope = "ip"
+    cache = default_cache
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request) #获取请求用户IP(去reqeuest中找请求头
+        return self.cache_format %{'scope':self.scope,'ident':ident}
+
+
+class UserThrottle(SimpleRateThrottle):
+    scope = "user"
+    cache = default_cache
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request) #获取请求用户IP(去reqeuest中找请求头
+        return self.cache_format %{'scope':self.scope,'ident':ident}
+```
