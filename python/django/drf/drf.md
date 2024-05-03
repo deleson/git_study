@@ -2097,7 +2097,7 @@ CACHES = {
 
 6.postman测试login视图
 
-![限流源码](../../../public/md_img/drf/限流源码.png)
+![限流测试](../../../public/md_img/drf/限流测试.png)
 
 频率也可以全局配置
 
