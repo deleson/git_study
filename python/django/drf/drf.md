@@ -232,6 +232,20 @@
 
 <br><br>
 
+## 0.3 JSON格式
+
+
+
+
+
+<br><br>
+
+## 0.4 django的多app
+
+<br><br>
+
+
+
 
 
 本笔记是基于b站视频所作
@@ -607,9 +621,15 @@ TEMPLATES = [
 ```python
 #drf配置
 REST_FRAMEWORK = {
-    "UNAUTHENTICATED_USER":lambda:"xxx"
+    "UNAUTHENTICATED_USER":lambda:"xxx" //None也可以
 }
 ```
+
+> 为什么要添加"UNAUTHENTICATED_USER":None, ?
+>
+> 提示错误是INSTALLED_APPS中没有'django.contrib.contenttypes'，这是因为drf里面内部在页面展示的时候，需要用到用户信息（匿名用户），默认情况下调用Request类中的方法_not_authenticated，里面会判断是否配置了UNAUTHENTICATED_USER，而在这个过程中会调用app组件
+
+
 
 <br>
 
@@ -678,7 +698,6 @@ drf的request是在django上的基础上进一层进行包裹的request
 obj = Foo("king",19)
 获取成员的两种方式
 obj.name
-
 v1 = getattr(obj,"name")
 ```
 
@@ -2526,3 +2545,393 @@ class UserThrottle(SimpleRateThrottle):
         ident = self.get_ident(request) #获取请求用户IP(去reqeuest中找请求头
         return self.cache_format %{'scope':self.scope,'ident':ident}
 ```
+
+<br>
+
+以下为两个扩展任务
+
+问题：限流自定义错误提示？
+
+回答：只要在视图类中重写throttled方法，此方法中raise类似于原本exceptions.Throttled的方法即可定制自定义错误提示
+
+<br>
+
+问题：getattr、getattribute、继承知识点总结？
+
+回答：
+
+- `getattr` 是一个内置函数，用于动态访问对象的属性，提供了一个机制来处理属性不存在的情况。
+- `__getattr__` 是一个特殊方法，定义了在尝试访问对象中不存在的属性时的行为。
+- `__getattribute__` 是一个特殊方法，用于拦截对象的所有属性访问尝试，无论属性是否存在。
+
+​		因此，可以通过__ getattr __方法来构造本类与父类的调用关系，即访问成员在子类中不存在时候，通过getattr魔法方法调用父类getattribute魔法方法中。
+
+
+
+<br>
+
+问题：request封装+认证+权限+限流过程？
+
+回答：
+
+
+
+
+
+
+
+# 2.drf中篇
+
+本章节内容：
+
+1. **版本：**在请求中携带版本号，便于后续API的更新迭代
+2. **解析器：**读取不同格式诗句进行解析然后赋值给request.data等对象中
+3. **序列化器**：将ORM获取的数据库QuerySet或数据对象序列化成JSON格式 + 请求数据格式校验（最重要的）
+4. **分页**：对ORM中获取的数据进行分页处理，分批返回用户
+5. **视图：**drf中提供了APIView+其他视图类让我们来继承
+
+
+
+<br>
+
+## 2.1版本
+
+
+
+### 2.1.1 基于Get参数
+
+基本使用如下：
+
+```python
+#视图类中新建
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.versioning import QueryParameterVersioning
+
+class HomeView(APIView):
+    #配置文件VERSION_PARAN(默认url参数为version）
+    #request.version获取get参数
+    versioning_class = QueryParameterVersioning
+    def get(self,request):
+        print(request.version)
+        return Response("...")
+```
+
+```python
+#setting中配置
+"VERSION_PARAM":"xxx",
+```
+
+<br>
+
+反向生成URL
+
+```python
+class BaseVersioning:
+    default_version = api_settings.DEFAULT_VERSION
+    allowed_versions = api_settings.ALLOWED_VERSIONS
+    version_param = api_settings.VERSION_PARAM
+
+    def determine_version(self, request, *args, **kwargs):
+        msg = '{cls}.determine_version() must be implemented.'
+        raise NotImplementedError(msg.format(
+            cls=self.__class__.__name__
+        ))
+
+    def reverse(self, viewname, args=None, kwargs=None, request=None, format=None, **extra):
+        return _reverse(viewname, args, kwargs, request, format, **extra)
+
+    def is_allowed_version(self, version):
+        if not self.allowed_versions:
+            return True
+        return ((version is not None and version == self.default_version) or
+                (version in self.allowed_versions))
+
+
+
+class QueryParameterVersioning(BaseVersioning):
+    """
+    GET /something/?version=0.1 HTTP/1.1
+    Host: example.com
+    Accept: application/json
+    """
+    invalid_version_message = _('Invalid version in query parameter.')
+
+    def determine_version(self, request, *args, **kwargs):
+        version = request.query_params.get(self.version_param, self.default_version)
+        if not self.is_allowed_version(version):
+            raise exceptions.NotFound(self.invalid_version_message)
+        return version
+
+    def reverse(self, viewname, args=None, kwargs=None, request=None, format=None, **extra):
+        url = super().reverse(
+            viewname, args, kwargs, request, format, **extra
+        )
+        if request.version is not None:
+            return replace_query_param(url, self.version_param, request.version)
+        return url
+
+
+
+
+class APIView(View):
+    versioning_class = api_settings.DEFAULT_VERSIONING_CLASS	#父类
+    def initial(self, request, *args, **kwargs):
+        # Determine the API version, if versioning is in use.
+        version, scheme = self.determine_version(request, *args, **kwargs)
+        request.version, request.versioning_scheme = version, scheme
+
+        # Ensure that the incoming request is permitted
+        self.perform_authentication(request)
+        self.check_permissions(request)
+        self.check_throttles(request)
+        
+    def determine_version(self, request, *args, **kwargs):
+        if self.versioning_class is None:
+            return (None, None)
+        scheme = self.versioning_class()
+        #版本、版本类的对象
+        return (scheme.determine_version(request, *args, **kwargs), scheme)
+    
+    
+    
+        
+class HomeView(APIView):
+    #配置文件VERSION_PARAN(默认url参数为version）
+    #request.version获取get参数
+    versioning_class = QueryParameterVersioning
+    def get(self,request):
+        print(request.version)
+        print(request.version_scheme)
+        return Response("...")
+
+```
+
+对于django而言，本身也有reverse方法来实现反向生成URL。
+
+而对于drf而言，采用QueryParameterVersioning类的方法来进行反向生成URL，可以在django的生成基础下加上版本。
+
+
+
+> **什么是反向生成 URL**
+>
+> 在 Django 中，反向生成 URL 指的是通过视图名称或 URL 名称以及可选的参数，生成完整的 URL 路径。它与直接在模板或代码中硬编码 URL 相对。这种方式允许 URL 结构更改时只需更新 URL 模式而不必更改模板或视图代码。
+>
+> 举例
+>
+> 1. **URL 模式**
+>
+>    ```
+>    pythonCopy code# urls.py
+>    from django.urls import path
+>    from . import views
+>    
+>    urlpatterns = [
+>        path('article/<int:article_id>/', views.article_detail, name='article_detail'),
+>    ]
+>    ```
+>
+> 2. **反向生成** 在视图或模板中，可以通过 `reverse()` 函数或者 `url` 模板标签来进行反向生成：
+>
+>    ```
+>    pythonCopy code# 使用 reverse() 在视图中反向生成
+>    from django.urls import reverse
+>    url = reverse('article_detail', args=[42])  # '/article/42/'
+>    ```
+>
+>    ```
+>    htmlCopy code<!-- 使用模板标签 url 在模板中反向生成 -->
+>    <a href="{% url 'article_detail' article_id=42 %}">查看文章</a>
+>    ```
+>
+> 为什么要使用反向生成 URL
+>
+> 1. **避免硬编码 URL** 使用反向生成可以减少硬编码 URL，提高代码可维护性。
+> 2. **确保 URL 一致性** URL 模式更新后，不需要更改模板或视图代码，因为它们依赖于 URL 名称。
+> 3. **简化代码管理** 开发人员可以通过统一的 URL 名称管理各个视图对应的 URL，提高开发效率。
+>
+> Django REST Framework (DRF) 中的反向生成 URL
+>
+> 在 DRF 中，反向生成 URL 与标准 Django 中类似，但使用的是 `rest_framework.reverse.reverse()` 函数。它主要用于生成 REST API 视图的 URL。
+>
+> 举例
+>
+> 1. **URL 模式**
+>
+>    ```
+>    pythonCopy code# urls.py
+>    from django.urls import path
+>    from rest_framework.routers import DefaultRouter
+>    from . import views
+>    
+>    router = DefaultRouter()
+>    router.register(r'articles', views.ArticleViewSet, basename='article')
+>    
+>    urlpatterns = [
+>        path('', include(router.urls)),
+>    ]
+>    ```
+>
+> 2. **反向生成** 在视图或序列化器中，可以使用 `rest_framework.reverse.reverse` 来进行反向生成：
+>
+>    ```
+>    pythonCopy code# 使用 reverse() 在视图中反向生成
+>    from rest_framework.reverse import reverse
+>    
+>    class ArticleSerializer(serializers.ModelSerializer):
+>        url = serializers.SerializerMethodField()
+>    
+>        class Meta:
+>            model = Article
+>            fields = ('id', 'title', 'url')
+>    
+>        def get_url(self, obj):
+>            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
+>    ```
+>
+> DRF 中的反向生成与 Django 的区别
+>
+> 1. **支持 API Request 上下文** 在 DRF 中的 `reverse()` 函数可接受 `request` 参数，这样可以基于当前请求的 `request` 对象生成完整的 URL，包括协议和域名。
+>
+>    ```
+>    pythonCopy code# 完整的 URL 将包括域名和协议
+>    url = reverse('article-detail', args=[42], request=request)
+>    ```
+>
+> 2. **使用 ViewSet 的 URL 名称** DRF 中使用 ViewSet 时，URL 名称会自动生成。例如上面的 `article` ViewSet 会生成 `article-list` 和 `article-detail` 两种 URL 名称。
+>
+> 3. **自定义路由** 使用 `DefaultRouter` 或其他路由器时，可以自定义 URL 的生成规则，并通过反向生成进行引用。
+>
+> 总结
+>
+> 1. **反向生成 URL**
+>    - Django 中使用 `django.urls.reverse` 或模板标签 `{% url %}`。
+>    - DRF 中使用 `rest_framework.reverse.reverse`，并且可以使用 `request` 参数生成完整的 URL。
+> 2. **为什么使用反向生成**
+>    - 避免硬编码 URL。
+>    - 提高代码可维护性和一致性。
+> 3. **DRF 与 Django 反向生成的区别**
+>    - 支持 API Request 上下文。
+>    - 使用 ViewSet 自动生成 URL 名称。
+>    - 路由器自定义路由与 URL 名称。
+
+django和drf反向生成URL使用情况如下：
+
+```python
+class HomeView(APIView):
+    #配置文件VERSION_PARAN(默认url参数为version）
+    #request.version获取get参数
+    versioning_class = QueryParameterVersioning
+    def get(self,request):
+        print(request.version)
+        print(request.versioning_scheme)
+        url = request.versioning_scheme.reverse("hh",request=request)
+        print("drf反向生成URL:",url)
+        # url2= reverse("hh")
+        # print("django反向生成URL:",url2)
+        return Response("...")
+```
+
+<br>
+
+### 2.1.2 基于路由URL
+
+在视图类中写上
+
+versioning_class = URLPathVersioning
+
+这种方法和get方法上写上参数传递类似，但是为了能够接受任意参数中，采用上述的方法更方便。
+
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.versioning import QueryParameterVersioning,URLPathVersioning
+from django.urls import reverse
+
+class HomeView(APIView):
+    #配置文件VERSION_PARAN(默认url参数为version）
+    #request.version获取get参数
+    versioning_class = URLPathVersioning
+    def get(self,request,*args,**kwargs):
+        # print(kwargs)
+        print(request.version)
+        print(request.versioning_scheme)
+        url = request.versioning_scheme.reverse("hh",request=request)
+        print("drf反向生成URL:",url)
+        url2= reverse("hh",kwargs=kwargs)
+        print("django反向生成URL:",url2)
+        return Response("...")
+```
+
+上述代码与基于Get参数的区别在于
+
+| 基于Get                                                      | 基于路由                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 传参通过查询                                                 | 传参通过路由                                                 |
+| get等方法可以不获取                                          | get等方法需要获取动态<>                                      |
+| django的reverse只需传name                                    | django的reverse需要传name和kwargs                            |
+| version = request.query_params.get(self.version_param, self.default_version) | version = kwargs.get(self.version_param, self.default_version) |
+
+
+
+### 2.1.3 基于Accept请求头
+
+在视图类中写上
+
+versioning_class = AcceptHeaderVersioning
+
+使用postman伪造请求，其他的使用与上述的类似
+
+
+
+ps:上述的三种版本的方法可以放到全局（"DEFAULT_VERSIONING_CLASS":"rest_framework.versioning.URLPathVersioning"
+
+<br>
+
+## 2.2 解析器
+
+解析器：解析请求者发送过来的数据（通常JSON)，一般是指对请求体中的数据进行解析
+
+### 2.2.1 解析器基本流程
+
+解析器有许多种（都是一种类）
+
+- Form解析器
+- JSON解析器
+
+请求者：
+
+- GET
+  - http://...
+  - 请求头
+- POST
+  - http//..				（request.query_params
+  - 请求头
+  - 请求体
+
+| 请求头                          | 请求体                 |
+| ------------------------------- | ---------------------- |
+| content-type:"urlencode"        | name=wu&age=19         |
+| content-type:"application/json" | {"name":"wu","age":19} |
+
+基本流程
+
+1. 读取请求头
+2. 根据请求头解析数据
+   1. 根据请求头获取解析器，所有的解析器类都有content-type值，假如获取JSON解析器
+   2. request.data = JSON解析器.parse
+3. request.data
+
+
+
+<br>
+
+
+
+### 2.2.2 解析器常见应用和源码流程
+
+
+
+<br><br>
+
+# 3.案例
