@@ -1353,7 +1353,7 @@ INSTALLED_APPS = [
 
 ## 1.1 drf初步使用
 
-
+对于视图函数
 
 - 基于django实现
 - 基于drf实现
