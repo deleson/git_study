@@ -1544,7 +1544,7 @@ def UserView(View):
 总结上述，APIView功能的添加体现如下：
 
 - def as_view(...)  -> 免除了csrf认证
-- def dispatch()      -> 视图执行钱、反射执行视图、视图后处理
+- def dispatch()      -> 视图执行前、反射执行视图、视图后处理
 
 <br>
 
@@ -1610,7 +1610,7 @@ path('user/<str:dt>/',views.InfoView.as_view()), #drf
 
 ### 1.2.4 纯净项目
 
-app要适当进行删除内容
+直接创建django，会有一些多余的组件不需要使用，因此对app要适当进行删除内容
 
 ```python
 INSTALLED_APPS = [
@@ -1728,6 +1728,8 @@ drf的request是在django上的基础上进一层进行包裹的request
 
 ### 1.3.1 oop
 
+该内容是python的一些语法知识，并非直接的drf内容，但由于drf中涉及这些方法，因此下面开始对涉及内容进行介绍。
+
 1. 类中的getattr方法如何触发？
 
 ```
@@ -1838,7 +1840,7 @@ request.yyy
 
 drf的request封装django的request对象逻辑如上述所示
 
-```
+```shell
 request = HttpRequest()				#django
 req = DrfRequest(request,123)		#drf
 
@@ -1851,8 +1853,6 @@ req._request.paht_into()
 req.method()
 req.paht_into()
 ```
-
-
 
 <br>
 
