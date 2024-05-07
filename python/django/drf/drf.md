@@ -3614,7 +3614,11 @@ class UserThrottle(SimpleRateThrottle):
 
 
 
+<br>
 
+<br>
+
+<br>
 
 # 2.drf中篇
 
@@ -3813,14 +3817,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->    
+>       
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->    
+>       
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->    
+>       
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
@@ -3921,6 +3925,8 @@ versioning_class = AcceptHeaderVersioning
 
 
 ps:上述的三种版本的方法可以放到全局（"DEFAULT_VERSIONING_CLASS":"rest_framework.versioning.URLPathVersioning"
+
+<br>
 
 <br>
 
@@ -4160,6 +4166,8 @@ ps：如果调用两遍，解析器也只会解析一遍
 
 <br>
 
+<br>
+
 ## 2.3 元类
 
 ### 2.3.1 元类概述
@@ -4320,7 +4328,7 @@ print(Foo.dex)
 
 
 
-
+<br>
 
 ### 2.3.2 元类继承
 
@@ -4344,14 +4352,6 @@ class Foo(Base):
 <br>
 
 ### 2.3.3 元类-案例-drf序列化源码
-
-
-
-
-
-<br>
-
-## 2.4 序列化
 
 ```python
 class SerializerMetaclass(type):
@@ -4379,6 +4379,269 @@ class UserSerializer(ModelSerializer):
     v1 = 123
     v2 = 456
     v3 ="哈哈哈"
+```
+
+
+
+<br>
+
+### 2.3.4 元类-扩展
+
+```python
+class MyType(type):
+    def __new__(cls, name, bases,attrs):
+        xx = super().__new__(cls, name, bases,attrs)
+        return xx
+
+    def __call__(cls, *args, **kwargs):
+        obj= cls.__new__(cls,*args,**kwargs)
+        cls.__init__(obj,*args,**kwargs)
+
+
+def Base(object,metaclass = MyType):
+    def __init__(self):
+        print("初始化")
+
+    def __new__(cls,*args,**kwargs):
+        print("实例化类的对象")
+        return object.__new__(cls)
+
+
+obj =Base()
+```
+
+> 在元类的 `__call__` 方法中，`cls` 指向由元类创建的类对象，这是因为元类的 `__call__` 方法控制着实例化的过程。理解这一点需要从 Python 元类的机制以及 `type` 类的行为来进行解释。
+>
+> **元类的 `__call__` 方法**
+>
+> 元类的 `__call__` 方法负责类的实例化过程。默认情况下，它的行为与普通类的实例化行为相似：调用类的 `__new__` 方法创建实例，然后调用实例的 `__init__` 方法进行初始化。
+>
+> 元类的 `__call__` 方法通常遵循以下步骤：
+>
+> 1. 调用类的 `__new__` 方法来创建新实例。
+> 2. 调用实例的 `__init__` 方法来初始化该实例。
+>
+> 因此，元类的 `__call__` 方法控制着类的实例化过程，而 `cls` 在这个方法中指的是由元类创建的类对象。
+>
+> **`type.__call__` 的默认行为**
+>
+> 元类 `type` 的默认行为可以在如下代码中看到：
+>
+> ```
+> pythonCopy codeclass MyType(type):
+>     def __call__(cls, *args, **kwargs):
+>         print(f"MyType.__call__: Instantiating class {cls.__name__}")
+>         instance = super().__call__(*args, **kwargs)  # 默认行为
+>         return instance
+> 
+> class Base(metaclass=MyType):
+>     def __init__(self):
+>         print("Base.__init__: 初始化")
+> 
+>     def __new__(cls, *args, **kwargs):
+>         print(f"Base.__new__: 实例化类的对象, cls={cls}")
+>         return super().__new__(cls)
+> 
+> # 实例化 Base 类
+> obj = Base()
+> ```
+>
+> **输出：**
+>
+> ```
+> kotlinCopy codeMyType.__call__: Instantiating class Base
+> Base.__new__: 实例化类的对象, cls=<class '__main__.Base'>
+> Base.__init__: 初始化
+> ```
+>
+> - 在 `MyType.__call__` 中，`cls` 是 `Base` 类对象，而不是元类本身 `MyType`。
+>
+> **为什么元类 `__call__` 方法中的 `cls` 指向类对象？**
+>
+> 1. **元类的 `__call__` 控制类的实例化：**
+>    - 类的实例化过程由元类的 `__call__` 方法控制。
+>    - 元类 `__call__` 的第一个参数 `cls` 指向被实例化的类，而不是元类本身。
+> 2. **元类 `type` 的默认 `__call__` 行为：**
+>    - `type.__call__` 方法调用类的 `__new__` 方法创建实例，然后调用 `__init__` 方法初始化实例。
+>    - 自定义元类继承自 `type`，因此自定义元类的 `__call__` 也会遵循这一流程。
+> 3. **与 `self` 的相似之处：**
+>    - 在实例方法中，`self` 是实例的引用。
+>    - 在元类方法中，`cls` 是类的引用。
+>    - 元类方法中的 `cls` 指向由该元类创建的类对象，而不是元类自身。
+>
+> **实例化流程的详细解释**
+>
+> 自定义元类的 `__call__` 方法控制了类的实例化流程。以下是一个完整的示例来说明这个流程：
+>
+> ```
+> pythonCopy codeclass MyType(type):
+>     def __new__(cls, name, bases, attrs):
+>         print(f"MyType.__new__: Creating class {name}")
+>         return super().__new__(cls, name, bases, attrs)
+> 
+>     def __call__(cls, *args, **kwargs):
+>         print(f"MyType.__call__: Instantiating class {cls.__name__}")
+>         obj = cls.__new__(cls, *args, **kwargs)  # 调用 Base.__new__
+>         cls.__init__(obj, *args, **kwargs)  # 调用 Base.__init__
+>         return obj
+> 
+> class Base(metaclass=MyType):
+>     def __init__(self, value):
+>         print(f"Base.__init__: 初始化, value={value}")
+>         self.value = value
+> 
+>     def __new__(cls, *args, **kwargs):
+>         print(f"Base.__new__: 实例化类的对象, cls={cls}")
+>         return super().__new__(cls)
+> 
+> # 实例化 Base 类
+> obj = Base(42)
+> ```
+>
+> **输出：**
+>
+> ```
+> kotlinCopy codeMyType.__new__: Creating class Base
+> MyType.__call__: Instantiating class Base
+> Base.__new__: 实例化类的对象, cls=<class '__main__.Base'>
+> Base.__init__: 初始化, value=42
+> ```
+>
+> **总结**
+>
+> 1. **`cls` 在元类的 `__call__` 方法中：** 指向由元类创建的类对象。
+> 2. **元类的 `__call__` 方法：** 控制类的实例化过程。
+> 3. **元类与类的关系：**
+>    - 元类决定类的创建方式。
+>    - 类的实例化过程由元类的 `__call__` 方法控制。
+> 4. **与继承的关系：**
+>    - 元类与类之间不是简单的继承关系，而是元类控制类的行为，类似于类控制实例的行为
+
+<br>
+<br>
+
+## 2.4 序列化器
+
+
+
+
+
+### 2.4.1 初步使用
+
+```python
+class Depart(models.Model):
+    title = models.CharField(verbose_name="部门",max_length=32)
+    order = models.IntegerField(verbose_name="顺序")
+    count = models.IntegerField(verbose_name="人数")
+
+
+
+class DepartSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class DepartView(APIView):
+    def get(self,request,*args,**kwargs):
+        #1.取数据库中获取数据
+        depart_object = models.Depart.objects.all().first()
+
+        #2.转换成JSON格式
+        ser = DepartSerializer(instance=depart_object)
+        print(ser.data)
+
+        #3.返回给用户
+        return Response(ser.data)
+```
+
+上述代码是对于Depart对象进行序列化，如果没有first，则获取的是QuerySet对象
+
+序列化也支持QuerySet对象
+
+```python
+class DepartView(APIView):
+    def get(self,request,*args,**kwargs):
+        #1.取数据库中获取数据
+        depart_object = models.Depart.objects.all()
+
+        #2.转换成JSON格式
+        ser = DepartSerializer(instance=depart_object,many=True)
+        print(ser.data)
+
+        #3.返回给用户
+        return Response(ser.data)
+```
+
+区别在于DepartSerializer(... , many = True)
+
+<br>
+
+
+
+
+
+### 2.4.2 序列化-ModelSerializer
+
+类似于ModelForm的使用
+
+```python
+class DepartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Depart
+        fields = "__all__"
+```
+
+```python
+class Depart(models.Model):
+    title = models.CharField(verbose_name="部门",max_length=32)
+    order = models.IntegerField(verbose_name="顺序")
+    count = models.IntegerField(verbose_name="人数")
+
+
+class UserInfo(models.Model):
+    name = models.CharField(verbose_name="姓名",max_length=32)
+    age  = models.IntegerField(verbose_name="年龄")
+
+    gender = models.SmallIntegerField(verbose_name="性别",choices=((1,"男"),(2,"女")))
+    depart = models.ForeignKey(verbose_name="部门",to="Depart",on_delete=models.CASCADE)
+    ctime  = models.DateTimeField(verbose_name="时间",auto_now_add=True)
+```
+
+```python
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserInfo
+        fields = "__all__"
+
+class UserView(APIView):
+    def get(self,request,*args,**kwargs):
+        models.UserInfo.objects.all().update(ctime=datetime.datetime.now())
+        #1获取数据
+        queryset = models.UserInfo.objects.all()
+        #2.序列化
+        ser = UserSerializer(instance=queryset,many=True)
+        #3.返回
+        context = {"status":True,"data":ser.data}
+        return Response(context)
+```
+
+上述代码的使用，在序列化输出的时候，给出的gender和depart只是数字而不是对应的文本。
+
+在传统django中，需要使用下面方法来访问文本
+
+- UserInfo_instance.get_gender_display
+- Userinfo_instance.depart.xx
+
+如果相关返回展示关联的文本，需要采用字段的自定制
+
+```python
+class UserSerializer(serializers.ModelSerializer):
+    gender_text = serializers.CharField(source="get_gender_display")
+    depart_text = serializers.CharField(source="depart.title")
+    ctime = serializers.DateTimeField(format="%Y-%m-%d")
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","gender","gender_text","depart_text","ctiem"]
 ```
 
 

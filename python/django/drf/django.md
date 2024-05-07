@@ -312,6 +312,187 @@ def orm(request):
 > - 当你定义一个 `QuerySet`（例如通过 `UserInfo.objects.filter(name="朱弘飞")`），你实际上是在构建一个 SQL 查询，但这个查询在这一刻还没有被执行。`QuerySet` 是懒惰的，它仅在需要评估结果（如迭代、访问元素、调用 `.count()`、`.update()` 等）时才真正执行对应的 SQL 语句。
 > - 特定的操作，如 `.update()` 和 `.delete()`，会立即执行相应的 SQL `UPDATE` 或 `DELETE` 语句来修改数据库中的数据，而不需要将数据加载到 Python 内存中。
 
+
+
+###  7.2  数据库关联
+
+在 Django 中，数据模型的关联关系主要包括以下几种：
+
+1. **一对多关系（Many-to-One）：**
+   - 使用 `ForeignKey` 实现。
+   - 一个对象与多个对象相关，但多个对象只能与一个对象关联。
+2. **多对多关系（Many-to-Many）：**
+   - 使用 `ManyToManyField` 实现。
+   - 一个对象可以与多个对象关联，多个对象也可以与一个对象关联。
+3. **一对一关系（One-to-One）：**
+   - 使用 `OneToOneField` 实现。
+   - 一个对象与另一个对象相互唯一关联。
+
+#### 7.2.1 一对多关系（Many-to-One）
+
+在一对多关系中，一个对象可以与多个对象相关，但多个对象只能与一个对象关联。比如，一个客户可以下多个订单。
+
+**示例：客户和订单**
+
+```
+pythonCopy code# app/models.py
+from django.db import models
+
+class Customer(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Order(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    order_date = models.DateField()
+
+    def __str__(self):
+        return f"Order for {self.customer} on {self.order_date}"
+```
+
+**解释：**
+
+- `customer` 字段是 `ForeignKey`，实现了多对一关系。
+- `on_delete=models.CASCADE` 表示当关联的 `Customer` 被删除时，相关的 `Order` 也将被删除。
+
+**数据操作：**
+
+```
+pythonCopy code# 创建一个客户
+customer = Customer.objects.create(name="John Doe")
+
+# 创建多个订单
+order1 = Order.objects.create(customer=customer, order_date="2024-05-01")
+order2 = Order.objects.create(customer=customer, order_date="2024-05-02")
+
+# 获取客户的所有订单
+orders = Order.objects.filter(customer=customer)
+print([order.order_date for order in orders])  # 输出: ['2024-05-01', '2024-05-02']
+```
+
+#### 7.2.2 多对多关系（Many-to-Many）
+
+在多对多关系中，一个对象可以与多个对象关联，多个对象也可以与一个对象关联。比如，一个学生可以选修多门课程，每门课程也可以有多名学生。
+
+**示例：学生和课程**
+
+```
+pythonCopy code# app/models.py
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Course(models.Model):
+    name = models.CharField(max_length=100)
+    students = models.ManyToManyField(Student, related_name='courses')
+
+    def __str__(self):
+        return self.name
+```
+
+**解释：**
+
+- `students` 字段是 `ManyToManyField`，实现了多对多关系。
+- `related_name` 定义了反向查询的名称，可以通过 `student.courses.all()` 获取学生的所有课程。
+
+**数据操作：**
+
+```
+pythonCopy code# 创建多个学生
+alice = Student.objects.create(name="Alice")
+bob = Student.objects.create(name="Bob")
+
+# 创建一门课程
+course1 = Course.objects.create(name="Math 101")
+
+# 将学生添加到课程
+course1.students.add(alice, bob)
+
+# 获取课程的所有学生
+students = course1.students.all()
+print([student.name for student in students])  # 输出: ['Alice', 'Bob']
+
+# 获取学生的所有课程
+courses = alice.courses.all()
+print([course.name for course in courses])  # 输出: ['Math 101']
+```
+
+#### 7.2.3一对一关系（One-to-One）
+
+在一对一关系中，一个对象与另一个对象相互唯一关联。比如，一个用户可以有一个唯一的用户档案。
+
+**示例：用户和用户档案**
+
+```
+pythonCopy code# app/models.py
+from django.db import models
+
+class User(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    address = models.CharField(max_length=200)
+    phone_number = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"Profile of {self.user}"
+```
+
+**解释：**
+
+- `user` 字段是 `OneToOneField`，实现了一对一关系。
+- `on_delete=models.CASCADE` 表示当关联的 `User` 被删除时，相关的 `UserProfile` 也将被删除。
+
+**数据操作：**
+
+```
+pythonCopy code# 创建一个用户
+user = User.objects.create(name="Jane Doe")
+
+# 创建关联的用户档案
+profile = UserProfile.objects.create(user=user, address="456 Elm Street", phone_number="987-654-3210")
+
+# 获取用户的档案
+print(profile.address)  # 输出: '456 Elm Street'
+print(user.userprofile.phone_number)  # 输出: '987-654-3210'
+```
+
+#### 7.2.4 总结
+
+1. **一对多关系（Many-to-One）：**
+   - 使用 `ForeignKey`。
+   - 适用于如客户与订单、作者与书籍的关系。
+2. **多对多关系（Many-to-Many）：**
+   - 使用 `ManyToManyField`。
+   - 适用于如学生与课程、演员与电影的关系。
+3. **一对一关系（One-to-One）：**
+   - 使用 `OneToOneField`。
+   - 适用于如用户与档案、员工与工位的关系。
+
+#### 7.2.5 其他相关关系
+
+- **自关联：**
+  - 一个模型与自身关联，比如树形结构中的父子节点关系。
+  - 使用 `ForeignKey` 或 `ManyToManyField` 实现。
+- **抽象基类：**
+  - 允许创建一个共享字段和方法的抽象模型类，子类继承它们。
+  - 使用 `abstract = True`。
+- **多表继承：**
+  - 子类继承父类模型的字段并具有自己的独立表。
+  - 使用 `Multi-table inheritance`。
+
+模型之间的关联不仅可以发生在同一个文件或应用中，还可以跨应用关联，这通常称为**跨文件关联**。主要的关联方式仍然是使用 `ForeignKey`、`OneToOneField` 和 `ManyToManyField`。它们与在同一个应用中的关联方式几乎完全相同。
+
 <br><br><br><br><br>
 
 # django项目
