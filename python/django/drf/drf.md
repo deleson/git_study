@@ -234,19 +234,1055 @@
 
 ## 0.3 JSON格式
 
+> JSON 详细介绍
+>
+> JSON（JavaScript Object Notation）是一种轻量级的数据交换格式。它是基于 JavaScript 对象表示法的文本格式，但它与语言无关，可以在不同的编程语言之间交换数据。
+>
+> JSON 格式
+>
+> - **对象（Object）：** 由花括号 `{}` 包围，并由键值对组成。键是字符串，值可以是任何 JSON 数据类型。
+>
+> ```
+> jsonCopy code{
+>     "name": "Alice",
+>     "age": 30,
+>     "is_student": false,
+>     "skills": ["Python", "Machine Learning"],
+>     "address": {
+>         "street": "123 Maple Street",
+>         "city": "Wonderland"
+>     }
+> }
+> ```
+>
+> - **数组（Array）：** 由方括号 `[]` 包围，并由值组成。值可以是任何 JSON 数据类型。
+>
+> ```
+> jsonCopy code[
+>     "Alice",
+>     "Bob",
+>     "Charlie"
+> ]
+> ```
+>
+> - 数据类型：
+>   - 字符串（String）：用双引号 `""` 包围。
+>   - 数字（Number）：整数和浮点数。
+>   - 布尔值（Boolean）：`true` 或 `false`。
+>   - 空值（Null）：`null`。
+>
+> JSON 的优势
+>
+> 1. **轻量级：** 相对于 XML，JSON 的数据结构更简单，数据量更少。
+> 2. **可读性好：** JSON 是纯文本格式，并且结构清晰，容易阅读和理解。
+> 3. **可移植性强：** 不依赖特定编程语言，可以在不同系统和环境之间方便地传输和解析。
+> 4. **支持多语言：** 各种编程语言都有丰富的 JSON 库支持。
+>
+> Python 中的 JSON 使用
+>
+> Python 的 `json` 模块提供了 JSON 序列化和反序列化的功能。
+>
+> ```
+> pythonCopy codeimport json
+> 
+> # 示例字典数据
+> data = {
+>     "name": "Alice",
+>     "age": 30,
+>     "is_student": False,
+>     "skills": ["Python", "Machine Learning"],
+>     "address": {
+>         "street": "123 Maple Street",
+>         "city": "Wonderland"
+>     }
+> }
+> 
+> # 将字典转换为 JSON 字符串
+> json_str = json.dumps(data, indent=4)
+> print("JSON 字符串:\n", json_str)
+> 
+> # 将 JSON 字符串转换回字典
+> data_loaded = json.loads(json_str)
+> print("还原后的字典:\n", data_loaded)
+> 
+> # 将字典保存到文件
+> with open("data.json", "w") as f:
+>     json.dump(data, f, indent=4)
+> 
+> # 从文件加载 JSON 数据
+> with open("data.json", "r") as f:
+>     data_from_file = json.load(f)
+> print("从文件加载的数据:\n", data_from_file)
+> ```
+>
+> **输出：**
+>
+> ```
+> jsonCopy codeJSON 字符串:
+>  {
+>     "name": "Alice",
+>     "age": 30,
+>     "is_student": false,
+>     "skills": [
+>         "Python",
+>         "Machine Learning"
+>     ],
+>     "address": {
+>         "street": "123 Maple Street",
+>         "city": "Wonderland"
+>     }
+> }
+> 还原后的字典:
+>  {'name': 'Alice', 'age': 30, 'is_student': False, 'skills': ['Python', 'Machine Learning'], 'address': {'street': '123 Maple Street', 'city': 'Wonderland'}}
+> 从文件加载的数据:
+>  {'name': 'Alice', 'age': 30, 'is_student': False, 'skills': ['Python', 'Machine Learning'], 'address': {'street': '123 Maple Street', 'city': 'Wonderland'}}
+> ```
+>
+> JSON 与 XML 的区别
+>
+> 1. 数据结构
+>    - JSON：
+>      - 使用键值对表示对象。
+>      - 使用列表表示数组。
+>      - 纯文本数据结构，更容易读取和解析。
+>    - XML：
+>      - 使用嵌套标签表示结构。
+>      - 标签有属性和内容。
+>      - 数据结构复杂。
+>
+> **JSON 格式：**
+>
+> ```
+> jsonCopy code{
+>     "name": "Alice",
+>     "age": 30
+> }
+> ```
+>
+> **XML 格式：**
+>
+> ```
+> xmlCopy code<person>
+>     <name>Alice</name>
+>     <age>30</age>
+> </person>
+> ```
+>
+> 1. **解析难度**
+>    - JSON：
+>      - 更容易解析，轻量级。
+>      - 原生支持 JavaScript。
+>    - XML：
+>      - 解析和构建复杂。
+>      - 更强大的文档描述能力。
+> 2. **数据类型支持**
+>    - JSON：
+>      - 支持常见的基本数据类型：字符串、数字、布尔值、数组、对象和空值。
+>      - 缺乏对二进制数据的直接支持。
+>    - XML：
+>      - 所有内容都是字符串。
+>      - 可以使用 CDATA 来包含二进制数据。
+>      - 支持自定义复杂数据类型和结构。
+> 3. **可扩展性和文档验证**
+>    - JSON：
+>      - 没有标准化的验证机制。
+>      - JSON Schema 是一种非正式的验证方式。
+>    - XML：
+>      - 支持 DTD 和 XML Schema 验证机制。
+>      - 更适合文档交换和描述。
+> 4. **数据传输效率**
+>    - **JSON：** 通常比 XML 更轻量级，占用带宽更少，解析速度更快。
+>    - **XML：** 标签较多且嵌套深时会增加数据量和解析复杂度。
+>
+> Python 中的 XML 使用
+>
+> Python 中处理 XML 可以使用内置的 `xml.etree.ElementTree` 模块。
+>
+> ```
+> pythonCopy codeimport xml.etree.ElementTree as ET
+> 
+> # 示例 XML 数据
+> xml_data = """<?xml version="1.0"?>
+> <data>
+>     <person>
+>         <name>Alice</name>
+>         <age>30</age>
+>         <is_student>false</is_student>
+>         <skills>
+>             <skill>Python</skill>
+>             <skill>Machine Learning</skill>
+>         </skills>
+>         <address>
+>             <street>123 Maple Street</street>
+>             <city>Wonderland</city>
+>         </address>
+>     </person>
+> </data>
+> """
+> 
+> # 解析 XML 数据
+> root = ET.fromstring(xml_data)
+> 
+> # 获取根元素名称
+> print("根元素:", root.tag)
+> 
+> # 遍历每个 person 元素
+> for person in root.findall("person"):
+>     name = person.find("name").text
+>     age = person.find("age").text
+>     is_student = person.find("is_student").text
+>     skills = [skill.text for skill in person.find("skills").findall("skill")]
+>     street = person.find("address/street").text
+>     city = person.find("address/city").text
+> 
+>     print("姓名:", name)
+>     print("年龄:", age)
+>     print("是否为学生:", is_student)
+>     print("技能:", skills)
+>     print("地址:", f"{street}, {city}")
+> ```
+>
+> **输出：**
+>
+> ```
+> makefileCopy code根元素: data
+> 姓名: Alice
+> 年龄: 30
+> 是否为学生: false
+> 技能: ['Python', 'Machine Learning']
+> 地址: 123 Maple Street, Wonderland
+> ```
+>
+> 总结
+>
+> - **JSON 优势：**
+>   - 更简单和轻量级。
+>   - 易于阅读和编写。
+>   - 广泛支持不同的编程语言。
+> - **XML 优势：**
+>   - 更适合结构化文档。
+>   - 支持文档验证。
+>   - 支持自定义复杂数据结构。
+> - **选择：**
+>   - 对于轻量级数据传输，通常选择 JSON。
+>   - 对于需要复杂验证、命名空间、或文档描述的场景，可以选择 XML。
 
+JSON 语法综合介绍
 
+JSON（JavaScript Object Notation）是一种轻量级的数据交换格式，具有简单、可读、易于解析的特点。它主要由对象、数组、键值对和其他数据类型组成。
 
+基本结构
+
+JSON 的基本结构由两个部分组成：
+
+1. **对象（Object）：** 由花括号 `{}` 包围的键值对集合。
+2. **数组（Array）：** 由方括号 `[]` 包围的值集合。
+
+数据类型
+
+1. 对象（Object）：
+   - 花括号 `{}` 包围的键值对集合。
+   - 键是字符串，必须用双引号 `""` 包围。
+   - 值可以是任何 JSON 数据类型。
+
+```
+jsonCopy code{
+    "name": "Alice",
+    "age": 30,
+    "is_student": false,
+    "skills": ["Python", "Machine Learning"],
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland"
+    }
+}
+```
+
+1. 数组（Array）：
+   - 由方括号 `[]` 包围的值集合。
+   - 可以包含任何 JSON 数据类型的值，包括对象、数组等。
+
+```
+jsonCopy code[
+    "Alice",
+    "Bob",
+    "Charlie"
+]
+```
+
+**嵌套数组和对象：**
+
+```
+jsonCopy code{
+    "students": [
+        {
+            "name": "Alice",
+            "age": 30
+        },
+        {
+            "name": "Bob",
+            "age": 25
+        }
+    ]
+}
+```
+
+1. 字符串（String）：
+   - 由双引号 `""` 包围的字符序列。
+   - 支持 Unicode 字符。
+
+```
+jsonCopy code{
+    "message": "Hello, 世界!",
+    "escaped": "She said: \"Hello!\""
+}
+```
+
+1. 数字（Number）：
+   - 整数或浮点数。
+
+```
+jsonCopy code{
+    "integer": 42,
+    "floating": 3.14159
+}
+```
+
+1. 布尔值（Boolean）：
+   - 仅两个值：`true` 和 `false`。
+
+```
+jsonCopy code{
+    "is_active": true,
+    "is_student": false
+}
+```
+
+1. 空值（Null）：
+   - 只有一个值：`null`。
+
+```
+jsonCopy code{
+    "unknown": null
+}
+```
+
+JSON 语法规则
+
+- **键必须是字符串：** 由双引号 `""` 包围。
+- **值可以是：** 对象、数组、字符串、数字、布尔值或空值。
+- **对象中的键值对：** 以逗号 `,` 分隔。
+- **对象的最后一个键值对之后不能有逗号。**
+- **数组中的元素：** 以逗号 `,` 分隔。
+- **数组的最后一个元素之后不能有逗号。**
+
+示例
+
+**正确的 JSON：**
+
+```
+jsonCopy code{
+    "name": "Alice",
+    "age": 30,
+    "skills": ["Python", "Machine Learning"],
+    "is_active": true,
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland"
+    }
+}
+```
+
+**错误的 JSON：**
+
+```
+jsonCopy code{
+    "name": "Alice",  // 单行注释是不允许的
+    "age": 30,
+    "skills": ["Python", "Machine Learning"], // 最后一个键值对之后不能有逗号
+    "is_active": true,
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland",
+    }  // 最后一个键值对之后不能有逗号
+}
+```
+
+JSON 转换与解析
+
+Python 提供了 `json` 模块用于 JSON 数据的转换和解析。
+
+将 Python 对象转换为 JSON 字符串
+
+- 使用 `json.dumps()` 函数。
+
+```
+pythonCopy codeimport json
+
+# 示例 Python 对象
+data = {
+    "name": "Alice",
+    "age": 30,
+    "is_student": False,
+    "skills": ["Python", "Machine Learning"],
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland"
+    }
+}
+
+# 转换为 JSON 字符串
+json_str = json.dumps(data, indent=4)
+print("JSON 字符串:\n", json_str)
+```
+
+**输出：**
+
+```
+jsonCopy codeJSON 字符串:
+ {
+    "name": "Alice",
+    "age": 30,
+    "is_student": false,
+    "skills": [
+        "Python",
+        "Machine Learning"
+    ],
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland"
+    }
+}
+```
+
+将 JSON 字符串转换为 Python 对象
+
+- 使用 `json.loads()` 函数。
+
+```
+pythonCopy codeimport json
+
+# 示例 JSON 字符串
+json_str = '''{
+    "name": "Alice",
+    "age": 30,
+    "is_student": false,
+    "skills": ["Python", "Machine Learning"],
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland"
+    }
+}'''
+
+# 解析 JSON 字符串
+data = json.loads(json_str)
+print("还原后的 Python 对象:\n", data)
+```
+
+**输出：**
+
+```
+jsonCopy code还原后的 Python 对象:
+ {'name': 'Alice', 'age': 30, 'is_student': False, 'skills': ['Python', 'Machine Learning'], 'address': {'street': '123 Maple Street', 'city': 'Wonderland'}}
+```
+
+将 JSON 保存到文件和从文件读取
+
+- **保存到文件：** 使用 `json.dump()` 函数。
+- **从文件读取：** 使用 `json.load()` 函数。
+
+```
+pythonCopy codeimport json
+
+# 示例 Python 对象
+data = {
+    "name": "Alice",
+    "age": 30,
+    "is_student": False,
+    "skills": ["Python", "Machine Learning"],
+    "address": {
+        "street": "123 Maple Street",
+        "city": "Wonderland"
+    }
+}
+
+# 保存到文件
+with open("data.json", "w") as f:
+    json.dump(data, f, indent=4)
+
+# 从文件读取
+with open("data.json", "r") as f:
+    data_from_file = json.load(f)
+print("从文件加载的数据:\n", data_from_file)
+```
+
+**输出：**
+
+```
+jsonCopy code从文件加载的数据:
+ {'name': 'Alice', 'age': 30, 'is_student': False, 'skills': ['Python', 'Machine Learning'], 'address': {'street': '123 Maple Street', 'city': 'Wonderland'}}
+```
+
+总结
+
+1. **JSON 数据结构：**
+   - 对象：键值对的集合，由 `{}` 包围。
+   - 数组：值的集合，由 `[]` 包围。
+2. **JSON 数据类型：**
+   - 字符串、数字、布尔值、空值、对象、数组。
+3. **语法规则：**
+   - 键必须是字符串，双引号包围。
+   - 对象和数组的最后一个键值对或元素后不能有逗号。
+4. **Python 与 JSON 的相互转换：**
+   - 使用 `json.dumps()` 和 `json.loads()` 函数。
+   - 使用 `json.dump()` 和 `json.load()` 进行文件操作。
 
 <br><br>
 
 ## 0.4 django的多app
 
+在 Django 项目中，多个应用（app）之间的关联和相互调用是很常见的需求。Django 提供了各种方式来实现这一目标，包括模型间的外键关系、URL 路由、跨应用视图和模板调用等。
+
+###  0.4.1 关联概念
+
+1. **模型关联（外键关系、OneToOne、ManyToMany）：** 在不同应用的模型之间建立数据库关系。
+2. **URL 路由共享：** 一个应用可以调用另一个应用的 URL。
+3. **视图调用：** 一个应用可以直接调用另一个应用的视图。
+4. **模板调用：** 在模板中引用其他应用的模板。
+5. **跨应用信号：** 使用信号机制实现不同应用之间的通信。
+
+创建示例项目和应用
+
+**1. 创建 Django 项目**
+
+```
+bash
+Copy code
+django-admin startproject myproject
+```
+
+**2. 创建两个应用**
+
+```
+bashCopy codecd myproject
+python manage.py startapp app1
+python manage.py startapp app2
+```
+
+**3. 注册应用**
+
+在 `settings.py` 中添加两个新应用。
+
+```
+pythonCopy code# settings.py
+INSTALLED_APPS = [
+    ...
+    'app1',
+    'app2',
+]
+```
+
+### 0.4.2 模型关联（外键关系、OneToOne、ManyToMany）
+
+假设我们在 `app1` 中有一个 `Author` 模型，在 `app2` 中有一个 `Book` 模型。我们可以通过外键来关联这两个模型。
+
+**app1/models.py**
+
+```
+pythonCopy code# app1/models.py
+from django.db import models
+
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+```
+
+**app2/models.py**
+
+```
+pythonCopy code# app2/models.py
+from django.db import models
+from app1.models import Author
+
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+```
+
+**迁移和创建数据库表：**
+
+```
+bashCopy codepython manage.py makemigrations
+python manage.py migrate
+```
+
+**在管理界面中注册模型：**
+
+**app1/admin.py**
+
+```
+pythonCopy code# app1/admin.py
+from django.contrib import admin
+from .models import Author
+
+admin.site.register(Author)
+```
+
+**app2/admin.py**
+
+```
+pythonCopy code# app2/admin.py
+from django.contrib import admin
+from .models import Book
+
+admin.site.register(Book)
+```
+
+### 0.4.3 URL 路由共享
+
+假设 `app1` 有一个视图 `author_list`，需要在 `app2` 中调用它。
+
+**app1/views.py**
+
+```
+pythonCopy code# app1/views.py
+from django.shortcuts import render
+from .models import Author
+
+def author_list(request):
+    authors = Author.objects.all()
+    return render(request, 'app1/author_list.html', {'authors': authors})
+```
+
+**app1/urls.py**
+
+```
+pythonCopy code# app1/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('authors/', views.author_list, name='author_list'),
+]
+```
+
+**app2/urls.py**
+
+```
+pythonCopy code# app2/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('books/', views.book_list, name='book_list'),
+]
+```
+
+**在主 URL 路由中包含两个应用的路由：**
+
+**myproject/urls.py**
+
+```
+pythonCopy code# myproject/urls.py
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('app1/', include('app1.urls')),
+    path('app2/', include('app2.urls')),
+]
+```
+
+**在 `app2` 的视图中调用 `app1` 的 URL：**
+
+**app2/views.py**
+
+```
+pythonCopy code# app2/views.py
+from django.shortcuts import render
+from .models import Book
+
+def book_list(request):
+    books = Book.objects.all()
+    return render(request, 'app2/book_list.html', {'books': books})
+```
+
+**app2/templates/app2/book_list.html**
+
+```
+htmlCopy code<!DOCTYPE html>
+<html>
+<head>
+    <title>Book List</title>
+</head>
+<body>
+    <h1>Book List</h1>
+    <ul>
+    {% for book in books %}
+        <li>{{ book.title }} by {{ book.author.name }}</li>
+    {% endfor %}
+    </ul>
+
+    <a href="{% url 'author_list' %}">View Authors</a>
+</body>
+</html>
+```
+
+### 0.4.4 视图调用
+
+如果 `app1` 需要在它的视图中调用 `app2` 的视图逻辑，可以直接导入并调用。
+
+**app2/views.py**
+
+```
+pythonCopy code# app2/views.py
+from django.shortcuts import render
+from .models import Book
+
+def book_list(request):
+    books = Book.objects.all()
+    return render(request, 'app2/book_list.html', {'books': books})
+```
+
+**app1/views.py**
+
+```
+pythonCopy code# app1/views.py
+from django.shortcuts import render
+from .models import Author
+from app2.views import book_list  # 引入 app2 的视图
+
+def author_and_book_list(request):
+    authors = Author.objects.all()
+    books_response = book_list(request)  # 调用 app2 的视图
+    books = books_response.context_data['books']
+    return render(request, 'app1/author_and_book_list.html', {'authors': authors, 'books': books})
+```
+
+**app1/urls.py**
+
+```
+pythonCopy code# app1/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('authors_books/', views.author_and_book_list, name='author_and_book_list'),
+]
+```
+
+**app1/templates/app1/author_and_book_list.html**
+
+```
+htmlCopy code<!DOCTYPE html>
+<html>
+<head>
+    <title>Author and Book List</title>
+</head>
+<body>
+    <h1>Author and Book List</h1>
+
+    <h2>Authors</h2>
+    <ul>
+    {% for author in authors %}
+        <li>{{ author.name }}</li>
+    {% endfor %}
+    </ul>
+
+    <h2>Books</h2>
+    <ul>
+    {% for book in books %}
+        <li>{{ book.title }} by {{ book.author.name }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
+```
+
+### 0.4.5 模板调用
+
+可以在一个应用的模板中直接引用另一个应用的模板。
+
+**app1/templates/app1/author_list.html**
+
+```
+htmlCopy code<!DOCTYPE html>
+<html>
+<head>
+    <title>Author List</title>
+</head>
+<body>
+    <h1>Author List</h1>
+    <ul>
+    {% for author in authors %}
+        <li>{{ author.name }}</li>
+    {% endfor %}
+    </ul>
+
+    {% include "app2/book_snippet.html" %}
+</body>
+</html>
+```
+
+**app2/templates/app2/book_snippet.html**
+
+```
+htmlCopy code<h2>Books</h2>
+<ul>
+{% for book in books %}
+    <li>{{ book.title }} by {{ book.author.name }}</li>
+{% endfor %}
+</ul>
+```
+
+**app2/views.py**
+
+```
+pythonCopy code# app2/views.py
+from django.shortcuts import render
+from .models import Book
+
+def book_snippet(request):
+    books = Book.objects.all()
+    return render(request, 'app2/book_snippet.html', {'books': books})
+```
+
+### 0.4.6 跨应用信号
+
+Django 信号可以用于在不同应用间进行通知和通信。
+
+**在 `app1` 中定义信号**
+
+**app1/signals.py**
+
+```
+pythonCopy code# app1/signals.py
+from django.dispatch import Signal
+
+# 定义一个自定义信号
+author_created = Signal(providing_args=["name"])
+```
+
+**在 `app1` 中触发信号**
+
+**app1/models.py**
+
+```
+pythonCopy code# app1/models.py
+from django.db import models
+from .signals import author_created
+
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # 触发信号
+        author_created.send(sender=self.__class__, name=self.name)
+
+    def __str__(self):
+        return self.name
+```
+
+**在 `app2` 中接收信号**
+
+**app2/signals.py**
+
+```
+pythonCopy code# app2/signals.py
+from django.dispatch import receiver
+from app1.signals import author_created
+
+@receiver(author_created)
+def author_created_handler(sender, **kwargs):
+    print(f"New author created: {kwargs['name']}")
+```
+
+**在 `app2` 的 `apps.py` 中连接信号**
+
+**app2/apps.py**
+
+```
+pythonCopy code# app2/apps.py
+from django.apps import AppConfig
+
+class App2Config(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'app2'
+
+    def ready(self):
+        import app2.signals
+```
+
+**在 `settings.py` 中配置 `app2` 应用**
+
+```
+pythonCopy code# settings.py
+INSTALLED_APPS = [
+    ...
+    'app2.apps.App2Config',
+]
+```
+
+### 0.4.7 总结
+
+- **模型关联：** 使用外键、OneToOne、ManyToMany 建立不同应用的模型之间的关系。
+- **URL 路由共享：** 一个应用的视图可以在另一个应用的模板或视图中被调用。
+- **视图调用：** 可以直接在一个应用的视图中调用另一个应用的视图逻辑。
+- **模板调用：** 使用 `include` 标签在模板中引用其他应用的模板片段。
+- **跨应用信号：** 通过信号机制在不同应用之间实现通知和通信。
+
 <br><br>
 
 
 
+## 0.5 __ new __ 方法
 
+> **`__new__` 方法详解**
+>
+> `__new__` 方法是 Python 对象的构造方法。它负责在内存中创建并返回一个新的实例，而 `__init__` 方法在实例创建后初始化该实例。通常，`__new__` 方法在定制类时不常用，但对于不可变类型（如元组、字符串）或定制对象（如元类），它显得非常重要。
+>
+> `__new__` 与 `__init__` 的区别
+>
+> 1. **调用顺序：**
+>    - `__new__` 方法在 `__init__` 方法之前被调用。
+>    - `__new__` 方法创建实例，而 `__init__` 方法初始化实例。
+> 2. **参数：**
+>    - `__new__` 通常接受与 `__init__` 相同的参数，但第一个参数是类本身（`cls`）。
+>    - `__init__` 的第一个参数是实例（`self`）。
+> 3. **返回值：**
+>    - `__new__` 必须返回一个新创建的实例。
+>    - `__init__` 无需返回值（通常返回 `None`）。
+>
+> `__new__` 方法的参数
+>
+> - `cls`：当前类。
+> - `*args`：位置参数，传递给类的构造方法。
+> - `**kwargs`：关键字参数，传递给类的构造方法。
+>
+> `__new__` 的基本示例
+>
+> ```
+> pythonCopy codeclass MyClass:
+>     def __new__(cls, *args, **kwargs):
+>         print(f"Creating instance of {cls}")
+>         instance = super().__new__(cls)
+>         return instance
+> 
+>     def __init__(self, name):
+>         print(f"Initializing instance with name={name}")
+>         self.name = name
+> 
+> # 实例化 MyClass
+> obj = MyClass("John")
+> 
+> # 输出：
+> # Creating instance of <class '__main__.MyClass'>
+> # Initializing instance with name=John
+> ```
+>
+> 使用 `__new__` 自定义不可变类型
+>
+> 不可变类型如字符串、元组和整数，在初始化后无法修改，因此需要在 `__new__` 中完成定制。
+>
+> **例子：**
+>
+> ```
+> pythonCopy codeclass CustomStr(str):
+>     def __new__(cls, value):
+>         # 在这里我们可以修改字符串的值
+>         value = value.upper()
+>         return super().__new__(cls, value)
+> 
+>     def __init__(self, value):
+>         # `__init__` 被调用，但因为 `str` 是不可变类型，所以这里无法修改字符串的值
+>         print(f"CustomStr initialized with value={value}")
+> 
+> custom_string = CustomStr("hello")
+> print(custom_string)  # 输出：HELLO
+> ```
+>
+> **使用 `__new__` 实现单例模式**
+>
+> 通过 `__new__` 方法，可以确保某个类只创建一个实例。
+>
+> ```
+> pythonCopy codeclass Singleton:
+>     _instance = None
+> 
+>     def __new__(cls, *args, **kwargs):
+>         if not cls._instance:
+>             cls._instance = super().__new__(cls, *args, **kwargs)
+>         return cls._instance
+> 
+>     def __init__(self, name):
+>         self.name = name
+> 
+> # 创建 Singleton 实例
+> s1 = Singleton("Instance1")
+> s2 = Singleton("Instance2")
+> 
+> # 判断两个实例是否相同
+> print(s1 is s2)  # 输出：True
+> print(s1.name)  # 输出：Instance2
+> ```
+>
+> 元类中的 `__new__` 方法
+>
+> 元类中的 `__new__` 方法主要用于自定义类的创建过程。
+>
+> ```
+> pythonCopy codeclass MyMeta(type):
+>     def __new__(cls, name, bases, dct):
+>         print(f"Creating class {name} with metaclass {cls}")
+>         dct['new_method'] = lambda self: "New Method"
+>         return super().__new__(cls, name, bases, dct)
+> 
+> class MyClass(metaclass=MyMeta):
+>     def greet(self):
+>         return "Hello!"
+> 
+> instance = MyClass()
+> print(instance.greet())         # 输出：Hello!
+> print(instance.new_method())    # 输出：New Method
+> ```
+>
+> **解释：**
+>
+> - `MyMeta.__new__` 方法：
+>   - 参数 `cls`：表示元类本身。
+>   - 参数 `name`：类的名称。
+>   - 参数 `bases`：类继承的基类。
+>   - 参数 `dct`：类的属性和方法字典。
+>
+> `__new__` 方法的总结
+>
+> - **基本概念：**
+>   - `__new__` 用于创建新实例。
+>   - 对于不可变类型或自定义对象来说非常重要。
+> - **参数解释：**
+>   - `cls`：当前类。
+>   - `*args` 和 `**kwargs`：传递给类构造方法的参数。
+> - **主要功能：**
+>   - 确保创建特定的实例。
+>   - 修改不可变对象的初始化行为。
+>   - 通过元类自定义类的创建过程。
+> - **典型应用：**
+>   - 不可变类型的定制化行为。
+>   - 单例模式。
+>   - 元类的 `__new__` 方法。
+
+
+
+
+
+<br><br>
 
 本笔记是基于b站视频所作
 
@@ -2929,6 +3965,439 @@ ps:上述的三种版本的方法可以放到全局（"DEFAULT_VERSIONING_CLASS"
 
 
 ### 2.2.2 解析器常见应用和源码流程
+
+解析器涉及的两个APIView是
+
+```python
+#所有的解析器
+parser_classes = []
+#根据请求，匹配对应的解析器
+content_negotiation_class = 
+```
+
+源码流程如下：
+
+```python
+class HomeView(APIView):
+    #所有的解析器
+    parser_classes = [JSONParser,FormParser]
+    #根据请求，匹配对应的解析器；寻找渲染器
+    content_negotiation_class = DefaultContentNegotiation
+    def post(self,request,*args,**kwargs):
+        print(request.data,type(request.data))
+        return Response("ok")
+    
+class APIView(View)    
+    def dispatch(self, request, *args, **kwargs):
+       	self.args = args
+        self.kwargs = kwargs
+        request = self.initialize_request(request, *args, **kwargs)
+        self.request = request
+        self.headers = self.default_response_headers  # deprecate?
+
+        try:
+            self.initial(request, *args, **kwargs)
+            #反射执行视图种的get、post方法
+            ...
+			response = handler(request,*args,**kwargs)
+        except Exception as exc:
+            response = self.handle_exception(exc)
+
+        self.response = self.finalize_response(request, response, *args, **kwargs)
+        return self.response
+    
+    
+    
+    def initialize_request(self, request, *args, **kwargs):
+        """
+        Returns the initial request object.
+        """
+        parser_context = self.get_parser_context(request)
+
+        return Request(
+            request,										#Django的request
+            parsers=self.get_parsers(),						#解析器    [解析对象，解析对象]
+            authenticators=self.get_authenticators(),		#认证组件
+            negotiator=self.get_content_negotiator(),		#DefaultContentNegotiation()
+            parser_context=parser_context					#传入{视图对象，URL路由参数}+添加drf的request、encoding
+        )
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Runs anything that needs to occur prior to calling the method handler.
+        """
+        self.format_kwarg = self.get_format_suffix(**kwargs)
+
+        # Perform content negotiation and store the accepted info on the request
+        neg = self.perform_content_negotiation(request)
+        request.accepted_renderer, request.accepted_media_type = neg
+
+        # Determine the API version, if versioning is in use.
+        version, scheme = self.determine_version(request, *args, **kwargs)
+        request.version, request.versioning_scheme = version, scheme
+
+        # Ensure that the incoming request is permitted
+        self.perform_authentication(request)
+        self.check_permissions(request)
+        self.check_throttles(request)        
+        
+        
+	#视图对象和URL路由参数
+    def get_parser_context(self, http_request):
+        """
+        Returns a dict that is passed through to Parser.parse(),
+        as the `parser_context` keyword argument.
+        """
+        # Note: Additionally `request` and `encoding` will also be added
+        #       to the context by the Request object.
+        return {
+            'view': self,
+            'args': getattr(self, 'args', ()),
+            'kwargs': getattr(self, 'kwargs', {})
+        }
+        
+        
+    def perform_content_negotiation(self, request, force=False):
+        """
+        Determine which renderer and media type to use render the response.
+        """
+        renderers = self.get_renderers()
+        conneg = self.get_content_negotiator()
+
+        try:
+            return conneg.select_renderer(request, renderers, self.format_kwarg)
+        except Exception:
+            if force:
+                return (renderers[0], renderers[0].media_type)
+            raise
+
+
+#调用解析器，通过request.data
+
+class Request:
+    def __init__(self, request, parsers=None, authenticators=None,
+                 negotiator=None, parser_context=None):
+        self._request = request
+        self.parsers = parsers or ()
+        self.negotiator = negotiator or self._default_negotiator()
+        self.parser_context = parser_context
+
+        if self.parser_context is None:
+            self.parser_context = {}
+        self.parser_context['request'] = self
+        self.parser_context['encoding'] = request.encoding or settings.DEFAULT_CHARSET
+            
+    @property
+    def data(self):
+        if not _hasattr(self, '_full_data'):
+            self._load_data_and_files()
+        return self._full_data
+
+            
+    def _load_data_and_files(self):
+        """
+        Parses the request content into `self.data`.
+        """
+        if not _hasattr(self, '_data'):
+            self._data, self._files = self._parse()
+            if self._files:
+                self._full_data = self._data.copy()
+                self._full_data.update(self._files)
+            else:
+                self._full_data = self._data
+
+            # if a form media type, copy data & files refs to the underlying
+            # http request so that closable objects are handled appropriately.
+            if is_form_media_type(self.content_type):
+                self._request._post = self.POST
+                self._request._files = self.FILES 
+                
+    def _parse(self):
+        #读取请求者他的Content-Type请求头 
+        media_type = self.content_type
+        
+        #请求发过来的原始数据
+        stream = self.stream
+
+		#获取解析器
+        parser = self.negotiator.select_parser(self, self.parsers)		#request和所有解析器对象 本质上是对比
+        																#Request的content_type和解析器media_type
+
+        if not parser:
+            raise exceptions.UnsupportedMediaType(media_type)
+		
+        #解析
+        #JSONParser - > json.loads 	(json字符串)
+        #			- > json.load  	(文件对象/在本代码中是内存对象)
+        #FormParser - > 解析x=123&age = 11 request.post同款
+        parsed = parser.parse(stream, media_type, self.parser_context)
+
+        # Parser classes may return the raw data, or a
+        # DataAndFiles object.  Unpack the result as required.
+        try:
+            return (parsed.data, parsed.files)
+        except AttributeError:
+            empty_files = MultiValueDict()
+            return (parsed, empty_files)
+
+```
+
+解析器对象会被封装到Request对象中，但是在访问request .data时触发解析动作。
+
+ps：如果调用两遍，解析器也只会解析一遍
+
+
+
+<br>
+
+### 2.2.3 文件解析器和全局配置
+
+文件解析器：FileUploadParser
+
+文件和数据解析器：MultiPartParser
+
+全局解析器配置（APIView中有配置名）：DEFAULT_PARSER_CLASSES
+
+<br>
+
+## 2.3 元类
+
+### 2.3.1 元类概述
+
+> **元类简介**
+>
+> 元类（Metaclass）是用于创建类的类。换句话说，元类定义了如何构建类本身。Python 中的一切都是对象，包括类。因此，类是由元类创建的，而元类本身通常由 `type` 这个元类创建。
+>
+> **关键概念：**
+>
+> 1. **类和实例：**
+>    - 类是创建实例的蓝图或模板。
+>    - 实例是根据类创建的对象。
+>    - 类的行为由它的元类决定。
+> 2. **元类的作用：**
+>    - 元类可以控制类的创建过程。
+>    - 修改类的属性、方法等行为。
+>    - 提供一种实现类级别行为的方法。
+>
+> **元类使用示例**
+>
+> 以下是一个简单的例子，展示了元类的基本概念及其作用：
+>
+> ```
+> pythonCopy code# 一个简单的元类
+> class MyMeta(type):
+>     def __new__(cls, name, bases, dct):
+>         print(f"Creating class {name} with metaclass {cls}")
+>         return super().__new__(cls, name, bases, dct)
+> 
+> # 使用元类
+> class MyClass(metaclass=MyMeta):
+>     def greet(self):
+>         return "Hello!"
+> 
+> # 创建实例
+> instance = MyClass()
+> print(instance.greet())
+> ```
+>
+> **输出：**
+>
+> ```
+> vbnetCopy codeCreating class MyClass with metaclass <class '__main__.MyMeta'>
+> Hello!
+> ```
+>
+> 在上述例子中：
+>
+> - `MyMeta` 是一个元类，它继承自 `type`。
+> - `MyClass` 使用 `MyMeta` 作为元类，因此它的创建过程被 `MyMeta.__new__` 所控制。
+> - `__new__` 方法在类被创建之前执行，可以修改类的行为。
+>
+> **元类的详细用法**
+>
+> **1. `__new__` 方法**
+>
+> - `__new__` 方法在类被创建之前执行。
+> - 接受 4 个参数：元类本身 `cls`、类名 `name`、基类 `bases`、类的属性字典 `dct`。
+>
+> ```
+> pythonCopy codeclass MyMeta(type):
+>     def __new__(cls, name, bases, dct):
+>         dct['extra_method'] = lambda self: "Extra method"
+>         return super().__new__(cls, name, bases, dct)
+> 
+> class MyClass(metaclass=MyMeta):
+>     def greet(self):
+>         return "Hello!"
+> 
+> instance = MyClass()
+> print(instance.greet())          # Output: Hello!
+> print(instance.extra_method())   # Output: Extra method
+> ```
+>
+> **2. `__init__` 方法**
+>
+> - `__init__` 方法在类被创建之后执行。
+> - 可以进一步调整类的属性或行为。
+>
+> ```python
+> pythonCopy codeclass MyMeta(type):
+>     def __new__(cls, name, bases, dct):
+>         return super().__new__(cls, name, bases, dct)
+> 
+>     def __init__(cls, name, bases, dct):
+>         super().__init__(name, bases, dct)
+>         cls.extra_method = lambda self: "Extra method"
+> 
+> class MyClass(metaclass=MyMeta):
+>     def greet(self):
+>         return "Hello!"
+> 
+> instance = MyClass()
+> print(instance.greet())          # Output: Hello!
+> print(instance.extra_method())   # Output: Extra method
+> ```
+>
+> 
+
+
+
+创建类有两种方式：
+
+1. 通过传统方式可以创建类
+2. 通过type也可以创建类
+   - 默认 	type
+   - 自定义 继承type
+
+传统方法的底层本质就是调用type的方法创建，如何修改类采用其他自定义的type来创建
+
+` class Foo(object,metaclass=MyType) #metaclass默认是type`
+
+```python
+#创建类：方式1
+class Foo(object)
+    v1 = 123
+
+    def __init__(self,name):
+        self.name = name
+
+    def func(self):
+        return 999
+
+
+#创建类：方式2
+#类名 = type("类名",(父类,),{成员})
+Foo2 = type("Foo",(object,),{"v1":123,"func":lambda self:9999})
+```
+
+
+
+在type(xxx)中，首先进入__ new __ 方法创建空值（类），然后再执行 __ init __ 方法往空值里面写东西
+
+
+
+注意，在metaclass创建类的时候，类本身还没有实例化，因此可以通过自定义的type类对类的创建前进行操作（例如增删类成员）
+
+```python
+class MyType(type):
+    def __new__(cls, name, bases,attrs):
+        #__ new __ (name,bases,attrs)
+        del attrs['v1']
+        attrs["dex"]="xxs"
+        xx = super().__new__(cls,name,bases,attrs)
+        return xx
+
+
+
+class Foo(object,metaclass=MyType):
+    v1 = 123
+    def func(self):
+        pass
+
+print(Foo.func)
+print(Foo.dex)
+```
+
+
+
+
+
+### 2.3.2 元类继承
+
+```python
+class MyType(type):
+    def __new__(cls, *args, **kwargs):
+        xx = super().__new__(cls,*args,**kwargs)
+        return xx
+
+class Base(object,metaclass=MyType)
+    pass
+
+class Foo(Base):
+    pass 
+```
+
+从上述展示，如果类的父类中指定了metaclass，那么该父类的所有子类都是指定的metaclass创建的
+
+
+
+<br>
+
+### 2.3.3 元类-案例-drf序列化源码
+
+
+
+
+
+<br>
+
+## 2.4 序列化
+
+```python
+class SerializerMetaclass(type):
+    def __new__(cls, name, bases, attrs):
+        data_dict = {}
+        for k,v in list(attrs.items()):
+            if isinstance(v,int):
+                data_dict[k] = attrs.pop(k)
+
+        attrs['_declared_fields'] = data_dict
+        return super().__new__(cls, name, bases, attrs)
+
+class BaseSerializer(object):
+    pass
+
+
+class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
+    pass
+
+
+class ModelSerializer(Serializer):
+    pass
+
+class UserSerializer(ModelSerializer):
+    v1 = 123
+    v2 = 456
+    v3 ="哈哈哈"
+```
+
+
+
+
+
+
+
+
+
+## 2.5 自定义钩子
+
+<br>
+
+
+
+
+
+
 
 
 
