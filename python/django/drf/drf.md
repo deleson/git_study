@@ -1166,6 +1166,13 @@ INSTALLED_APPS = [
 > - `*args`：位置参数，传递给类的构造方法。
 > - `**kwargs`：关键字参数，传递给类的构造方法。
 >
+> 元类 `__new__` 方法的参数包括：
+>
+> 1. **`cls`：** 当前元类本身（类似于普通类方法中的 `self`）。
+> 2. **`name`：** 正在创建的类的名称（字符串）。
+> 3. **`bases`：** 正在创建的类的基类（父类）元组。
+> 4. **`attrs`：** 包含正在创建的类的属性字典，包括所有方法和字段。
+>
 > `__new__` 的基本示例
 >
 > ```
@@ -1266,19 +1273,62 @@ INSTALLED_APPS = [
 > - **基本概念：**
 >   - `__new__` 用于创建新实例。
 >   - 对于不可变类型或自定义对象来说非常重要。
+>   
 > - **参数解释：**
 >   - `cls`：当前类。
 >   - `*args` 和 `**kwargs`：传递给类构造方法的参数。
+>   
 > - **主要功能：**
 >   - 确保创建特定的实例。
 >   - 修改不可变对象的初始化行为。
 >   - 通过元类自定义类的创建过程。
+>   
 > - **典型应用：**
 >   - 不可变类型的定制化行为。
 >   - 单例模式。
 >   - 元类的 `__new__` 方法。
+>   
+>   
 
+## 0.6 @property
 
+`@property`
+
+- **用途**：将一个方法转换为只读属性，使得可以通过点符号（.`属性名`）来访问该属性。
+- **优势**：提供对属性的控制，支持延迟计算、只读属性和数据验证。
+
+```python
+python复制代码class MyClass:
+    def __init__(self, value):
+        self._value = value
+
+    @property
+    def value(self):
+        """通过点符号访问属性时调用的方法"""
+        return self._value
+
+    @value.setter
+    def value(self, new_value):
+        """通过点符号设置属性值时调用的方法"""
+        if new_value < 0:
+            raise ValueError("Value cannot be negative")
+        self._value = new_value
+
+    @value.deleter
+    def value(self):
+        """通过del关键字删除属性时调用的方法"""
+        del self._value
+
+# 使用示例
+obj = MyClass(10)
+print(obj.value)  # 通过点符号访问属性，输出：10
+
+obj.value = 20    # 通过点符号设置属性值
+print(obj.value)  # 输出：20
+
+del obj.value     # 通过del关键字删除属性
+# print(obj.value)  # 试图访问已删除的属性会引发AttributeError
+```
 
 
 
@@ -1915,13 +1965,80 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 >
 > 这个过程展示了DRF如何提供一个强大且灵活的机制来处理API请求，通过封装和扩展Django的`HttpRequest`对象，增加了许多对API开发非常有用的功能。
 
-
+为什么在as_view中返回的是view，而不是view()？前者不是返回函数本身吗？这里不是要返回view函数调用吗？
 
 <br><br>
 
 ## 1.4 drf认证
 
+功能
 
+- **验证用户的身份**，确保请求是来自合法用户。
+
+目的
+
+- 确保应用的安全性，保护数据和服务不被未授权的用户访问。
+
+发展历史
+
+- **早期 Web 开发：** 用户需要输入用户名和密码来访问网站，使用的是简单的表单认证。
+- **传统的身份验证：** 后来引入了 Cookie 和会话机制，通过会话来保持用户的登录状态。
+- **现代 REST API：** 对于 API 接口，传统的 Cookie 机制不适用，因此引入了基于令牌（Token）的身份验证和 OAuth2 等更复杂的机制。
+
+> 使用场景（故事）
+>
+> **故事背景：** 小明刚开始学习编程，他决定建立一个 API 平台供他的小伙伴们共享图片。小明了解到，为了防止外人随便上传或删除图片，他需要验证用户身份。于是他学习了 DRF 的认证机制。
+>
+> 1. **基于会话的认证（SessionAuthentication）：**
+>
+>    - **适用场景：** 用户访问需要保持状态的 Web 应用，比如 Django 自带的管理界面。
+>    - **工作原理：** 用户登录后，会在 Cookie 中保存一个会话 ID。每次请求时，服务器会通过会话 ID 验证用户身份。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.authentication import SessionAuthentication
+>    
+>    class MyAPIView(APIView):
+>        authentication_classes = [SessionAuthentication]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明首先让小伙伴们登录他的图片共享平台，然后通过会话来确保每个用户都能看到自己的图片并上传新图片。
+>
+> 2. **基于令牌的认证（TokenAuthentication）：**
+>
+>    - **适用场景：** 提供给移动应用和外部客户端的 API。
+>    - **工作原理：** 用户在首次登录时，服务器会生成一个令牌（Token）。之后用户在每次请求时提供这个令牌来证明自己的身份。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.authentication import TokenAuthentication
+>    
+>    class MyAPIView(APIView):
+>        authentication_classes = [TokenAuthentication]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明发现他的朋友们希望通过移动应用上传和查看图片，他于是使用 TokenAuthentication 机制分发令牌。大家在手机应用中输入令牌后，就能随时随地访问 API 了。
+>
+> 3. **基于 OAuth2 的认证（OAuth2Authentication）：**
+>
+>    - **适用场景：** 集成第三方服务，比如使用 Google、Facebook 登录。
+>    - **工作原理：** 用户通过第三方服务登录后，获取访问令牌（Access Token），使用该令牌访问 API。
+>
+>    ```
+>    pythonCopy codefrom oauth2_provider.contrib.rest_framework import OAuth2Authentication
+>                   
+>    class MyAPIView(APIView):
+>        authentication_classes = [OAuth2Authentication]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明的小伙伴们抱怨每次登录都要输入用户名和密码，觉得很麻烦。小明于是引入了 OAuth2，通过 Google 或 Facebook 登录，这样大家就可以一键登录并直接访问 API 了
 
 ### 1.4.1 认证使用
 
@@ -2520,6 +2637,78 @@ class NoAuthentication(BaseAuthentication):
 
 ## 1.6 权限
 
+功能
+
+- **控制用户能否访问特定数据和功能**。
+
+目的
+
+- 保护特定数据和功能，只允许授权的用户访问。
+
+发展历史
+
+- **早期的权限控制：** 用户在登录后获得不同级别的权限，使用用户名或角色进行验证。
+- **现代权限控制：** 针对 API 的权限控制更加灵活，可以基于用户、组、角色或自定义规则。
+
+> 使用场景（故事）
+>
+> **故事背景：** 小明的图片共享平台上线后，越来越多的小伙伴开始使用，但有些朋友上传了不合适的内容。于是小明决定给他的朋友们设定不同的权限，确保每个人只能做他们被允许做的事情。
+>
+> 1. **只允许登录用户访问（IsAuthenticated）：**
+>
+>    - **适用场景：** 需要确保 API 只对经过身份验证的用户开放。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.permissions import IsAuthenticated
+>    
+>    class MyPrivateAPIView(APIView):
+>        permission_classes = [IsAuthenticated]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明发现大家都能随意查看图片，于是他用 `IsAuthenticated` 只允许登录的用户访问。
+>
+> 2. **只允许管理员访问（IsAdminUser）：**
+>
+>    - **适用场景：** 确保某些敏感操作只对管理员开放。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.permissions import IsAdminUser
+>    
+>    class AdminAPIView(APIView):
+>        permission_classes = [IsAdminUser]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明发现有的朋友随意删除别人的图片，于是他设置了 `IsAdminUser`，只允许管理员删除图片。
+>
+> 3. **自定义权限：**
+>
+>    - **适用场景：** 需要根据复杂的业务逻辑进行权限判断。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.permissions import BasePermission
+>                   
+>    class IsUploaderOrReadOnly(BasePermission):
+>        def has_object_permission(self, request, view, obj):
+>            # 允许上传者进行所有操作，其他用户只能查看
+>            if request.method in ['GET', 'HEAD', 'OPTIONS']:
+>                return True
+>            return obj.uploader == request.user
+>                   
+>    class MyPictureAPIView(APIView):
+>        permission_classes = [IsUploaderOrReadOnly]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明想确保每个用户只能删除自己上传的图片，他自定义了权限类 `IsUploaderOrReadOnly`，确保只有上传者能删除图片，其他用户只能查看。
+
 ### 1.6.1 权限概述
 
 认证组件 = [认证类，认证类，认证类]			-> 	执行每个认证类中的authenticate方法
@@ -2992,6 +3181,76 @@ path('avater/', views.AvaterView.as_view()),
 
 
 ## 1.7 限流
+
+功能
+
+- **限制用户的请求频率**，防止滥用或恶意访问。
+
+目的
+
+- 防止恶意用户或脚本短时间内发起大量请求导致服务器过载。
+
+发展历史
+
+- **早期限流：** 使用计数器等简单方式限制请求数量。
+- **现代限流：** 使用滑动窗口、令牌桶等更复杂的算法来实现更精细的限流。
+
+> 使用场景（故事）
+>
+> **故事背景：** 小明发现有人使用脚本不停地上传和下载图片，导致服务器压力很大，其他用户的体验也不好。于是小明决定给 API 设置限流。
+>
+> 1. **匿名用户限流（AnonRateThrottle）：**
+>
+>    - **适用场景：** 对匿名用户进行限流，防止恶意访问。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.throttling import AnonRateThrottle
+>    
+>    class MyAnonAPIView(APIView):
+>        throttle_classes = [AnonRateThrottle]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明发现大量匿名用户（未登录）在使用他的 API，他用 `AnonRateThrottle` 限制匿名用户每分钟最多只能请求 10 次。
+>
+> 2. **认证用户限流（UserRateThrottle）：**
+>
+>    - **适用场景：** 对已登录用户进行限流，防止滥用。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.throttling import UserRateThrottle
+>    
+>    class MyUserAPIView(APIView):
+>        throttle_classes = [UserRateThrottle]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明发现一些登录用户也在不停上传和下载图片，他设置了 `UserRateThrottle`，限制每个用户每分钟最多请求 60 次。
+>
+> 3. **自定义限流：**
+>
+>    - **适用场景：** 根据业务需求和用户行为定制限流规则。
+>
+>    ```
+>    pythonCopy codefrom rest_framework.throttling import BaseThrottle
+>                   
+>    class BurstRateThrottle(BaseThrottle):
+>        def allow_request(self, request, view):
+>            # 实现自定义限流逻辑
+>            return True
+>                   
+>    class MyBurstAPIView(APIView):
+>        throttle_classes = [BurstRateThrottle]
+>        ...
+>    ```
+>
+>    **小故事：**
+>
+>    - 小明希望允许大家在短时间内上传几张图片，但过了这个数量后就必须等待一段时间再继续上传。他自定义了限流类 `BurstRateThrottle`，让大家既能自由上传又不会滥用 API。
 
 ### 1.7.1基本逻辑
 
@@ -3627,10 +3886,8 @@ class UserThrottle(SimpleRateThrottle):
 1. **版本：**在请求中携带版本号，便于后续API的更新迭代
 2. **解析器：**读取不同格式诗句进行解析然后赋值给request.data等对象中
 3. **序列化器**：将ORM获取的数据库QuerySet或数据对象序列化成JSON格式 + 请求数据格式校验（最重要的）
-4. **分页**：对ORM中获取的数据进行分页处理，分批返回用户
-5. **视图：**drf中提供了APIView+其他视图类让我们来继承
 
-
+ps：还有元类的介绍
 
 <br>
 
@@ -3817,14 +4074,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->       
+>                      
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->       
+>                      
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->       
+>                      
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
@@ -4522,6 +4779,24 @@ obj =Base()
 
 ## 2.4 序列化器
 
+通过ORM从数据库获取到的 QuerySet 或 对象 均可以被序列化为 json 格式数据。
+
+ <br>
+
+任务：
+
+- 元类是什么？
+- 序列化器
+  - 常见使用
+  - 源码流程
+- 数据校验
+- 案例：博客平台
+  - 登录/注册  =》提交数据（数据校验）
+  - 博客列表   =》取QuerySet     =》序列化 =》many=True
+  - 博客详细   =》 取ORM对象    =》序列化 =》many=False
+  - 新建博客
+  - 认证+版本
+
 
 
 
@@ -4644,11 +4919,904 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["name","age","gender","gender_text","depart_text","ctiem"]
 ```
 
+上述的gender_text、depart_text变量的赋值方法等价于对数据库中的实例进行" . " 操作
+
+即model_instance.get_gender_display、model_instance.depart.title
+
+
+
+<br>
+
+### 2.4.3  序列化-自定义方法
+
+```python
+class UserSerializer(serializers.ModelSerializer):
+    gender_text = serializers.CharField(source="get_gender_display")
+    depart_text = serializers.CharField(source="depart.title")
+    ctime = serializers.DateTimeField(format="%Y-%m-%d")
+    xxx = serializers.SerializerMethodField()
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","gender","gender_text","depart_text","ctime","xxx"]
+
+    def get_xxx(self,obj):
+        return "shit {}".format(obj.name)
+```
+
+通过上述的xxx = serializers.SerializerMethodField( )
+
+可以自动触发下面的函数get_xxx(self,object)方法
+
+ps:obj是数据库数据对象
+
+<br>
+
+
+
+### 2.4.4 序列化-嵌套和继承及总结
+
+对于数据库关联关系-多对多关系，这种关系而言，怎么通过一个表的一个变量字段来关联所有的另一个表的字段？
+
+```python
+class Depart(models.Model):
+    title = models.CharField(verbose_name="部门",max_length=32)
+    order = models.IntegerField(verbose_name="顺序")
+    count = models.IntegerField(verbose_name="人数")
+
+
+class Tag(models.Model):
+    caption= models.CharField(verbose_name="标签",max_length=32)
+
+class UserInfo(models.Model):
+    name = models.CharField(verbose_name="姓名",max_length=32)
+    age  = models.IntegerField(verbose_name="年龄")
+
+    gender = models.SmallIntegerField(verbose_name="性别",choices=((1,"男"),(2,"女")))
+    depart = models.ForeignKey(verbose_name="部门",to="Depart",on_delete=models.CASCADE)
+    ctime  = models.DateTimeField(verbose_name="时间",auto_now_add=True)
+
+    tags = models.ManyToManyField(verbose_name="标签",to="Tag")
+```
+
+``` shell
+queryset = models.UserInfo.object.all()
+for obj in queryest:
+	obj.get_gender_display()	#获取性别choice的文字
+	obj.depart.title			#获取foreignkey关联的另一张表字段
+	
+而对于tags
+	obj.tags.all()		#[Tag对象，Tag对象]
+如何获取序列化的tags相关数据，===> 通过自定义方法实现
+```
+
+```python
+#具体的实现方法如下
+def get_xxx(self,obj):
+    queryset = obj.tags.all()
+    return [{"id":tag.id,"caption":tag.caption} for tag in queryset] 
+```
+
+而对于上述方法实现，形式较为复制，再序列化器中有嵌套的功能，可以更为简便的实现相应功能。
+
+对于Foreignkey和manytomany的嵌套实现
+
+```python
+class D1(serializers.ModelSerializer):
+    class Meta:
+        model = models.Depart
+        fields = "__all__"
+
+class D2(serializers.ModelSerializer):
+    class Meta:
+        model = models.Tag
+        fields = "__all__"
+
+
+class UserSerializer(serializers.ModelSerializer):
+    depart = D1()
+    tags   = D2(many=True)
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","depart","tags"]
+```
+
+在嵌套时，可以看到tags是多个数据，所以要有many=True
+
+<br>
+
+所谓的序列化继承，就是写好了一个序列化器后，由另一个序列化器继承，最终子类得到父类的字段。
+
+总结序列器
+
+- Serializer （类似Form，要自行写字段
+- ModelSerializer（类似ModelForm
+- choice + source + 时间（即自定义方法，功能上类似使用点运算符
+- 嵌套（一种适用于数据库关系多对多情况的处理 fk、m2m
+- 继承
+
+ <br>
+
+
+
+### 2.4.5 序列化源码
+
+![认证源码](../../../public/md_img/drf/序列化源码.png)
+
+![认证源码](../../../public/md_img/drf/序列化源码2.png)
+
+<br>
+
+#### 源码概述
+
+两步走
+
+1. 加载字段(先将serializers所有的字段加载保存)
+   1. 在类成员中删除
+   2. 汇总到类名._declared_fields中（会把父类的也汇总的自身）
+
+```python
+class UserSerializer(serializers.ModelSerializer):
+    xx = serializers.CharField(source='name')
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","xx"]
+```
+
+2. 序列化
+
+`ser = UserSerializer(instance = queryset,many = True) # ListSerializer对象`
+
+many = True ,则是循环queryset中每个对象，再调用UserSerializer进行实例化
+
+`ser   =  UserSerializer(instance = queryset,many = False) #UserSerializer对象`
+
+无论是那种，都是对象=》UserSerializer=》序列化
+
+
+
+<br>
+
+序列化过程
+
+``` python
+db_instance  = models.UserInfo.objects.all().first()		# title order count models的field
+ser = UserSerializer(....)									# title order count serializers的field
+
+#当执行ser.data，触发序列化过程
+	-内部寻找对应关系
+    -一一进行序列化
+```
+
+<br>
+
+
+
+数据校验-对用户请求数据格式进行校验=》类似Form和ModelForm进行
 
 
 
 
 
+#### 源码-创建字段对象
+
+对于继承元类的类，是先创建类内部的成员，再创建类本身。
+其本质是因为类的创建需要传递类成员。
+
+同理对于序列化器，也是先创建内部的字段对象
+
+``` python
+class InfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+
+    title = serializers.CharField()
+    
+    order = serializers.IntegerField()
+```
+
+
+
+```python
+class Field:
+    _creation_count = 0
+    def __init__(self,*,...):
+        self._creation_counter = Field._creation_counter
+        Field._createion_counter += 1 
+
+
+class IntegerField(Field):
+    def __init__(self, **kwargs):
+        ...
+        self.max_value = 111
+        super().__init__(**kwargs)
+    def to_representation(self, value):
+        return int(value)
+        
+class CharField(Fleid):
+    def __init__(self,**kwargs):
+        ...
+    def to_representation(self, value):
+        return str(value)
+        
+id = serializers.IntegerField() {max_value:111,_createion_counter:0}
+title = serializers.CharField() {_creation_counter:1}
+order = serializers.IntegerField() {_creation_counter:2}
+```
+
+_creation_counter 计数的意义？
+
+让后续开发时，根据编写顺序来定义后续源码中各个字段处理顺序。
+
+<br>
+
+#### 源码-创建类
+
+创建类（利用metaclass）
+
+```python
+class SerializerMetaclass(type):
+    @classmethod
+    def _get_declared_fields(cls, bases, attrs):
+        fields = [(field_name, attrs.pop(field_name))
+                  for field_name, obj in list(attrs.items())
+                  if isinstance(obj, Field)]
+        fields.sort(key=lambda x: x[1]._creation_counter)
+
+        # Ensures a base class field doesn't override cls attrs, and maintains
+        # field precedence when inheriting multiple parents. e.g. if there is a
+        # class C(A, B), and A and B both define 'field', use 'field' from A.
+        known = set(attrs)
+
+        def visit(name):
+            known.add(name)
+            return name
+
+        base_fields = [
+            (visit(name), f)
+            for base in bases if hasattr(base, '_declared_fields')
+            for name, f in base._declared_fields.items() if name not in known
+        ]
+
+        #返回父类的字段对象和自身的字段对象[(字段名，对象),(),...]
+        return dict(base_fields + fields)
+    def __new__(cls, name, bases, attrs):
+        attrs['_declared_fields'] = cls._get_declared_fields(bases, attrs)		#{自己的字段对象+ 父类的字段对象}
+        return super().__new__(cls, name, bases, attrs)    
+```
+
+需要分析metaclass里面的__ new __方法
+
+当前序列化类中所有的字段对象，都在_declared_fields中
+
+<br>
+
+
+
+
+
+#### 源码-实例化类
+
+用户请求到来，数据库获取数据+序列化类
+
+```python
+#1获取数据
+queryset = models.UserInfo.objects.all()
+#2.序列化
+ser = UserSerializer(instance=queryset,many=True)
+```
+
+
+
+```python
+class SerializerMetaclass(type):
+    """
+    This metaclass sets a dictionary named `_declared_fields` on the class.
+
+    Any instances of `Field` included as attributes on either the class
+    or on any of its superclasses will be include in the
+    `_declared_fields` dictionary.
+    """
+
+    @classmethod
+    def _get_declared_fields(cls, bases, attrs):
+        fields = [(field_name, attrs.pop(field_name))
+                  for field_name, obj in list(attrs.items())
+                  if isinstance(obj, Field)]
+        fields.sort(key=lambda x: x[1]._creation_counter)
+
+        # Ensures a base class field doesn't override cls attrs, and maintains
+        # field precedence when inheriting multiple parents. e.g. if there is a
+        # class C(A, B), and A and B both define 'field', use 'field' from A.
+        known = set(attrs)
+
+        def visit(name):
+            known.add(name)
+            return name
+
+        base_fields = [
+            (visit(name), f)
+            for base in bases if hasattr(base, '_declared_fields')
+            for name, f in base._declared_fields.items() if name not in known
+        ]
+
+        return dict(base_fields + fields)
+
+    def __new__(cls, name, bases, attrs):
+        attrs['_declared_fields'] = cls._get_declared_fields(bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
+
+class BaseSerializer(Field):
+    def __init__(self, instance=None, data=empty, **kwargs):
+        self.instance = instance
+        if data is not empty:
+            self.initial_data = data
+        self.partial = kwargs.pop('partial', False)
+        self._context = kwargs.pop('context', {})
+        kwargs.pop('many', None)
+        super().__init__(**kwargs)
+        
+    def __new__(cls,*args,**kwargs):
+        #many等于true的情况
+        if kwargs.pop("many",False):
+            return cls.many_init(*args,**kwargs)
+        
+        #many等于false的情况
+        return  super().__new__(cls,*args.**kwargs) 	#创建当前类的对象
+    
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {}
+        for key in LIST_SERIALIZER_KWARGS_REMOVE:
+            value = kwargs.pop(key, None)
+            if value is not None:
+                list_kwargs[key] = value
+        list_kwargs['child'] = cls(*args, **kwargs)		#实例化当前类的对象 
+        list_kwargs.update({
+            key: value for key, value in kwargs.items()
+            if key in LIST_SERIALIZER_KWARGS
+        })
+        meta = getattr(cls, 'Meta', None)
+        list_serializer_class = getattr(meta, 'list_serializer_class', ListSerializer)
+        return list_serializer_class(*args, **list_kwargs)			#实例化ListSerializer( obj = UserSerializer())
+
+    
+    
+    
+class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
+    pass
+    
+class UserSerializer(serializers.ModelSerializer):
+    depart = D1()
+    tags   = D2(many=True)
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","depart","tags"]
+```
+
+因此在两个不同的many，返回的对象也有不同
+
+`ser = UserSerializer(instance = queryset,many = True) # ListSerializer(obj = UserSerializer)`
+
+`ser   =  UserSerializer(instance = queryset,many = False) #UserSerializer对象`
+
+```python
+LIST_SERIALIZER_KWARGS_REMOVE = ('allow_empty', 'min_length', 'max_length')
+#这些是默认不能传入的内容
+```
+
+
+
+<br>
+
+
+
+
+
+#### 源码-序列化过程
+
+触发序列化ser.data,首先介绍many=False的UserSerializer的情况
+
+``` python
+instance = models.UserInfo.objects.all().first()
+ser = UserSerializer(instance = queryset,many = False)
+ser.data
+```
+
+``` python
+class SerializerMetaclass(type):
+    """
+    This metaclass sets a dictionary named `_declared_fields` on the class.
+
+    Any instances of `Field` included as attributes on either the class
+    or on any of its superclasses will be include in the
+    `_declared_fields` dictionary.
+    """
+
+    @classmethod
+    def _get_declared_fields(cls, bases, attrs):
+        fields = [(field_name, attrs.pop(field_name))
+                  for field_name, obj in list(attrs.items())
+                  if isinstance(obj, Field)]
+        fields.sort(key=lambda x: x[1]._creation_counter)
+
+        # Ensures a base class field doesn't override cls attrs, and maintains
+        # field precedence when inheriting multiple parents. e.g. if there is a
+        # class C(A, B), and A and B both define 'field', use 'field' from A.
+        known = set(attrs)
+
+        def visit(name):
+            known.add(name)
+            return name
+
+        base_fields = [
+            (visit(name), f)
+            for base in bases if hasattr(base, '_declared_fields')
+            for name, f in base._declared_fields.items() if name not in known
+        ]
+
+        return dict(base_fields + fields)
+
+    def __new__(cls, name, bases, attrs):
+        attrs['_declared_fields'] = cls._get_declared_fields(bases, attrs)
+        return super().__new__(cls, name, bases, attrs)
+
+class BaseSerializer(Field):
+    def __init__(self, instance=None, data=empty, **kwargs):
+        self.instance = instance
+        if data is not empty:
+            self.initial_data = data
+        self.partial = kwargs.pop('partial', False)
+        self._context = kwargs.pop('context', {})
+        kwargs.pop('many', None)
+        super().__init__(**kwargs)
+        
+    def __new__(cls,*args,**kwargs):
+        #many等于true的情况
+        if kwargs.pop("many",False):
+            return cls.many_init(*args,**kwargs)
+        
+        #many等于false的情况
+        return  super().__new__(cls,*args.**kwargs) 	#创建当前类的对象
+    
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {}
+        for key in LIST_SERIALIZER_KWARGS_REMOVE:
+            value = kwargs.pop(key, None)
+            if value is not None:
+                list_kwargs[key] = value
+        list_kwargs['child'] = cls(*args, **kwargs)		#实例化当前类的对象 
+        list_kwargs.update({
+            key: value for key, value in kwargs.items()
+            if key in LIST_SERIALIZER_KWARGS
+        })
+        meta = getattr(cls, 'Meta', None)
+        list_serializer_class = getattr(meta, 'list_serializer_class', ListSerializer)
+        return list_serializer_class(*args, **list_kwargs)			#实例化ListSerializer( obj = UserSerializer())
+    
+    @property
+    def data(self):
+        if hasattr(self, 'initial_data') and not hasattr(self, '_validated_data'):
+            msg = (
+                'When a serializer is passed a `data` keyword argument you '
+                'must call `.is_valid()` before attempting to access the '
+                'serialized `.data` representation.\n'
+                'You should either call `.is_valid()` first, '
+                'or access `.initial_data` instead.'
+            )
+            raise AssertionError(msg)
+
+        if not hasattr(self, '_data'):
+            if self.instance is not None and not getattr(self, '_errors', None):
+                
+                #to_representation是核心的序列化功能/转换成json格式
+                self._data = self.to_representation(self.instance)
+            
+        	elif hasattr(self, '_validated_data') and not getattr(self, '_errors', None):
+                self._data = self.to_representation(self.validated_data)
+            else:
+                self._data = self.get_initial()
+        return self._data
+
+
+class ModelSerializer(Serializer):
+    def get_fields(self):
+        #获取类定义的那些字段对象
+        declared_fields = copy.deepcopy(self._declared_fields)
+        
+        #数据库表=类 model = models.UserInfo
+        model = getattr(self.Meta, 'model')
+        depth = getattr(self.Meta, 'depth', 0)
+
+        if depth is not None:
+            assert depth >= 0, "'depth' may not be negative."
+            assert depth <= 10, "'depth' may not be greater than 10."
+
+        # Retrieve metadata about fields & relationships on the model class.
+        info = model_meta.get_field_info(model)
+        field_names = self.get_field_names(declared_fields, info)
+
+        # Determine any extra field arguments and hidden fields that
+        # should be included
+        extra_kwargs = self.get_extra_kwargs()
+        extra_kwargs, hidden_fields = self.get_uniqueness_extra_kwargs(
+            field_names, declared_fields, extra_kwargs
+        )
+
+        # Determine the fields that should be included on the serializer.
+        fields = {}
+
+        for field_name in field_names:
+            # If the field is explicitly declared on the class then use that.
+            if field_name in declared_fields:
+                fields[field_name] = declared_fields[field_name]
+                continue
+
+            extra_field_kwargs = extra_kwargs.get(field_name, {})
+            source = extra_field_kwargs.get('source', '*')
+            if source == '*':
+                source = field_name
+
+            # Determine the serializer field class and keyword arguments.
+            field_class, field_kwargs = self.build_field(
+                source, info, model, depth
+            )
+
+            # Include any kwargs defined in `Meta.extra_kwargs`
+            field_kwargs = self.include_extra_kwargs(
+                field_kwargs, extra_field_kwargs
+            )
+
+            # Create the serializer field.
+            fields[field_name] = field_class(**field_kwargs)
+
+        # Add in any hidden fields.
+        fields.update(hidden_fields)
+
+        return fields
+    
+    
+    
+class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
+
+    @cached_property
+    def fields(self):
+        """
+        A dictionary of {field_name: field_instance}.
+        """
+        # `fields` is evaluated lazily. We do this to ensure that we don't
+        # have issues importing modules that use ModelSerializers as fields,
+        # even if Django's app-loading stage has not yet run.
+        fields = BindingDict(self)
+        for key, value in self.get_fields().items():
+            fields[key] = value
+        return fields   
+    
+    @property
+    def _readable_fields(self):
+        for field in self.fields.values():
+            if not field.write_only:
+                yield field    
+    
+    @property
+    def data(self):
+        ret = super().data
+        return ReturnDict(ret, serializer=self)
+
+    def to_representation(self, instance):
+        """
+        Object instance -> Dict of primitive datatypes.
+        """
+        ret = {}
+        
+        #获取所有的字段，包含_declared_fields和fields=[...]
+        fields = self._readable_fields
+		
+        #循环所有的字段对象，调用字段对象里面的函数
+        for field in fields:
+        	attribute = field.get_attribute(instance)
+            ret[field.field_name] = field.to_representation(attribute)
+
+        # 返回序列化后的结果
+        return ret    
+    
+    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Depart
+        fields = "__all__"
+```
+
+
+
+
+
+
+
+
+
+
+
+#### 源码-List序列化过程
+
+几乎和正常序列化一致，多了循环过程。
+
+执行过程中是在ListSerializer类中进行.data调用，这个地方同样是调用父类的BaseSerializer类中的data函数，只是在调用
+
+to_representation时候由于self的不同，调用的情况有所不同。
+
+简而言之
+
+| 序列化                                                   | List序列化                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| 通过自定义序列器进行data触发                             | 通过ListSerializer进行data触发                               |
+| 父类BaseSerializer触发to_repretation函数是在Serializer中 | 父类BaseSerializer触发to_repretation函数是在ListSerializer中 |
+
+```python
+class ListSerializer(BaseSerializer):
+    def to_representation(self, data):
+        """
+        List of object instances -> List of dicts of primitive datatypes.
+        """
+        # Dealing with nested relationships, data can be a Manager,
+        # so, first get a queryset from the Manager if needed
+        iterable = data.all() if isinstance(data, models.manager.BaseManager) else data
+
+        return [
+            self.child.to_representation(item) for item in iterable
+        ]
+```
+
+在list里面的to_representation中return是循环数据，并对数据进行child.to_representation处理（child是自定义的序列器对象）
+
+<br><br>
+
+<br>
+
+
+
+# 3.drf下篇
+
+本节内容：
+
+- 序列化器：请求数据格式校验部分
+- 分页，对ORM中获取的数据进行分页处理，分批返回给用户
+- 视图，drf中提供了APIView+气体视图类来让我们继承
+- 路由，配合视图快速生成增删改查相关路由+视图关系
+- 条件筛选，编写API搜索
+
+<br>
+
+## 3.1 序列化回顾
+
+序列化器
+
+- 序列化
+
+  - 使用序列化器的步骤
+
+    - 编写序列化器的类
+    - 路由->视图->去数据库获取对象或QuerySet- >序列化器的类转换成列表、字典、有序字典->JSON处理
+    - 钩子 get_字段名(self,obj):
+
+    ```python
+    ser = DepartSerializer(instance=对象)
+    ```
+
+- 数据校验
+
+  - 使用序列化器的步骤
+
+    - 编写序列化器的类
+    - 路由->视图->request.data请求发送过来的数据（大多是json）- >校验（序列化器的类）->操作（例如数据库操作）
+    - 钩子 validate_字段名(self,value)
+
+    ```python
+    ser = DepartSerializer(data=request.data)
+    ```
+
+- 上述两个过程可以结合
+
+  - 创建用户：
+    - 用户发送json格式，请求进行校验
+    - 连接数据保存（得到数据库对象）
+    - 需要再将新增数据返回（不能直接返回用户发送的，要发送数据库添加的，因为数据库新增数据会添加id等）
+    - 再调用序列化器类，使其把新增的数据库对象进行序列化
+
+ <br><br>
+
+## 3.2 序列化-基本校验
+
+获取数据一般是GET请求，
+
+更新数据一般是
+
+- 新增数据：POST请求
+- 更新数据：PUT请求（REST规范
+
+
+
+下面是一个以Serialzer继承的序列器的数据校验过程
+
+```python
+class DepartSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
+
+class DepartView(APIView):
+    def post(self,request,*args,**kwargs):
+        #1.获取原始数据
+        print(request.data)
+        #2.校验
+        ser = DepartSerializer(data=request.data)
+        # if ser.is_valid():
+        #     return Response(ser.validated_data)
+        # else:
+        #     return Response(ser.errors)
+        ser.is_valid(raise_exception=True)      #成功或抛出异常，异常被dispatch捕获
+        return Response(ser.validated_data)
+```
+
+<br><br>
+
+## 3.3 序列化-内置和正则校验
+
+如果对于自定义或多种格式都需要验证，只需要改序列器类
+
+<br>
+
+### 3.3.1 内置校验
+
+下面是drf内置的校验规则
+
+```python
+class DepartSerializer(serializers.Serializer):
+    title = serializers.CharField(required=True,max_length=20,min_length=6)
+    order = serializers.IntegerField(required=False,max_value=100,min_value=10)
+    level = serializers.ChoiceField(choices=[("1","高级"),(2,"中级")])
+```
+
+其中level里面使用了整型1和字符串1，这没有影响
+
+<br>
+
+### 3.3.2 正则校验
+
+邮箱校验的本质其实就是使用了正则校验，如果想要自定义校验，可以如下实现
+
+```python
+from django.core.validators import RegexValidator
+
+class DepartSerializer(serializers.Serializer):
+    #email = serializers.EmailField()
+    xx = serializers.CharField(validators=[RegexValidator(r"\d+",message="xx格式错误")])
+```
+
+<br><br>
+
+
+
+## 3.4 序列化-钩子校验
+
+钩子校验的实现思路是validate_字段名(self,传入值)
+
+```python
+class DepartSerializer(serializers.Serializer):
+    title = serializers.CharField(required=True,max_length=20,min_length=6)
+    order = serializers.IntegerField(required=False,max_value=100,min_value=10)
+    level = serializers.ChoiceField(choices=[("1","高级"),(2,"中级")])
+    xx = serializers.CharField(validators=[RegexValidator(r"\d+", message="xx格式错误")])
+
+    def validate_xx(self,value):
+        if len(value) > 6:
+            raise exceptions.ValidationError("字段钩子验证失败，字段长度大于6")
+        return value
+```
+
+在所有字段整体进行校验完成后，有一个整体校验的钩子函数validate(self,attrs)，attrs是校验成功的字段显示（前提是所有字段验证通过）
+
+对于字段校验失败，默认是字段名：错误信息
+
+对于全局校验失败，则是默认non_field_errors，这个可以通过修改api_settings.NON_FIELD_ERRORS_KEY来改变
+
+（其实全局校验，也可以写在业务的视图里面即view中is_valid()里面）
+
+<br>
+
+<br>
+
+## 3.5 序列化-Model字段多少情况
+
+使用ModelSerialzer可以实现上述类似效果
+
+```python
+class DepartModelSerializer(serializers.ModelSerializer):
+    more = serializers.CharField(required = True)
+    class Meta:
+        model = models.Depart
+        fields = ["title","order","count","more"]
+        extra_kwargs = {
+            "title":{"validators":[RegexValidator(r"\d+",message="title格式错误")]},
+            "order":{"min_value":5}
+        }
+```
+
+使用Modelserializer有两个好处
+
+1. 无需自行编写字段
+2. 可以直接将数据保存数据库
+
+现在对于第二点进行讲解：
+
+​	一般如果使用Serializer得到ser.validated_data，需要自己写models.Depart.objects.create(**ser.validated_data)
+
+​	但使用ModelSerializer得到ser.validated_data，可以直接调用ser.save()
+
+然而使用ser.save有两个小问题：
+
+1. 如果用户提交数据对应的字段少于数据库中的，save会保存，这时需要save传参
+
+   ser.save(count=100)
+
+2. 如果用户提交数据对应的字段多余数据库中的，例如重复密码，需要剔除非数据库字段
+
+​		ser.validated_data.pop("字段名") /del 
+
+<br><br>
+
+
+
+## 3.6 序列化-FK和M2M
+
+3.5保存数据库的时候，同时也支持FK和M2M
+
+```python
+class UsModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","gender","depart","tags"]
+        extra_kwargs = {
+            "name" : {"validators":[RegexValidator(r"n-\d+",message="格式错误")]}
+        }
+        
+        def validate_depart(self,value):
+            if value.id > 1 :
+                return value
+            raise exceptions.ValidationError("部门错误")
+```
+
+上述代码的depart字段是FK，对应部门表，用户应当输入部门编号，默认存在一个是否存在这个编号的校验
+
+而在钩子函数中，Fk的value是对应的部门表编号数据对象，可以通过这个进行进一步操作处理
+
+<br>
+
+tags字段是M2M，同理也是对应的表数据行对象，不过由于是字典，因此用户输入数据可以输入一个列表
+
+上述的两种表结构，save保存的时候，都会自动的进行处理（尤其是对于M2M）
+
+
+
+<br>
+
+问题：关于FK的ID问题？
+
+对于FK字段depart，在数据库UserInfo中实际的字段名其实是”depart_id“，但是在field中=[...,"depart"]，这个原因主要是由于ModelSerializer可以自动为Fk其生成后面的id，所以不需要写depart_id(这样写会出问题)，但通过自定义字段，也可以输入到数据库中（只要符合数据库规则即可）
+
+
+
+<br>
+
+问题：关于M2M自定义问题？
+
+
+
+
+
+<br><br>
+
+### 2.4.12 序列化-梳理
+
+### 2.4.13 序列化-同时校验和序列化
 
 
 
