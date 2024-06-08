@@ -4939,6 +4939,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = models.UserInfo
         fields = ["name","age","gender","gender_text","depart_text","ctime","xxx"]
 
+        #钩子方法
     def get_xxx(self,obj):
         return "shit {}".format(obj.name)
 ```
@@ -5624,7 +5625,7 @@ class ListSerializer(BaseSerializer):
 
  <br><br>
 
-## 3.2 序列化-基本校验
+## 3.2 反序列化-基本校验
 
 获取数据一般是GET请求，
 
@@ -5658,7 +5659,7 @@ class DepartView(APIView):
 
 <br><br>
 
-## 3.3 序列化-内置和正则校验
+## 3.3 反序列化-内置和正则校验
 
 如果对于自定义或多种格式都需要验证，只需要改序列器类
 
@@ -5695,7 +5696,7 @@ class DepartSerializer(serializers.Serializer):
 
 
 
-## 3.4 序列化-钩子校验
+## 3.4 反序列化-钩子校验
 
 钩子校验的实现思路是validate_字段名(self,传入值)
 
@@ -5724,7 +5725,7 @@ class DepartSerializer(serializers.Serializer):
 
 <br>
 
-## 3.5 序列化-Model字段多少情况
+## 3.5 反序列化-Model字段多少情况
 
 使用ModelSerialzer可以实现上述类似效果
 
@@ -5765,7 +5766,7 @@ class DepartModelSerializer(serializers.ModelSerializer):
 
 
 
-## 3.6 序列化-FK和M2M
+## 3.6 反序列化-FK和M2M校验
 
 3.5保存数据库的时候，同时也支持FK和M2M
 
@@ -5808,29 +5809,410 @@ tags字段是M2M，同理也是对应的表数据行对象，不过由于是字�
 
 问题：关于M2M自定义问题？
 
+M2M自己内部可以生成第三个表进行处理，如果需要进行自己自定义M2M关系，可以通过输入序列，然后利用钩子函数将其处理成
 
+另一个表数据对象（这种情况下不需要做额外操作即可save成功）
 
+```python
+class UsModelSerializer(serializers.ModelSerializer):
+    tags = serializers.ListField()
+    class Meta:
+        model = models.UserInfo
+        fields = ["name","age","gender","depart","tags"]
+        # extra_kwargs = {
+        #     "name" : {"validators":[RegexValidator(r"n-\d+",message="格式错误")]}
+        # }
 
+    def validate_tags(self,value):
+        print(value)
+        queryset = models.Tag.objects.all()
+        #queryset = models.Tag.objects.filter(id__in=value)
+        return queryset
+```
+
+为什么可以仅从return queryset来定位object(1)和object(2)
 
 <br><br>
 
-### 2.4.12 序列化-梳理
-
-### 2.4.13 序列化-同时校验和序列化
 
 
+## 3.7 反序列化-梳理
 
-## 2.5 自定义钩子
+1. 自定义Serializer+字段
+
+2. 自定义Serializer+字段（内置+正则）
+
+3. 自定义Serializer+字段（内置+正则）+字段钩子+全局钩子
+
+4. 自定义ModelSerializer + extra_kwarts + save保存数据库（多pop，少save参数）
+
+5. 自定义ModelSerializer + FK =》自动获取关联数据 depart
+
+   ​												 =》自定义关联数据     depart_id
+
+6.  自定义ModelSerializer+ M2M =》 自定关联数据
+
+​															 =》自定义关联数据 xx = ListField() + 钩子函数
+
+7. 校验+序列化
+
+   - 检验Serializer + 序列化Serializer（写两个）
+   - 检验/序列化Seralizer（校验返回相同）
+   - 检验/序列化Seralizer（校验返回不相同）
+     - 使用read_only和write_only
+       - read_only只有在序列化时候使用
+       - wirte_only只有在校验的时候使用
+
+   ```python
+   extra_kwargs ={
+       "id":{"read_only":True},
+   }
+   ```
+
+   当使用一个序列化器完成校验和序列化的过程的时候
+
+   可以省略下面两条，直接ser.data（因为.save返回值会自动传递到当前对象
+
+   ```python
+   instance = ser.save()
+   xx = xxModelserializer(instance=instance)
+   ```
+
+   
+
+
+
+
+
+
 
 <br>
 
+<br>
+
+## 3.8 同时校验和序列化
+
+save的返回值，是当前创建表的数据对象
+
+```instance = ser.save()```
+
+返回值可以通过.获取字段
+
+<br>
+
+如果要对新增的数据进行序列化返回，则需要使用序列化的功能
+
+下面结合校验+序列化的一个综合小例子。
+
+```python
+class DpModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Depart
+        fields = ["id","title","count"]
+
+class Dp2ModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Depart
+        fields = "__all__"
 
 
 
+class DpView(APIView):
+    def post(self,request,*args,**kwargs):
+
+        ser = DpModelSerializer(data=request.data)
+        if ser.is_valid():
+            print("视图",ser.validated_data)
+            instance = ser.save()
+            xx = Dp2ModelSerializer(instance=instance)
+            return Response(xx.data)
+        else:
+            print("视图",ser.errors)
+            return Response(ser.errors)
+```
 
 
 
+> 即使两个序列化器定义的字段不同，由于 `Dp2ModelSerializer` 是用来序列化包含所有字段的实例，所以它能正确处理和输出所有字段的数据。模型实例创建时包含了所有字段，而序列化器只会序列化其定义中的字段。
 
+此外对于多选框、Fk和M2M的字段，如果想要校验传入的值和序列化返回的值不同（比如depart传入1，序列化返回销售部），则可以按如下步骤
+
+```python
+#方法1
+class UusModelSerializer(serializers.ModelSerializer):
+    gender_text = serializers.CharField(source="get_gender_display",read_only=True)
+    depart_text = serializers.CharField(source="depart.title",read_only=True)
+    class Meta:
+        model = models.UserInfo
+        fields = ["id", "name", "age", "gender", "depart","gender_text","depart_text"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "gender":{"write_only":True}
+
+        }
+        
+#方法2
+#对于FK和M2M可以参考2.4.4
+class UusModelSerializer(serializers.ModelSerializer):
+    v1 = serializers.SerializerMethodField()
+    class Meta:
+        model = models.UserInfo
+        fields = ["id", "name", "age", "gender", "depart","v1"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "gender":{"write_only":True}
+
+        }
+
+    def get_v1(self,obj):
+        return {"id":obj.gender,"text":obj.get_gender_display()}
+```
+
+
+
+> 我们来详细探讨一下为什么在某些情况下不能使用 `CharField`，以及如果试图使用 `CharField` 代替 `SerializerMethodField` 会发生什么。
+>
+> ### 为什么不能使用 `CharField`
+>
+> #### 1. 动态数据
+>
+> `CharField` 用于静态数据，直接从模型字段读取。如果你需要生成动态数据或计算值，`CharField` 无法满足需求。
+>
+> #### 2. 数据来源
+>
+> `CharField` 仅适用于与模型字段直接对应的简单数据。如果需要从多个字段计算或组合数据，`CharField` 不适用。
+>
+> ### 示例分析
+>
+> 假设我们有如下模型：
+>
+> ```
+> python复制代码class UserInfo(models.Model):
+>     id = models.AutoField(primary_key=True)
+>     name = models.CharField(max_length=100)
+>     age = models.IntegerField()
+>     gender = models.CharField(max_length=10)
+> 
+>     def get_gender_display(self):
+>         return "Male" if self.gender == "M" else "Female"
+> ```
+>
+> #### 使用 `SerializerMethodField`
+>
+> ```
+> python复制代码class UserInfoSerializer(serializers.ModelSerializer):
+>     v1 = serializers.SerializerMethodField()
+> 
+>     class Meta:
+>         model = UserInfo
+>         fields = ["id", "name", "age", "gender", "v1"]
+> 
+>     def get_v1(self, obj):
+>         return {"id": obj.gender, "text": obj.get_gender_display()}
+> ```
+>
+> 在这种情况下：
+>
+> - `v1` 是动态生成的字段，包含 `gender` 的 ID 和对应的文本描述。
+> - `get_v1` 方法根据模型实例的 `gender` 属性生成复杂的结构数据。
+>
+> #### 使用 `CharField`
+>
+> 如果尝试用 `CharField` 来替代：
+>
+> ```
+> python复制代码class UserInfoSerializer(serializers.ModelSerializer):
+>     v1 = serializers.CharField()
+> 
+>     class Meta:
+>         model = UserInfo
+>         fields = ["id", "name", "age", "gender", "v1"]
+> ```
+>
+> 在这种情况下：
+>
+> - `v1` 不能直接对应模型中的任何字段，因为模型没有名为 `v1` 的字段。
+> - 没有办法通过 `CharField` 实现从 `gender` 字段动态生成复杂结构数据的需求。
+>
+> ### 实际效果
+>
+> - **定义不匹配**：`CharField` 需要一个固定的字符串值来源，而模型中没有对应的字段。
+> - **缺乏灵活性**：无法处理动态计算逻辑，不能生成复杂的结构数据（如包含多个子字段的数据）。
+>
+> ### 总结
+>
+> - **`SerializerMethodField`**：用于动态计算和生成复杂数据。通过 `get_<field_name>` 方法实现，可以根据模型实例的其他字段生成所需的数据。
+> - **`CharField`**：仅用于静态、直接映射的简单字符数据，无法处理动态逻辑和复杂结构。
+
+<br>
+
+<br>
+
+## 3.9 自定义钩子
+
+需求：编写一个序列化类，实现创建用户，
+
+​			提供：{"name":"x3","age":11,"gender":1}
+
+​			返回：{"id:1","name":"x3","gender":男}
+
+```python
+class NbUserInfo(models.Model):
+    name = models.CharField(verbose_name="姓名",max_length=32)
+    age  = models.IntegerField(verbose_name="年龄")
+    gender = models.SmallIntegerField(verbose_name="性别",choices=((1,"男"),(2,"女")))
+```
+
+注意：该需求和上述的3.8不同，返回的gender和输入的gender是同名字段。
+
+
+
+```python
+#支持输入（即校验），但序列化时候没有钩子方法
+class NbModelSerializer(serializers.ModelSerializer):
+	gender = serializers.CharField()
+    class Meta:
+        model = models.NbUserInfo
+        fields = ["id", "name", "age", "gender"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+
+        }
+ 
+ #不支持输入（即校验）但是又钩子方法
+ class NbModelSerializer(serializers.ModelSerializer):
+	gender = serializers.SerializerMethodField()
+    class Meta:
+        model = models.NbUserInfo
+        fields = ["id", "name", "age", "gender"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+
+        }
+    def get_gender(self,obj):
+    	return obj.get_gender_display()
+    
+#为了解决上述遇到的问题，有两种方法解决
+
+```
+
+方法1
+
+1. SerializerMethodField到底是如何实现的执行钩子方法？
+2. 序列化
+   1. 加载字段
+   2. 实例化对象 ser = NbModelSerializer(...)
+   3. ser.data
+
+
+
+下面这个是关于SerializerMethodField类的实现
+
+```python
+class SerializerMethodField(Field):
+    def __init__(self, method_name=None, **kwargs):
+        self.method_name = method_name
+        kwargs['source'] = '*'
+        kwargs['read_only'] = True
+        super().__init__(**kwargs)
+
+    def bind(self, field_name, parent):
+        # The method name defaults to `get_{field_name}`.
+        if self.method_name is None:
+            self.method_name = 'get_{field_name}'.format(field_name=field_name)
+
+        super().bind(field_name, parent)
+
+    def to_representation(self, value):
+        method = getattr(self.parent, self.method_name)
+        return method(value)
+```
+
+下面是关于序列化过程源码的流程再现
+
+```python
+class BaseSerializer(Field):
+    @property
+    def data(self):
+        if hasattr(self, 'initial_data') and not hasattr(self, '_validated_data'):
+            msg = (
+                'When a serializer is passed a `data` keyword argument you '
+                'must call `.is_valid()` before attempting to access the '
+                'serialized `.data` representation.\n'
+                'You should either call `.is_valid()` first, '
+                'or access `.initial_data` instead.'
+            )
+            raise AssertionError(msg)
+
+        if not hasattr(self, '_data'):
+            if self.instance is not None and not getattr(self, '_errors', None):
+                self._data = self.to_representation(self.instance)
+            elif hasattr(self, '_validated_data') and not getattr(self, '_errors', None):
+                self._data = self.to_representation(self.validated_data)
+            else:
+                self._data = self.get_initial()
+        return self._data
+    
+    
+    
+class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
+    @property
+    def data(self):
+        ret = super().data
+        return ReturnDict(ret, serializer=self)
+    
+    def to_representation(self, instance):
+        """
+        Object instance -> Dict of primitive datatypes.
+        """
+        ret = {}
+        #[字段对象，字段对象，...]			#内部会执行各个字段对象bind方法，对于SerializerMethodField对象，执行完
+        								   #bind方法会维护一个method_name
+            
+            
+        fields = self._readable_fields     #找到所有的字段，筛选出可以读取 read_only + 啥都没有 => 字段对象
+
+        for field in fields:
+            try:
+                attribute = field.get_attribute(instance)
+            except SkipField:
+                continue
+
+            # We skip `to_representation` for `None` values so that fields do
+            # not have to explicitly deal with that case.
+            #
+            # For related fields with `use_pk_only_optimization` we need to
+            # resolve the pk value.
+            check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
+            if check_for_none is None:
+                ret[field.field_name] = None
+            else:
+                ret[field.field_name] = field.to_representation(attribute)
+
+        return ret
+    
+    
+    
+    
+    
+class ModelSerializer(Serializer):
+    
+    
+    
+    
+
+class NbModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.NbUserInfo
+        fields = ["id", "name", "age", "gender"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+
+        }
+
+    def get_v1(self,obj):
+        return {"id":obj.gender,"text":obj.get_gender_display()}
+```
 
 <br><br>
 
