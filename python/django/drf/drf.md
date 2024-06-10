@@ -2030,7 +2030,7 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 >
 >    ```
 >    pythonCopy codefrom oauth2_provider.contrib.rest_framework import OAuth2Authentication
->                   
+>                      
 >    class MyAPIView(APIView):
 >        authentication_classes = [OAuth2Authentication]
 >        ...
@@ -2692,14 +2692,14 @@ class NoAuthentication(BaseAuthentication):
 >
 >    ```
 >    pythonCopy codefrom rest_framework.permissions import BasePermission
->                   
+>                      
 >    class IsUploaderOrReadOnly(BasePermission):
 >        def has_object_permission(self, request, view, obj):
 >            # 允许上传者进行所有操作，其他用户只能查看
 >            if request.method in ['GET', 'HEAD', 'OPTIONS']:
 >                return True
 >            return obj.uploader == request.user
->                   
+>                      
 >    class MyPictureAPIView(APIView):
 >        permission_classes = [IsUploaderOrReadOnly]
 >        ...
@@ -3237,12 +3237,12 @@ path('avater/', views.AvaterView.as_view()),
 >
 >    ```
 >    pythonCopy codefrom rest_framework.throttling import BaseThrottle
->                   
+>                      
 >    class BurstRateThrottle(BaseThrottle):
 >        def allow_request(self, request, view):
 >            # 实现自定义限流逻辑
 >            return True
->                   
+>                      
 >    class MyBurstAPIView(APIView):
 >        throttle_classes = [BurstRateThrottle]
 >        ...
@@ -4074,14 +4074,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->                      
+>                         
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->                      
+>                         
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->                      
+>                         
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
@@ -5201,7 +5201,7 @@ class SerializerMetaclass(type):
 ```python
 #1获取数据
 queryset = models.UserInfo.objects.all()
-#2.序列化
+#2.初始序列化
 ser = UserSerializer(instance=queryset,many=True)
 ```
 
@@ -5527,7 +5527,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 ```
 
-
+注意instance传入时候已经转变成json格式了
 
 
 
@@ -6096,7 +6096,9 @@ class NbModelSerializer(serializers.ModelSerializer):
 
 ```
 
-方法1
+<br>
+
+**方法1**
 
 1. SerializerMethodField到底是如何实现的执行钩子方法？
 2. 序列化
@@ -6174,6 +6176,7 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
 
         for field in fields:
             try:
+                #charField字段对象.get_attribute()、SerializerMethodField字段对象.get_attribute()默认为none
                 attribute = field.get_attribute(instance)
             except SkipField:
                 continue
@@ -6202,6 +6205,8 @@ class ModelSerializer(Serializer):
     
 
 class NbModelSerializer(serializers.ModelSerializer):
+    gender = serializers.SerializerMethodField()
+    v1 = serializers.CharField(source="depart.title",read_only=True)
     class Meta:
         model = models.NbUserInfo
         fields = ["id", "name", "age", "gender"]
@@ -6210,10 +6215,183 @@ class NbModelSerializer(serializers.ModelSerializer):
 
         }
 
-    def get_v1(self,obj):
+    def get_gender(self,obj):
         return {"id":obj.gender,"text":obj.get_gender_display()}
 ```
+
+问题：bind方法是在什么时候？在哪里被触发的？
+
+
+
+
+
+对于SerializerMethodField字段对象，
+
+- 在get_attribute调用时，source=“*”，默认返回none
+
+- 在to_representation中调用钩子函数
+
+
+
+对于CharField字段对象而言
+
+- 在get_attribute调用，souce=“depart.title”，返回instance.depart.title
+- 在to_representation调用时，返回str(传入值)
+
+可以自行定义一个新字段类
+
+```python
+class MyCharField(IntegerField):
+    def __init__(self, method_name=None, **kwargs):
+        self.method_name = method_name
+        super().__init__(**kwargs)
+
+    def bind(self, field_name, parent):
+        # The method name defaults to `get_{field_name}`.
+        if self.method_name is None:
+            self.method_name = 'xget_{field_name}'.format(field_name=field_name)
+
+        super().bind(field_name, parent)
+
+    #此处调用钩子函数    
+    def get_attribute(self, instance):
+        method = getattr(self.parent, self.method_name)
+        return method(instance)
+    
+    def to_representation(self,value):
+        return str(value)
+```
+
+上述代码可以实现输入编号校验，返回文本序列
+
+<br>
+
+**方法2**（推荐）
+
+可以基于另一种逻辑，在to_representation函数种判断钩子是否存在，如果不存在
+
+执行field.gettribute()获取字段对象对于实例数据。否则不执行
+
+通过上述思路要求重写to_representation函数
+
+class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
+    @property
+    def data(self):
+        ret = super().data
+        return ReturnDict(ret, serializer=self)
+         
+
+```python
+#原始的to_presentation函数
+class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
+    def to_representation(self, instance):
+        """
+        Object instance -> Dict of primitive datatypes.
+        """
+        ret = {}
+        #[字段对象，字段对象，...]			#内部会执行各个字段对象bind方法，对于SerializerMethodField对象，执行完
+        								   #bind方法会维护一个method_name
+            
+            
+        fields = self._readable_fields     #找到所有的字段，筛选出可以读取 read_only + 啥都没有 => 字段对象
+
+        for field in fields:
+            try:
+                #charField字段对象.get_attribute()、SerializerMethodField字段对象.get_attribute()默认为none
+                attribute = field.get_attribute(instance)
+            except SkipField:
+                continue
+
+            # We skip `to_representation` for `None` values so that fields do
+            # not have to explicitly deal with that case.
+            #
+            # For related fields with `use_pk_only_optimization` we need to
+            # resolve the pk value.
+            check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
+            if check_for_none is None:
+                ret[field.field_name] = None
+            else:
+                ret[field.field_name] = field.to_representation(attribute)
+
+        return ret
+
+
+
+
+#重写的to_representation
+
+
+from rest_framework.fields import (  # NOQA # isort:skip
+    CreateOnlyDefault, CurrentUserDefault, SkipField, empty
+)
+from rest_framework.relations import Hyperlink, PKOnlyObject  # NOQA # isort:skip
+
+
+class SbModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.NbUserInfo
+        fields = ["id", "name", "age", "gender"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+
+        }
+
+    def sb_gender(self,obj):
+        return obj.get_gender_display()
+
+    def to_representation(self, instance):
+        ret = {}
+        fields = self._readable_fields
+
+        for field in fields:
+            if hasattr(self,'sb_%s' % field.field_name):
+                value = getattr(self,"sb_%s" % field.field_name)(instance)
+                ret[field.field_name] = value
+            else:
+                try:
+                    attribute = field.get_attribute(instance)
+                except SkipField:
+                    continue
+                check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
+                if check_for_none is None:
+                    ret[field.field_name] = None
+                else:
+                    ret[field.field_name] = field.to_representation(attribute)
+
+        return ret
+
+
+class SbView(APIView):
+    def post(self, request, *args, **kwargs):
+        ser = SbModelSerializer(data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return Response(ser.data)
+        else:
+            return Response(ser.errors)
+```
+
+如果要多次使用to_representation函数，可以自行书写一个钩子类来使用
+
+记住继承的时候，将构造的钩子类写在前面，因为继承顺序前面优先
 
 <br><br>
 
 # 3.案例
+
+## 3.1 博客列表
+
+## 3.2 博客详细和评论
+
+## 3.3 注册
+
+## 3.4 登录
+
+## 3.5 发布评论
+
+## 3.6 赞
+
+## 3.7 新建博文
+
+## 3.8 总结
+
