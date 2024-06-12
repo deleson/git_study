@@ -2224,7 +2224,7 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 >
 >    ```
 >    pythonCopy codefrom oauth2_provider.contrib.rest_framework import OAuth2Authentication
->                         
+>                            
 >    class MyAPIView(APIView):
 >        authentication_classes = [OAuth2Authentication]
 >        ...
@@ -2887,14 +2887,14 @@ class NoAuthentication(BaseAuthentication):
 >
 >    ```
 >    pythonCopy codefrom rest_framework.permissions import BasePermission
->                         
+>                            
 >    class IsUploaderOrReadOnly(BasePermission):
 >        def has_object_permission(self, request, view, obj):
 >            # 允许上传者进行所有操作，其他用户只能查看
 >            if request.method in ['GET', 'HEAD', 'OPTIONS']:
 >                return True
 >            return obj.uploader == request.user
->                         
+>                            
 >    class MyPictureAPIView(APIView):
 >        permission_classes = [IsUploaderOrReadOnly]
 >        ...
@@ -3432,12 +3432,12 @@ path('avater/', views.AvaterView.as_view()),
 >
 >    ```
 >    pythonCopy codefrom rest_framework.throttling import BaseThrottle
->                         
+>                            
 >    class BurstRateThrottle(BaseThrottle):
 >        def allow_request(self, request, view):
 >            # 实现自定义限流逻辑
 >            return True
->                         
+>                            
 >    class MyBurstAPIView(APIView):
 >        throttle_classes = [BurstRateThrottle]
 >        ...
@@ -4269,14 +4269,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->                            
+>                               
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->                            
+>                               
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->                            
+>                               
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
@@ -6941,7 +6941,51 @@ class BlogAuthentication(BaseAuthentication):
         return "API"
 ```
 
+```python
+from api.ext.hook import HookSerializer
+class CommentSerializers(HookSerializer,serializers.ModelSerializer):
+    class Meta:
+        model = models.Comment
+        fields = ["id","content","user","create_datetime"]
+        extra_kwargs = {
+            "id":{"read_only":True},
+            "user":{"read_only":True},
+            "create_datetime":{"read_only":True},
+        }
 
+    def sb_user(self,obj):
+        return obj.user.username
+
+
+class CommentView(APIView):
+    authentication_classes = [BlogAuthentication,]
+    def get(self,request,blog_id):
+        #评论列表+无需登录
+
+        #1.获取ID
+        queryset = models.Comment.objects.filter(blog_id=blog_id)
+
+        #2.序列化
+        ser = CommentSerializers(instance=queryset,many=True)
+
+        #3.返回
+        context = {"code":"1000","data":ser.data}
+        return Response(context)
+    
+    def post(self,request,blog_id):
+        #新建评论+需要登录
+        #request.user判断是否认证过
+        if not request.user:
+            return Response({"code":3000,"error":"认证失败"})
+        blog_object = models.Blog.objects.filter(id=blog_id).first()
+        if not blog_object:
+            return Response({"code":2000,"error":"博客不存在"})
+        ser = CommentSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code": 1002, "error": "校验失败","detail":ser.errors})
+        ser.save(blog=blog_object,user=request.user)
+        return Response({"code":1000,"data":ser.data})
+```
 
 <br>
 
@@ -6949,7 +6993,10 @@ class BlogAuthentication(BaseAuthentication):
 
 ## 3.6 赞
 
+赞需要在登录的情况下进行，具体要求如下：
 
+- 赞过不能再赞
+- 结合事务实现添加赞+赞数量更新
 
 
 

@@ -39,17 +39,10 @@ export default defineConfig({
                 ]
             },
             {
-                text: '前端学习',
-                items: [
-                    {text: 'html', link: '/study_directory/font-end/html'},
-                    {text: 'css', link: '/study_directory/font-end/css'},
-                    {text: 'javascript', link: '/study_directory/font-end/js'},
-                ]
-            },
-            {
                 text: '书籍阅读',
                 items: [
-                    {text: '利用python进行数据分析', link: '/study_directory/book/利用python进行数据分析'}
+                    {text: '利用python进行数据分析', link: '/python/book/利用python进行数据分析'},
+                    {text: '利用python进行数据分析', link: '/python/book/利用python进行数据分析'}
                 ]
             }
         ],
