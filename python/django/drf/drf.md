@@ -1397,6 +1397,200 @@ del obj.value     # 通过del关键字删除属性
 
 
 
+
+
+## 0.7 meta
+
+在django中meta：model、ModelForm
+
+
+
+> Django 中的 `Meta` 类用于定义模型的元数据。通过使用 `Meta` 类，你可以控制模型的行为和数据库表的属性。下面是 `Meta` 类的详细介绍及各个参数的使用方法。
+>
+> ### `Meta` 类的常见参数
+>
+> #### `db_table`
+>
+> 用于指定模型对应的数据库表的名称。如果不指定，Django 会使用应用名和模型名生成表名。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+> 
+>     class Meta:
+>         db_table = 'my_custom_blog_table'
+> ```
+>
+> #### `ordering`
+>
+> 用于指定查询结果的默认排序顺序。可以使用字段名称排序，也可以在字段名前加上 `-` 进行降序排序。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     created_at = models.DateTimeField(auto_now_add=True)
+> 
+>     class Meta:
+>         ordering = ['-created_at']  # 按创建时间降序排序
+> ```
+>
+> #### `verbose_name` 和 `verbose_name_plural`
+>
+> 用于定义模型的单数和复数名称，这些名称会在 Django 管理后台和其他地方显示。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+> 
+>     class Meta:
+>         verbose_name = '博客'
+>         verbose_name_plural = '博客'
+> ```
+>
+> #### `unique_together`
+>
+> 用于定义联合唯一约束，确保指定字段的组合是唯一的。这个在 Django 2.2 后被 `UniqueConstraint` 取代。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     user = models.ForeignKey(User, on_delete=models.CASCADE)
+> 
+>     class Meta:
+>         unique_together = (('title', 'user'),)  # 确保每个用户的标题唯一
+> ```
+>
+> #### `constraints`
+>
+> 用于定义更多复杂的约束，比如联合唯一约束、检查约束等。
+>
+> ```
+> python复制代码from django.db import models
+> 
+> class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     user = models.ForeignKey(User, on_delete=models.CASCADE)
+> 
+>     class Meta:
+>         constraints = [
+>             models.UniqueConstraint(fields=['title', 'user'], name='unique_blog_title_user')
+>         ]
+> ```
+>
+> #### `abstract`
+>
+> 用于定义抽象基类。抽象基类不会在数据库中创建表，主要用于继承。
+>
+> ```
+> python复制代码class TimestampedModel(models.Model):
+>     created_at = models.DateTimeField(auto_now_add=True)
+>     updated_at = models.DateTimeField(auto_now=True)
+> 
+>     class Meta:
+>         abstract = True
+> 
+> class Blog(TimestampedModel):
+>     title = models.CharField(max_length=255)
+> ```
+>
+> #### `permissions`
+>
+> 用于定义自定义权限。可以为模型添加额外的权限，便于在权限管理系统中使用。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+> 
+>     class Meta:
+>         permissions = [
+>             ("can_publish", "Can publish blogs"),
+>         ]
+> ```
+>
+> #### `indexes`
+>
+> 用于定义数据库索引。索引可以加速查询，但也会增加一些存储开销和维护时间。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     created_at = models.DateTimeField(auto_now_add=True)
+> 
+>     class Meta:
+>         indexes = [
+>             models.Index(fields=['created_at']),
+>         ]
+> ```
+>
+> #### `get_latest_by`
+>
+> 用于指定模型中哪一个字段是用来确定最近的对象的。常用于模型的 `latest()` 方法。
+>
+> ```
+> python复制代码class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     created_at = models.DateTimeField(auto_now_add=True)
+> 
+>     class Meta:
+>         get_latest_by = 'created_at'
+> ```
+>
+> #### `default_related_name`
+>
+> 用于指定模型的默认反向关系名称。Django 默认会为外键创建反向关系名称，可以通过此参数进行自定义。
+>
+> ```
+> python复制代码class Author(models.Model):
+>     name = models.CharField(max_length=255)
+> 
+> class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     author = models.ForeignKey(Author, on_delete=models.CASCADE)
+> 
+>     class Meta:
+>         default_related_name = 'blogs'
+> ```
+>
+> 这样，`author.blogs.all()` 就可以用于获取某个作者的所有博客。
+>
+> ### 完整示例
+>
+> 综合以上所有参数，下面是一个包含各种 `Meta` 参数的完整模型示例：
+>
+> ```
+> python复制代码from django.db import models
+> 
+> class Author(models.Model):
+>     name = models.CharField(max_length=255)
+> 
+> class Blog(models.Model):
+>     title = models.CharField(max_length=255)
+>     content = models.TextField()
+>     created_at = models.DateTimeField(auto_now_add=True)
+>     updated_at = models.DateTimeField(auto_now=True)
+>     author = models.ForeignKey(Author, on_delete=models.CASCADE)
+> 
+>     class Meta:
+>         db_table = 'blog_table'
+>         ordering = ['-created_at']
+>         verbose_name = '博客'
+>         verbose_name_plural = '博客'
+>         unique_together = (('title', 'author'),)
+>         constraints = [
+>             models.UniqueConstraint(fields=['title', 'author'], name='unique_blog_title_author')
+>         ]
+>         indexes = [
+>             models.Index(fields=['created_at']),
+>         ]
+>         get_latest_by = 'created_at'
+>         default_related_name = 'blogs'
+>         permissions = [
+>             ("can_publish", "Can publish blogs"),
+>         ]
+> ```
+>
+> 通过合理使用 `Meta` 类中的各个参数，你可以控制 Django 模型的各种行为，从而更好地满足项目需求。 
+
 <br><br><br>
 
 # 1.drf初步了解
@@ -2030,7 +2224,7 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 >
 >    ```
 >    pythonCopy codefrom oauth2_provider.contrib.rest_framework import OAuth2Authentication
->                      
+>                         
 >    class MyAPIView(APIView):
 >        authentication_classes = [OAuth2Authentication]
 >        ...
@@ -2308,6 +2502,7 @@ class UserView(APIView):
    视图函数会执行，只不过self.user 和self.auth为None
 
    ```python
+   #URL中
    class URLAuthentication(BaseAuthentication):
        def authenticate(self, request):
            token = request.query_params.get("token")
@@ -2692,14 +2887,14 @@ class NoAuthentication(BaseAuthentication):
 >
 >    ```
 >    pythonCopy codefrom rest_framework.permissions import BasePermission
->                      
+>                         
 >    class IsUploaderOrReadOnly(BasePermission):
 >        def has_object_permission(self, request, view, obj):
 >            # 允许上传者进行所有操作，其他用户只能查看
 >            if request.method in ['GET', 'HEAD', 'OPTIONS']:
 >                return True
 >            return obj.uploader == request.user
->                      
+>                         
 >    class MyPictureAPIView(APIView):
 >        permission_classes = [IsUploaderOrReadOnly]
 >        ...
@@ -3237,12 +3432,12 @@ path('avater/', views.AvaterView.as_view()),
 >
 >    ```
 >    pythonCopy codefrom rest_framework.throttling import BaseThrottle
->                      
+>                         
 >    class BurstRateThrottle(BaseThrottle):
 >        def allow_request(self, request, view):
 >            # 实现自定义限流逻辑
 >            return True
->                      
+>                         
 >    class MyBurstAPIView(APIView):
 >        throttle_classes = [BurstRateThrottle]
 >        ...
@@ -4074,14 +4269,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->                         
+>                            
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->                         
+>                            
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->                         
+>                            
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
@@ -6379,19 +6574,398 @@ class SbView(APIView):
 
 # 3.案例
 
+开发一个博客系统，包含：博客列表、详细、评论、点赞、登录、注册、发布博客
+
+首先建立表结构
+
+```python
+from django.db import models
+
+
+class UserInfo(models.Model):
+    username = models.CharField(verbose_name="用户名", max_length=32, db_index=True)
+    password = models.CharField(verbose_name="密码", max_length=64)
+    token = models.CharField(verbose_name="TOKEN", max_length=64, null=True, blank=True, db_index=True)
+
+
+class Blog(models.Model):
+    category_choices = ((1, "云计算"), (2, "Python全栈"), (3, "Go开发"))
+    category = models.IntegerField(verbose_name="分类", choices=category_choices)
+
+    image = models.CharField(verbose_name="封面", max_length=255)
+    title = models.CharField(verbose_name="标题", max_length=32)
+    summary = models.CharField(verbose_name="简介", max_length=256)
+    text = models.TextField(verbose_name="博文")
+    ctime = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    creator = models.ForeignKey(verbose_name="创建者", to="UserInfo", on_delete=models.CASCADE)
+
+    comment_count = models.PositiveIntegerField(verbose_name="评论数", default=0)
+    favor_count = models.PositiveIntegerField(verbose_name="赞数", default=0)
+
+
+class Favor(models.Model):
+    """ 赞 """
+    blog = models.ForeignKey(verbose_name="博客", to="Blog", on_delete=models.CASCADE)
+    user = models.ForeignKey(verbose_name="用户", to="UserInfo", on_delete=models.CASCADE)
+    create_datetime = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['blog', 'user'], name='uni_favor_blog_user')
+        ]
+
+
+class Comment(models.Model):
+    """ 评论表 """
+    blog = models.ForeignKey(verbose_name="博客", to="Blog", on_delete=models.CASCADE)
+    user = models.ForeignKey(verbose_name="用户", to="UserInfo", on_delete=models.CASCADE)
+
+    content = models.CharField(verbose_name="内容", max_length=150)
+    create_datetime = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+```
+
+
+
 ## 3.1 博客列表
+
+首先利用django创建数据
+
+```python
+def db(request):
+    v1 = models.UserInfo.objects.create(username="king",password="111")
+    v2 = models.UserInfo.objects.create(username="shit",password="111")
+
+    models.Blog.objects.create(
+        category=1,
+        image="xx/xx/xxx.png",
+        title="郑经理",
+        summary="...",
+        text="共轭价格牌赶紧跑开皮肉给JPEG精品激光炮键盘",
+        creator=v1
+    )
+
+    models.Blog.objects.create(
+        category=2,
+        image="xx/xx/xxx.png",
+        title="弛放吧",
+        summary="...",
+        text="二哥哥1俄国个发1个人该个发v给vv",
+        creator=v2
+    )
+    return HttpResponse("创建成功")
+```
+
+博客列表：路由+视图+序列化
+
+``` python
+from api import models
+from rest_framework.views import APIView
+from rest_framework import serializers
+from rest_framework.response import Response
+
+
+class BlogSerializers(serializers.ModelSerializer):
+    category = serializers.CharField(source="get_category_display")
+    ctime = serializers.DateTimeField(format="%Y-%m-%d")
+    # creator_name = serializers.CharField(source="creator.username")
+    creator = serializers.SerializerMethodField()
+    class Meta:
+        model = models.Blog
+        fields = ["category","image","title","summary","ctime","comment_count","favor_count","creator",]
+
+    def get_creator(self,obj):
+        return {"id":obj.creator_id,"name":obj.creator.username}
+
+class BlogView(APIView):
+    def get(self,request,*args,**kwargs):
+        "博客列表"
+
+        #1.读取数据库中的博客信息
+        queryset = models.Blog.objects.all().order_by("-id")
+
+        #2.序列化
+        ser = BlogSerializers(instance=queryset,many=True)
+
+        #3.返回
+        context = {"code":"1000","data":ser.data}
+        return Response(context)
+
+
+```
+
+
+
+
+
+
+
+<br>
+
+<br>
 
 ## 3.2 博客详细和评论
 
+如果需要实现博客详细，可以使用下面的方法进行
+
+```python
+class BlogUserSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserInfo
+        fields = ["id","username"]
+
+
+class BlogDetailSerializers(serializers.ModelSerializer):
+    category = serializers.CharField(source="get_category_display")
+    ctime = serializers.DateTimeField(format="%Y-%m-%d")
+    creator = BlogUserSerializers()
+    class Meta:
+        model = models.Blog
+        fields = "__all__"
+
+
+
+class BlogDetailView(APIView):
+    def get(self,request,*args,**kwargs):
+        "博客详细"
+
+        #1.获取id
+        pk = kwargs.get("pk")
+
+        #2.根据ID获取对象
+        instance = models.Blog.objects.filter(id=pk).first()
+        if not instance:
+            return Response({"code":1001,"error":"不存在"})
+
+        #2.序列化
+        ser = BlogDetailSerializers(instance=instance,many=False)
+
+        #3.返回
+        context = {"code":"1000","data":ser.data}
+        return Response(context)
+```
+
+但是使用上述代码，在访问该页面的时候，还需要得到该博客相关的评论
+
+博客相关的评论通常需要分页，我们可以分成两个视图来实现
+
+- 一个实现返回博客详细
+- 一个实现返回评论
+
+```python
+path("api/blog/<int:pk>/",views.BlogDetailView.as_view()),
+# path("api/comment/",views.BlogDetailView.as_view()), #?blog=1,
+path("api/comment/<int:blog_id>/",views.CommentView.as_view()),
+```
+
+```python
+class CommentSerializers(serializers.ModelSerializer):
+    user = serializers.CharField(source="user.username")
+    class Meta:
+        model = models.Comment
+        fields = ["id","content","user","create_datetime"]
+
+
+class CommentView(APIView):
+    def get(self,request,blog_id):
+        #评论列表
+        #1.获取ID
+        queryset = models.Comment.objects.filter(blog_id=blog_id)
+
+        #2.序列化
+        ser = CommentSerializers(instance=queryset,many=True)
+
+        #3.返回
+        context = {"code":"1000","data":ser.data}
+        return Response(context)
+```
+
+此外由于对于评论，可能还需要新增评论，所以这里不仅需要查看数据（序列化），还需要传入数据
+
+```python
+#重写了to_representation函数
+from api.ext.hook import HookSerializer
+class CommentSerializers(HookSerializer,serializers.ModelSerializer):
+    class Meta:
+        model = models.Comment
+        fields = ["id","content","user","create_datetime"]
+
+    def sb_user(self,obj):
+        return obj.user.username
+```
+
+通过上述方法，是的可以传入同名字段user id编号，返回文本字段
+
+<br>
+
+<br>
+
 ## 3.3 注册
+
+输入用户信息+重复密码进行注册
+
+```python
+path("api/register/",views.RegisterView.as_view()),
+
+
+
+class RegisterSerializers(serializers.ModelSerializer):
+    confirm_password = serializers.CharField(write_only=True)
+    class Meta:
+        model = models.UserInfo
+        fields = ["id","username","password","confirm_password"]
+        extra_kwargs = {
+            "id":{"read_only":True},
+            "password":{"write_only":True}
+        }
+
+    def validate_password(self,value):
+        print("密码:",value)
+        return value
+
+    def validate_confirm_password(self,value):
+        print("重复密码:",value)
+        password = self.initial_data.get("password")
+        if password != value:
+            raise exceptions.ValidationError("密码不一致")
+        return value
+
+
+class RegisterView(APIView):
+    def post(self,request):
+        #1.提交数据{"username":xxx,"password":xxx,"confirm_password":xxx}
+
+        #2.校验+保存
+        ser = RegisterSerializers(data=request.data)
+        if ser.is_valid():
+            ser.validated_data.pop("confirm_password")
+            ser.save()
+            #注意调用ser.data会触发序列化，校验和序列化默认使用了同一个序列器类
+            return Response({"code": 1000, "error": "注册成功", "data": ser.data})
+        else:
+            return Response({"code":1001,"error":"注册失败","detail":ser.errors})
+```
+
+<br>
+
+<br>
 
 ## 3.4 登录
 
+登录成功，申辰token+失效日期，返回
+
+```python
+class LoginSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserInfo
+        fields = ["id","username","password","token"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "password":{"write_only":True},
+            "token": {"read_only": True},
+        }
+
+    def validate_password(self,value):
+        print("密码:",value)
+        return value
+
+
+
+class LoginView(APIView):
+    def post(self,request):
+        request.data
+        ser = LoginSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code":1003,"error":"登录校验失败","detail":ser.errors})
+        instance = models.UserInfo.objects.filter(**ser.validated_data).first()
+        if not instance:
+            return Response({"code":1002,"error":"用户名或密码错误","detail":ser.errors})
+        token =str(uuid.uuid4())
+        #下面两条是django的知识
+        instance.token = token
+        instance.save()
+        print(instance)
+        ser = LoginSerializers(instance=instance)
+
+        return Response({"code":1000,"token":token,"data":ser.data})
+```
+
+<br>
+
+<br>
+
 ## 3.5 发布评论
+
+创建评论（需要登录）
+
+在URL上通过GET方式传入博客ID + 请求体中评论信息，发送到后端API
+
+- 认证组件，request.user
+- 构造参数保存
+
+关于评论可以写的方位
+
+- 单独视图
+- 同一在之前评论列表视图（存在一个认证问题）
+
+如果使用同一视图，那么需要解决同一view类中不同请求方法的认证权限不同
+
+如何处理？借助匿名用户
+
+认证组件如下：
+
+```python
+from rest_framework.authentication import BaseAuthentication
+from api import models
+
+
+class BlogAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+
+        #在URL中获取参数
+        token = request.query_params.get("token")
+        if not token:
+            return
+        instance = models.UserInfo.objects.first(token=token).first()
+        if not instance:
+            return
+
+        #token是合法的
+        return instance,token #request.user 和request.auth
+
+    def authenticate_header(self, request):
+        """
+        Return a string to be used as the value of the `WWW-Authenticate`
+        header in a `401 Unauthenticated` response, or `None` if the
+        authentication scheme should return `403 Permission Denied` responses.
+        """
+        return "API"
+```
+
+
+
+<br>
+
+<br>
 
 ## 3.6 赞
 
+
+
+
+
+<br>
+
+<br>
+
 ## 3.7 新建博文
+
+
+
+
+
+<br>
+
+<br>
 
 ## 3.8 总结
 
