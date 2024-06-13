@@ -536,6 +536,172 @@ re.compile()函数只接收一个 值作为它的第二参数。可以使用管�
 
 ## 2.2 输入验证
 
+### 2.2.1 PyInputPlus模块
+
+PyInputPlus包含与input()类似的、用于多种数据（如数字、日期、E-mail地址 等）的函数。如果用户输入了无效的内容，例如格式错误的日期或超出预期范围的数字， 那么PyInputPlus会再次提示他们输入。PyInputPlus还包含其他有用的功能，例如提 示用户的次数限制和时间限制（如果要求用户在时限内做出响应）
+
+PyInputPlus不是Python标准库的一部分，因此必须利用pip单独安装。
+
+pii install --user pyinnputplus
+
+<br>
+
+PyInputPlus具有几种用于不同类型输入的函数
+
+| inputStr      | 类似于内置的input()函数，但具有一般的PyInputPlus功能。你还可 以将自定义验证函数传递给它。 |
+| ------------- | ------------------------------------------------------------ |
+| inputNum      | 确保用户输入数字并返回int或float值，这取决于数字是否包含小数 点。 |
+| inputChoice   | 确保用户输入系统提供的选项之一。                             |
+| inputMenu     | 与inputChoice()类似，但提供一个带有数字或字母选项的菜单。    |
+| inputDatetime | 确保用户输入日期和时间。                                     |
+| inputYesNo    | 确保用户输入“yes”或“no”响应。                                |
+| inputBool     | 类似inputYesNo()，但接收“True”或“False”响应，并返回一个布尔 值。 |
+| inputEmail    | 确保用户输入有效的E-mail地址。                               |
+| inputFilepath | 确保用户输入有效的文件路径和文件名，并可以选择检查是否存 在具有该名称的文件。 |
+| inputPassword | 类似于内置的input()，但是在用户输入时显示*字符，因此不会 在屏幕上显示口令或其他敏感信息。 |
+
+与Python的内置input()不同，PyInputPlus模块的函数包含一些用于输入验证的附 加功能
+
+<br>
+
+#### a. 关键字参数min、max
+
+接收int和float数的inputNum()、inputInt()和inputFloat()函数还具 有min、max、greaterThan和lessThan关键字参数，用于指定有效值范围。
+
+```python
+>>> import pyinputplus as pyip
+>>> response = pyip.inputNum('Enter num: ', min=4)
+Enter num:3
+Input must be at minimum 4. 
+Enter num:4
+>>>  response
+4
+>>> response = pyip.inputNum('Enter num: ', greaterThan=4)
+Enter num: 4
+Input must be greater than 4. 
+Enter num: 5
+>>> response
+5
+>>> response = pyip.inputNum('>', min=4, lessThan=6)
+Enter num: 6
+Input must be less than 6. 
+Enter num: 3
+Input must be at minimum 4. 
+Enter num: 4
+>>>  response
+4
+```
+
+<br>
+
+#### b.关键字参数blank
+
+在默认情况下，除非将关键字参数blank设置为True，否则不允许输入空格字符
+
+```python
+>>> import pyinputplus as pyip
+>>> response = pyip.inputNum('Enter num: ')    
+Enter num:(blank input entered here)
+Blank  values  are  not  allowed. 
+Enter num: 42
+>>>  response
+42
+>>>  response  =  pyip.inputNum(blank=True)
+(blank input entered here)
+>>>  response
+```
+
+<br>
+
+#### c. 关键字参数limit、timeout和default
+
+在默认情况下，PyInputPlus模块的函数会一直（或在程序运行时）要求用户提供 有效输入。如果你希望某个函数在经过**一定次数**的尝试或**一定的时间**后停止要求用户输 入，就可以使用limit和timeout关键字参数。用limit关键字参数传递**一个整数**，以确 定PyInputPlus的函数在放弃之前尝试接收有效**输入多少次**。用timeout关键字参数传递 一个整数，以确定用户在**多少秒之内**必须提供有效输入，然后PyInputPlus模块的函数 会放弃。
+
+如果用户没有提供有效输入，那么这些关键字参数分别引发
+
+RetryLimitException或TimeoutException异常
+
+```python
+>>> import pyinputplus as pyip
+>>> response = pyip.inputNum(limit=2) 
+blah
+'blah' is not a number.
+Enter num: number 
+'number' is not a number.
+Traceback (most recent call last):
+--snip--
+pyinputplus.RetryLimitException
+>>> response = pyip.inputNum(timeout=10) 
+42 (entered after 10 seconds of waiting)
+Traceback (most recent call last):
+--snip--
+pyinputplus.TimeoutException
+```
+
+
+
+当你使用这些关键字参数并传入default关键字参数时，该函数将返回默认值，而不 是引发异常。
+
+```python
+>>>  response  =  pyip.inputNum(limit=2,  default='N/A') 
+hello
+'hello' is not a number.
+world
+'world' is not a number.
+>>> response
+'N/A'
+```
+
+<br>
+
+#### d. 关键字参数allowRegexes和blockRegexes
+
+也可以使用正则表达式指定输入是否被接受。关键字参数allowRegexes和 blockRegexes利用正则表达式字符串列表来确定PyInputPlus模块的函数将接受或拒绝 哪些内容作为有效输入。
+
+
+
+```python
+>>> import pyinputplus as pyip
+>>> response = pyip.inputNum(allowRegexes=[r'(I|V|X|L|C|D|M)+', r'zero']) 
+XLII
+>>> response
+'XLII'
+>>> response = pyip.inputNum(allowRegexes=[r'(i|v|x|l|c|d|m)+', r'zero']) 
+xlii
+>>> response
+'xlii'
+```
+
+<br>
+
+还可以用blockRegexes关键字参数指定PyInputPlus模块的函数不接收的正则表 达式字符串列表。在交互式环境中输入以下内容，使得inputNum()不接收偶数作为有效 输入。
+
+```python
+>>> import pyinputplus as pyip
+>>> response = pyip.inputNum(blockRegexes=[r'[02468]$']) 
+42
+This response is invalid.
+44
+This response is invalid.
+43
+>>> response
+43
+```
+
+如果同时指定allowRegexes和blockRegexes参数，那么允许列表将优先于阻止列 表。
+
+<br>
+
+#### e. 将自定义验证函数传递给inputCustom()
+
+
+
+
+
+
+
+
+
 ## 2.3 读写文件
 
 ## 2.4 组织文件
