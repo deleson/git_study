@@ -42,7 +42,7 @@ export default defineConfig({
                 text: '书籍阅读',
                 items: [
                     {text: '利用python进行数据分析', link: '/python/book/利用python进行数据分析'},
-                    {text: '利用python进行数据分析', link: '/python/book/利用python进行数据分析'}
+                    {text: 'Python编程快速上手_让繁琐工作自动化', link: '/python/book/利用python进行数据分析'}
                 ]
             }
         ],

@@ -1591,7 +1591,111 @@ del obj.value     # 通过del关键字删除属性
 >
 > 通过合理使用 `Meta` 类中的各个参数，你可以控制 Django 模型的各种行为，从而更好地满足项目需求。 
 
-<br><br><br>
+<br><br>
+
+## 0.8 F表达式
+
+> 在 Django 中，可以使用 F 表达式来实现数据库字段的增减操作，而无需先将字段的当前值从数据库中取出再加减后再保存回去，这样可以避免并发操作时的数据不一致性问题。具体来说，对于你描述的需求，可以使用 F 表达式来实现对博客的评论数和赞数的自动更新。
+>
+> ### 使用 F 表达式的示例
+>
+> 假设有以下 Django 模型：
+>
+> ```
+> python复制代码from django.db import models
+> 
+> class Blog(models.Model):
+>     title = models.CharField(max_length=100)
+>     content = models.TextField()
+>     comment_count = models.IntegerField(default=0)
+>     favor_count = models.IntegerField(default=0)
+> 
+> class Favor(models.Model):
+>     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='favors')
+>     user = models.ForeignKey(User, on_delete=models.CASCADE)
+>     create_datetime = models.DateTimeField(auto_now_add=True)
+> 
+> class Comment(models.Model):
+>     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comments')
+>     user = models.ForeignKey(User, on_delete=models.CASCADE)
+>     content = models.TextField()
+>     create_datetime = models.DateTimeField(auto_now_add=True)
+> ```
+>
+> #### 增加赞功能实现
+>
+> 当用户添加赞时，除了在 Favor 表中创建记录外，还需要更新对应博客的赞数：
+>
+> ```
+> python复制代码from django.db.models import F
+> 
+> def add_favor(blog_id, user_id):
+>     # 创建 Favor 记录
+>     favor = Favor.objects.create(blog_id=blog_id, user_id=user_id)
+> 
+>     # 更新对应博客的赞数
+>     Blog.objects.filter(id=blog_id).update(favor_count=F('favor_count') + 1)
+> 
+>     return favor
+> ```
+>
+> #### 删除赞功能实现
+>
+> 当用户取消赞时，除了从 Favor 表中删除记录外，也要相应地减少对应博客的赞数：
+>
+> ```
+> python复制代码def delete_favor(blog_id, user_id):
+>     # 删除 Favor 记录
+>     Favor.objects.filter(blog_id=blog_id, user_id=user_id).delete()
+> 
+>     # 更新对应博客的赞数
+>     Blog.objects.filter(id=blog_id).update(favor_count=F('favor_count') - 1)
+> ```
+>
+> #### 增加评论功能实现
+>
+> 当用户添加评论时，除了在 Comment 表中创建记录外，还需要更新对应博客的评论数：
+>
+> ```
+> python复制代码def add_comment(blog_id, user_id, content):
+>     # 创建 Comment 记录
+>     comment = Comment.objects.create(blog_id=blog_id, user_id=user_id, content=content)
+> 
+>     # 更新对应博客的评论数
+>     Blog.objects.filter(id=blog_id).update(comment_count=F('comment_count') + 1)
+> 
+>     return comment
+> ```
+>
+> #### 删除评论功能实现
+>
+> 当用户删除评论时，除了从 Comment 表中删除记录外，也要相应地减少对应博客的评论数：
+>
+> ```
+> python复制代码def delete_comment(comment_id):
+>     # 获取评论对应的博客 ID
+>     blog_id = Comment.objects.get(id=comment_id).blog_id
+> 
+>     # 删除 Comment 记录
+>     Comment.objects.filter(id=comment_id).delete()
+> 
+>     # 更新对应博客的评论数
+>     Blog.objects.filter(id=blog_id).update(comment_count=F('comment_count') - 1)
+> ```
+>
+> ### F 表达式的作用
+>
+> F 表达式允许在数据库层级上执行增减操作，而不是在 Python 层级将字段值取出、加减后再存回数据库，这样可以保证操作的原子性和并发安全性。使用 F 表达式还可以利用数据库的原生功能来执行更新操作，避免不必要的数据传输和性能损耗。
+>
+> 在 Django 中，F 表达式支持对整数、浮点数和日期时间字段进行加减操作，并且可以与其他数据库查询条件和表达式结合使用，非常灵活和强大。
+
+
+
+
+
+<br><br>
+
+<br>
 
 # 1.drf初步了解
 
@@ -2224,7 +2328,7 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 >
 >    ```
 >    pythonCopy codefrom oauth2_provider.contrib.rest_framework import OAuth2Authentication
->                            
+>                                           
 >    class MyAPIView(APIView):
 >        authentication_classes = [OAuth2Authentication]
 >        ...
@@ -2887,14 +2991,14 @@ class NoAuthentication(BaseAuthentication):
 >
 >    ```
 >    pythonCopy codefrom rest_framework.permissions import BasePermission
->                            
+>                                           
 >    class IsUploaderOrReadOnly(BasePermission):
 >        def has_object_permission(self, request, view, obj):
 >            # 允许上传者进行所有操作，其他用户只能查看
 >            if request.method in ['GET', 'HEAD', 'OPTIONS']:
 >                return True
 >            return obj.uploader == request.user
->                            
+>                                           
 >    class MyPictureAPIView(APIView):
 >        permission_classes = [IsUploaderOrReadOnly]
 >        ...
@@ -3432,12 +3536,12 @@ path('avater/', views.AvaterView.as_view()),
 >
 >    ```
 >    pythonCopy codefrom rest_framework.throttling import BaseThrottle
->                            
+>                                           
 >    class BurstRateThrottle(BaseThrottle):
 >        def allow_request(self, request, view):
 >            # 实现自定义限流逻辑
 >            return True
->                            
+>                                           
 >    class MyBurstAPIView(APIView):
 >        throttle_classes = [BurstRateThrottle]
 >        ...
@@ -4269,14 +4373,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->                               
+>                                              
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->                               
+>                                              
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->                               
+>                                              
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
@@ -6998,7 +7102,80 @@ class CommentView(APIView):
 - 赞过不能再赞
 - 结合事务实现添加赞+赞数量更新
 
+首先添加认证类，实现视图函数全登录认证
 
+```python
+class BlogAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+
+        #在URL中获取参数
+        token = request.query_params.get("token")
+        if not token:
+            return
+        instance = models.UserInfo.objects.filter(token=token).first()
+        if not instance:
+            return
+
+        #token是合法的
+        return instance,token #request.user 和request.auth
+
+    def authenticate_header(self, request):
+        """
+        Return a string to be used as the value of the `WWW-Authenticate`
+        header in a `401 Unauthenticated` response, or `None` if the
+        authentication scheme should return `403 Permission Denied` responses.
+        """
+        return "API"
+
+
+class NoAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+
+        raise exceptions.AuthenticationFailed({"code":2000,"error":"认证失败"})
+
+    def authenticate_header(self, request):
+        """
+        Return a string to be used as the value of the `WWW-Authenticate`
+        header in a `401 Unauthenticated` response, or `None` if the
+        authentication scheme should return `403 Permission Denied` responses.
+        """
+        return "API"
+```
+
+在赞的视图函数中，添加认证组件，即可实现禁止匿名用户访问
+
+```python
+    authentication_classes = [BlogAuthentication,NoAuthentication]
+```
+
+视图和序列器实现
+
+```python
+class FavorSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = models.Favor
+        fields = ["blog"]
+
+
+
+
+class FavorView(APIView):
+    authentication_classes = [BlogAuthentication,NoAuthentication]
+    def post(self,request):
+        #{blog+user} ,查询，不存在赞添加
+        ser = FavorSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code":1003,"error":"赞校验失败","detail":ser.errors})
+
+        #1.存在，则不再点赞
+        exists = models.Favor.objects.filter(user=request.user,blog=ser.validated_data["blog"]).exists() #或者**ser.validated_data
+        if exists:
+            return Response({"code":1005,"error":"赞已存在"})
+
+        #2.不存在，赞
+        ser.save(user=request.user)
+        return Response({"code":1000,"data":ser.data})
+```
 
 <br>
 
@@ -7006,7 +7183,100 @@ class CommentView(APIView):
 
 ## 3.7 新建博文
 
+对于数据而言一般
 
+- 新增数据，post请求
+
+- 更新数据，put请求
+
+在本功能中，采用在BlogView中添加post方法来新建，主要问题
+
+- 认证功能
+- 序列器共用
+
+```python
+class BlogUserSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserInfo
+        fields = ["id","username"]
+
+
+class BlogSerializers(HookSerializer,serializers.ModelSerializer):
+    ctime = serializers.DateTimeField(format="%Y-%m-%d",read_only=True)
+    creator = BlogUserSerializers(read_only=True)
+    class Meta:
+        model = models.Blog
+        fields = ["id","category","image","title","text","summary","ctime","comment_count","favor_count","creator",]
+        extra_kwargs = {
+            "comment_count":{"read_only":True},
+            "favor_count":{"read_only":True},
+            "text":{"write_only":True},
+        }
+    def sb_category(self,obj):
+        return obj.get_category_display()
+
+
+
+class BlogView(APIView):
+    authentication_classes = [BlogAuthentication]
+    def get(self,request,*args,**kwargs):
+        "博客列表"
+
+        #1.读取数据库中的博客信息
+        queryset = models.Blog.objects.all().order_by("-id")
+
+        #2.序列化
+        ser = BlogSerializers(instance=queryset,many=True)
+
+        #3.返回
+        context = {"code":"1000","data":ser.data}
+        return Response(context)
+
+    def post(self,request,*args,**kwargs):
+        if not request.user:
+            return Response({"code":3000,"error":"认证失败"})
+
+        ser = BlogSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code":1002,"error":"校验失败","detail":ser.errors})
+        ser.save(creator=request.user)
+        return Response({"code":1000,"info": "注册成功","data":ser.data})
+```
+
+每篇博客都有评论数和赞数，添加赞的时候，不仅在Favor表要保存，还要找到相关的博客，将博客的赞数或评论数加一，此外如果有删除功能，那么对于博客的评论数和赞数也要对应减一
+
+
+
+```python
+class FavorView(APIView):
+    authentication_classes = [BlogAuthentication,NoAuthentication]
+    def post(self,request):
+        #{blog+user} ,查询，不存在赞添加
+        ser = FavorSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code":1003,"error":"赞校验失败","detail":ser.errors})
+
+        #1.存在，则不再点赞
+        instance_favor = models.Favor.objects.filter(user=request.user,blog=ser.validated_data["blog"]).first() #或者**ser.validated_data
+        if instance_favor:
+            instance_favor.delete()
+            models.Blog.objects.filter(id=ser.validated_data["blog"].id).update(favor_count=F('favor_count') - 1)
+            return Response({"code":1005,"error":"赞已取消"})
+
+        #2.不存在，赞
+        ser.save(user=request.user)
+        # 更新对应博客的赞数
+        models.Blog.objects.filter(id=ser.validated_data["blog"].id).update(favor_count=F('favor_count') + 1)
+        return Response({"code":1000,"data":ser.data})
+```
+
+下面是具体采取的手段
+
+```python
+models.Blog.objects.filter(id=ser.validated_data["blog"].id).update(favor_count=F('favor_count') - 1)
+models.Blog.objects.filter(id=ser.validated_data["blog"].id).update(favor_count=F('favor_count') + 1)
+
+```
 
 
 
@@ -7016,3 +7286,41 @@ class CommentView(APIView):
 
 ## 3.8 总结
 
+在本博客系统中，博客列表和评论列表返回需要有分页功能
+
+在drf中实现分页可以通过两种组件
+
+- PageNumberPagination
+- LimitOffsetPagination
+
+使用类似于序列化器组件和认证组件等
+
+都是自定义一个分页类（继承），然后view视图添加pagination_class= xxx（注意这个是单值）
+<br>
+
+视图中的代码缺乏复用,drf提供了5个用于增删改查等功能的五大类
+
+- 主要可以通过继承APIview下面的类进行实现功能（五大类
+
+
+
+> 在 Django REST Framework (DRF) 中，有五个主要的视图类（ViewSets），它们为常见的 CRUD 操作（创建、读取、更新、删除）提供了标准化的实现。这些视图类有助于减少重复代码，提高开发效率，并符合 RESTful 设计理念。这五个主要的视图类包括：
+>
+> 1. **APIView：**
+>    - `APIView` 是 DRF 中最基础的视图类。它允许你手动处理 HTTP 请求，提供最大的灵活性，但需要你自己实现请求和响应的处理逻辑。
+> 2. **GenericAPIView：**
+>    - `GenericAPIView` 是 `APIView` 的一个子类，结合了 Mixin 类提供的通用行为，例如获取对象列表、获取单个对象、创建对象、更新对象、删除对象等。通常与 Mixin 类一起使用，例如 `ListAPIView`、`RetrieveAPIView`、`CreateAPIView`、`UpdateAPIView`、`DestroyAPIView` 等。
+> 3. **ViewSet：**
+>    - `ViewSet` 是 Django REST Framework 中最强大和最高级的视图类之一。它结合了 `GenericAPIView`、`Mixin` 类和路由机制，提供了一种简化和统一的方式来处理常见的 CRUD 操作。`ViewSet` 可以自动路由和映射到 URL，并支持标准的 HTTP 动词（GET、POST、PUT、PATCH、DELETE 等）。
+> 4. **ModelViewSet：**
+>    - `ModelViewSet` 是 `ViewSet` 的一个子类，专门用于处理 Django 模型的 CRUD 操作。它结合了 `GenericAPIView`、`Mixin` 类和 `Model` 类，为你的模型提供了自动路由和标准的 CRUD 功能。通常用于管理数据库模型的 RESTful API。
+> 5. **ReadOnlyModelViewSet：**
+>    - `ReadOnlyModelViewSet` 是 `ModelViewSet` 的一个变种，它自动提供了只读操作（GET 请求），包括获取对象列表和获取单个对象的功能。适用于不需要修改或创建新对象的场景。
+>
+> 这些视图类在 DRF 中提供了不同级别的抽象和复用，使得开发者可以根据需要选择最合适的视图类来实现 API 的功能。使用这些视图类可以大大简化代码的编写，并且符合 RESTful 设计原则，提高了 API 的可维护性和扩展性。
+
+总之关于本课程没有提到的内容大致方向
+
+- APIView的进一步延申GenericAPIView
+- 分页功能组件
+- 分页的过滤和排序
