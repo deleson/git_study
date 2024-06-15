@@ -7,9 +7,23 @@ export default defineConfig({
     description: "A VitePress Site",
     themeConfig: {
         // https://vitepress.dev/reference/default-theme-config
-        outlineTitle:"目录",
-        outline:[1,6],
+        outlineTitle: "目录",
+        outline: [1, 6],
         nav: [
+            {
+                text: '数据存储和处理技术',
+                items: [
+                    {text: 'Redis', link: '/python/database/'},
+
+                ],
+            },
+            {
+                text: 'Python自动化',
+                items: [
+                    {text: 'pyautogui', link: '/python/python自动化/pyautogui'},
+
+                ],
+            },
             {
                 text: 'Python',
                 items: [
