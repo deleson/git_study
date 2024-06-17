@@ -598,13 +598,97 @@ pyautogui.scroll(50,100,100)  #移动并滚动
 
 ## 3.1 键盘输入
 
+主要内容：
+
+- wirte()		     批量按键盘按键
+- typewrite()     批量按键盘按键
+
+上述的两个函数是完全一样的，下面是typewirte函数定义
+
+```python
+def typewrite(message, interval=0.0, logScreenshot=None, _pause=True):
+```
+
+内部实现是对底层press函数的封装，同时在press函数内部又调用了_keyDown和_keyUP函数
+
+在官方文档的KEYBOARD_KEYS有所有可以按下的按键，注意多字符按键，不能按下
+例如f1传入，会按下f1，不会按下键盘上的f1，但如果传入列表，则可以按下，原因在于底层使用press函数。
+
+此外如果不是键盘按键，或KEYBOARD_KEYS 或KEY_NAMES没有的按键会被直接忽略（注意大写字母虽然在里面没有，但是会动态添加）。
+
+```python
+import  pyautogui
+
+
+pyautogui.write("a")
+pyautogui.write("abc123")
+pyautogui.write("abc123",interval=0.5)
+pyautogui.write("abc123\t\negege",interval=0.5)         #可以通过\t制表\n换行
+
+#对于多字符键盘按键，可以使用列表形式传入
+pyautogui.write("abcspace123enter\n\n",interval=0.5)            #错误传入多字符按键
+pyautogui.write(['a','b','c','space','1','2','3','enter'])  #正确传入多字符按键
+```
+
 <br>
 
 ## 3.2 键盘按键
 
+主要内容：
+
+- press()				按键盘按键（按下并且释放）
+- keyDown()         按键盘按键（按下但不释放）
+- keyUp()              释放已按下单键盘按键
+
+press函数可以实现多字符串的输入，并且该函数实际是keyDown和keyUp函数的封装
+
+如果press函数想要像wirte函数一样按下多个按钮，可以传入列表，press函数同时也有按下的间隔时间，此外还有一个
+
+可以控制按下重复次数的参数。
+
+```python
+import pyautogui
+
+pyautogui.press("a")
+pyautogui.press("space")
+pyautogui.press(["#","1","2"])
+pyautogui.press(["#","1","2"],interval=2)    #interval没生效
+pyautogui.press(["#","1","2"],presses=3,interval=2)    #interval生效
+
+#press(“a”)等价于
+pyautogui.keyUp("a")
+pyautogui.keyDown("a")
+
+
+#演示快捷键ctrl + v
+pyautogui.keyDown("ctrl")
+pyautogui.keyDown("v")
+pyautogui.keyUp("v")
+pyautogui.keyUp("ctrl")
+```
+
 <br>
 
 ## 3.3 键盘快捷键
+
+主要内容：
+
+- hotkey    专门按快捷键的方法
+
+本质是封装keydown和keyup函数，同时本函数支持interval参数
+
+本函数不能传列表
+
+```python
+import pyautogui
+
+
+# pyautogui.hotkey("ctrl","V")
+pyautogui.hotkey("win","d")
+pyautogui.hotkey("win","d")
+```
+
+
 
 <br>
 
@@ -612,15 +696,430 @@ pyautogui.scroll(50,100,100)  #移动并滚动
 
 # 4.消息对话框
 
+主要内容：
+
+- alert              警告对话框
+- confirm        确认对话框
+- prompt        提示用户输入对话框
+- password    密码输入对话框
+
+上面的四个函数，在内部实现的时候是在pymsgbox里面引入的同名模块实现的
+
+下面是alert警告框的使用
+
+```python
+import pyautogui
+import pymsgbox
+from tkinter import Tk,Button
+
+
+"""
+警告对话框
+
+返回被点击按钮的文本
+"""
+# print(pyautogui.alert())    #点击确定和关闭都是返回ok，这是由于作者没有做ok
+# #下面两条使用win原生的组件
+# print(pyautogui.alert(title="警告",text="自动化出现异常",icon=pymsgbox.STOP))
+# print(pyautogui.alert(title="警告",text="自动化出现异常",icon=pymsgbox.WARNING))
+#
+# #下面这个使用tkinter
+# print(pyautogui.alert(title="警告",text="自动化出现异常",_tkinter=True))
+#
+# print(pyautogui.alert(title="警告",text="自动化出现异常",button="已收到警告"))
+# print(pyautogui.alert(title="警告",text="自动化出现异常",button="已收到警告",timeout=3000))  #3000毫秒
+
+root = Tk()
+root.title("自动化控制台")
+
+def start_auto_gui_1():
+    """ 开始1UI自动化"""
+    print(pyautogui.alert(title="警告",text="自动化出现异常",button="已收到警告",root=root))    #该窗口是root的子窗口
+
+
+Button(root,text="开始#1",command=start_auto_gui_1).pack(pady=10)
+Button(root,text="开始#2").pack(pady=10)
+Button(root,text="开始#3").pack(pady=10)
+root.mainloop()
+```
+
+confirm确认框特点如下
+
+- 和alert一样，如果是win会走本地的对话框，否则tkinter
+- button传入元组或列表
+  - 对于pymsgbox模块内，该参数不能随便自己写
+  - 如果使用自定义的按钮组，则使用tkinter
+- 和alert一样，确认框有timeout参数
+
+<br>
+
+prompt文本框特点如下：
+
+- 必定使用tkinter
+- 有参数default，即文本默认值
+- 同样有timeout参数
+- 返回值是文本输入内容
+
+<br>
+
+password密码框特点如下：
+
+- 除了和promot参数一致的部分，还有一个mask参数，设置遮盖的字符，默认为*
+
+
+
+PS：吐槽一句，感觉这个对话框不好用，自动化工具为什么会有这玩意？
+
 <br>
 
 <br>
 
 # 5.屏幕截图
 
+## 5.1屏幕截图
+
+函数screenshot()，主要用法有三种
+
+1. 不带任何参数
+2. 带文件名参数
+3. 带region=(x,x,x,x)，告知截取的区域
+
+<br>
+
+主要内容
+
+- screenshot                      屏幕截图函数
+- 其他函数logScreenshot 屏幕截图日志参数
+- 屏幕截图日志相关常量
+
+<br>
+
+下面介绍screenshot函数使用
+
+```python
+import pyautogui
+from PIL.Image import Image
+
+img = pyautogui.screenshot()
+print(img)                          #返回PIL的image类,该类支持save方法
+img.save("./1.jpg")
+box = (12,276,116,717)
+img.crop(box).save("./2.jpg")       #部分裁剪
+
+print(pyautogui.screenshot(imageFilename="./2.png"))        #等同于上述三条代码
+print(pyautogui.screenshot(imageFilename="./2.png"),region=box)        #等同于使用部分裁剪
+```
+
+然后是关于鼠标拖拽和鼠标移动的logScrenshot参数(默认为False/None)
+
+在函数内部调用 _logScreenshot函数，在 _ logScreenshot函数内部底层调用了screenshot函数，具体定义如下
+
+```python
+def _logScreenshot(logScreenshot, funcName, funcArgs, folder="."):
+```
+
+- 是否记录屏幕截图
+- 函数名
+- 函数的参数
+- 保存的目录
+
+保存的文件名是年月日等参数
+
+如果设置了logScreenshot为True，则鼠标操作后会进行截图保存
+
+还可以设置全局常量
+
+- pyautogui.LOG_SCREENSHOTS为True，则默认为操作后截图。
+- pyautogui.LOG_SCREENSHOTS_LIMIT，设置屏幕截图的数量（覆盖）
+
 <br><br>
 
+## 5.2 图片定位
+
+主要内容：
+
+- locateOnScreen()    在屏幕上进行图片定位，返回图片区域
+- center()                     返回图片区域的中心坐标点
+- locateCenterOnScreen()  在屏幕上进行图片定位，返回中心坐标点
+- locateAllOnScreen() 在屏幕上进行图片定位，返回所有图片区域
+- locate()                       在给定图片上进行图片定位，返回图片区域
+- locateAll()                   在给定图片上进行图片定位，返回所有图片区域
+- click()、moveTo()等函数传入图片路径
+
+图片查找顺序是从左到右、从上到下
+
+对于locateOnScreen函数，底层使用的是locate，而locate调用了locateAll。
+
+locateOnScreen有几个重要参数：
+
+- 要查找的图片地址
+- confidence，查找精确度（要安装过opencv）
+- minSearchTime，最小查找时间
+- grayscale，是否设置灰度值图片定位（黑白，会快一点，但准确性下降）
+- region，设置匹配的区域，传入盒子（左上角x，左上角y，宽，高）
+
+<br>
+
+可以使用center函数获取区域的中心
+
+```python
+print(pyautogui.center(pyautogui.locateOnScreen("./image/steam.PNG",confidence = 0.9)))
+```
+
+<br>
+
+locateAllOnScreen()获取多个匹配图片，返回的是一个生成器
+
+```python
+#locateAllOnScreen()
+print(pyautogui.locateAllOnScreen("./image/steam.PNG",confidence = 0.9))			#返回生成器
+print(list(pyautogui.locateAllOnScreen("./image/steam.PNG",confidence = 0.9)))		#返回列表，元素是box
+```
+
+<br>
+
+locate，主要参数有三个
+
+- needleImage，要查找的图片
+- haystackImage，要查找的区域，默认是调用截图函数screenshot
+- **kwargs，
+
+返回box对象（左上角坐标+宽高）
+
+<br>
+
+locateAll，传参+返回生成器
+
+<br>
+
+此外在click函数中，也可以传入字符串（这个字符串是图片地址），会调用center获取图片中心点，在进行点击(同理moveTo函数也一样)
+
+既可以直接实现点击某个图片
+
+```python
+click("./image/xx.png")
+
+#和下面这个代码等价
+img_box = locateOnScreen("./image/xx.png")
+moveTo(img_box)
+click()
+```
+
+click和moveTo内部都调用了_normalizeXYArgs函数来判断传入参数是否为字符串，然后选择是否进行图片定位和返回
+
+<br>
+
+<br>
+
+## 5.3 屏幕像素获取与匹配
+
+主要内容：
+
+- pixel：获取屏幕像素，返回rgb
+- pixelMatchesColor()，屏幕像素匹配颜色
+
+获取屏幕像素方法如下
+
+```
+import pyautogui
+#方法1，使用getpixel
+img = pyautogui.screenshot()
+print(img.getpixel((100,500)))
+
+#方法2，使用pixel
+print(pyautogui.pixel(100,500))
+```
+
+判断某个像素是否匹配
+
+```python
+print(pyautogui.pixelMatchesColor(100,500,(255,255,255)))
+print(pyautogui.pixelMatchesColor(100,500,(255,255,255)),tolerance=20)
+```
+
+tolerance参数是匹配时候可以偏差的容忍范围
+
+<br>
+
+<br>
+
 # 6.其他
+
+主要内容
+
+- failSafeCheck()：故障安全检查
+- 通用暂停
+- mouseInfo():获取鼠标信息小程序
+- displayMousePosition():显示鼠标位置小工具
+- sleep():休眠，封装了time.sleep
+- countdown():倒计时
+- run()： 使用迷你语言执行UI自动化操作
+- printInfo()：打印UI自动化信息
+- getInfo()：获取UI自动化信息
+
+<br>
+
+
+
+failSafeCheck，当程序进行很多自动化操作的时候，很难手动关闭，这时候可以通过移动屏幕四个角，触发异常
+
+该异常是FailSafeException（故障安全异常），因此可以认为是个保护机制
+
+现在以click函数进行分析。
+
+1.首先在click函数上面可以看到一个通用的函数装饰器
+
+```python
+@_genericPyAutoGUIChecks
+def click(
+    x=None, y=None, clicks=1, interval=0.0, button=PRIMARY, duration=0.0, tween=linear, logScreenshot=None, _pause=True
+):
+```
+
+2.装饰器内部，运行函数之前会调用failSafeCheck故障安全检查函数
+
+```python
+def _genericPyAutoGUIChecks(wrappedFunction):
+    """
+    A decorator that calls failSafeCheck() before the decorated function and
+    _handlePause() after it.
+    """
+
+    @functools.wraps(wrappedFunction)
+    def wrapper(*args, **kwargs):
+        failSafeCheck()
+        returnVal = wrappedFunction(*args, **kwargs)
+        _handlePause(kwargs.get("_pause", True))
+        return returnVal
+
+    return wrapper
+```
+
+3.查看故障安全检查函数，看到查看是否在四个角并且开启了故障检测
+
+```pyhton
+def failSafeCheck():
+    if FAILSAFE and tuple(position()) in FAILSAFE_POINTS:
+        raise FailSafeException(
+            "PyAutoGUI fail-safe triggered from mouse moving to a corner of the screen. To disable this fail-safe, set pyautogui.FAILSAFE to False. DISABLING FAIL-SAFE IS NOT RECOMMENDED."
+        )
+```
+
+<br>
+
+通用暂停_pause(默认为True)，在很多函数都有这个参数
+
+在_pause对应调用 _ handlePause函数
+
+```python
+_handlePause(kwargs.get("_pause", True))
+```
+
+```python
+def _handlePause(_pause):
+    """
+    A helper function for performing a pause at the end of a PyAutoGUI function based on some settings.
+
+    If ``_pause`` is ``True``, then sleep for ``PAUSE`` seconds (the global pause setting).
+    """
+    if _pause:
+        assert isinstance(PAUSE, int) or isinstance(PAUSE, float)
+        time.sleep(PAUSE)
+```
+
+默认停止时间PAUSE为0.1秒
+
+ps:想要查看什么函数使用了通用暂停和安全故障，可以对准装饰器使用alt+f7
+
+<br>
+
+实用工具
+
+1. mouseInfo()：这个函数可以获取当前鼠标的xy坐标、rgb颜色和rgb as hex
+
+2. displayMousePosition()：在命令行运行，效果是在命令行实时显示鼠标坐标值和rgb
+
+3. countdown()：倒计时
+
+   ```python
+   def countdown(seconds):
+       for i in range(seconds, 0, -1):
+           print(str(i), end=" ", flush=True)#flush不设置内存缓存
+           time.sleep(1)
+       print()
+   ```
+
+4. run迷你语言实现
+
+   ```python
+   def run(commandStr, _ssCount=None):
+       """Run a series of PyAutoGUI function calls according to a mini-language
+       made for this function. The `commandStr` is composed of character
+       commands that represent PyAutoGUI function calls.
+   
+       For example, `run('ccg-20,+0c')` clicks the mouse twice, then makes
+       the mouse cursor go 20 pixels to the left, then click again.
+   
+       Whitespace between commands and arguments is ignored. Command characters
+       must be lowercase. Quotes must be single quotes.
+   
+       For example, the previous call could also be written as `run('c c g -20, +0 c')`.
+   
+       The character commands and their equivalents are here:
+   
+       `c` => `click(button=PRIMARY)`
+       `l` => `click(button=LEFT)`
+       `m` => `click(button=MIDDLE)`
+       `r` => `click(button=RIGHT)`
+       `su` => `scroll(1) # scroll up`
+       `sd` => `scroll(-1) # scroll down`
+       `ss` => `screenshot('screenshot1.png') # filename number increases on its own`
+   
+       `gX,Y` => `moveTo(X, Y)`
+       `g+X,-Y` => `move(X, Y) # The + or - prefix is the difference between move() and moveTo()`
+       `dX,Y` => `dragTo(X, Y)`
+       `d+X,-Y` => `drag(X, Y) # The + or - prefix is the difference between drag() and dragTo()`
+   
+       `k'key'` => `press('key')`
+       `w'text'` => `write('text')`
+       `h'key,key,key'` => `hotkey(*'key,key,key'.replace(' ', '').split(','))`
+       `a'hello'` => `alert('hello')`
+   
+       `sN` => `sleep(N) # N can be an int or float`
+       `pN` => `PAUSE = N # N can be an int or float`
+   
+       `fN(commands)` => for i in range(N): run(commands)
+   
+       Note that any changes to `PAUSE` with the `p` command will be undone when
+       this function returns. The original `PAUSE` setting will be reset.
+   
+       TODO - This function is under development.
+       """
+   
+       # run("ccc")  straight forward
+       # run("susu") if 's' then peek at the next character
+       global PAUSE
+   
+       if _ssCount is None:
+           _ssCount = [
+               0
+           ]  # Setting this to a mutable list so that the callers can read the changed value. TODO improve this comment
+   
+       commandList = _tokenizeCommandStr(commandStr)
+   
+       # Carry out each command.
+       originalPAUSE = PAUSE
+       _runCommandList(commandList, _ssCount)
+       PAUSE = originalPAUSE
+   ```
+
+   具体实现如下
+
+   ```python
+   pyautogui.run("g300,300s2csss2g+500,+0s2rss") #中间的空格会被忽略，所以可以空格隔开命令
+   ```
+
+5. printInfo()，调用getInfo得到相关UI自动化的信息
 
 <br><br>
 

@@ -242,7 +242,7 @@ number.findall('Agent Alice told Agent Carol that Agent Eve knew Agent Bob was a
 
 有时候你想匹配一组字符，但缩写的字符分类（\d、\w、\s等）太宽泛。这时候你 可以用方括号定义自己的字符分类。例如，字符分类[aeiouAEIOU]将匹配所有元音字 符，且不区分大小写。
 
-```python
+```bash
 vowelRegex = re.compile(r[aeiouAEIOU])
 vowelRegex.findall('RoboCop eats baby food. BABY FOOD.')
 #返回['o', 'o', 'o', 'e', 'a', 'a', 'o', 'o', 'A', 'O', 'O']
@@ -256,7 +256,7 @@ vowelRegex.findall('RoboCop eats baby food. BABY FOOD.')
 
 在字符分类的左方括号后加上一个插入字符（^），就可以得到“非字符类”。非字符 类将匹配**不在这个字符类中的所有字符**。
 
-```python
+```bash
 consonantRegex = re.compile(r'[^aeiouAEIOU]')
 consonantRegex.findall('RoboCop eats baby food. BABY FOOD.')
 #返回['R', 'b', 'c', 'p', ' ', 't', 's', ' ', 'b', 'b', 'y', ' ', 'f', 'd', '.', '
@@ -279,7 +279,7 @@ consonantRegex.findall('RoboCop eats baby food. BABY FOOD.')
 
 查找Hello开始的字符串
 
-```shell
+```bash
 >>> beginsWithHello = re.compile(r'^Hello')
 >>> beginsWithHello.search('Hello world!')
 <re. Match object; span=(0, 5), match='Hello'>
@@ -291,7 +291,7 @@ True
 
 查找正则表达式r'\d$'匹配以数字0～9结束的字符串
 
-```shell
+```bash
 >>> endsWithNumber = re.compile(r'\d$')
 >>> endsWithNumber.search('Your number is 42')
 <re. Match object; span=(16, 17), match='2'>
@@ -301,7 +301,7 @@ True
 
 <br>查找正则表达式r'^\d+$'匹配从开始到结束都是数字的字符串。
 
-```shell
+```bash
 >>> wholeStringIsNum = re.compile(r'^\d+$')
 >>> wholeStringIsNum.search('1234567890')
 <re. Match object; span=(0, 10), match='1234567890'>
@@ -323,7 +323,7 @@ True
 
 在正则表达式中，.（句点）字符称为“通配字符”。它匹配换行符之外的所有字符。
 
-```shell
+```bash
 >>> atRegex = re.compile(r'.at')
 >>> atRegex.findall('The cat in the hat sat on the flat mat.')
 ['cat', 'hat', 'sat', 'lat', 'mat']
@@ -335,7 +335,7 @@ True
 
 可以使用.和*来匹配所有字符
 
-```shell
+```bash
 >>> nameRegex = re.compile(r'First Name: (.*) Last Name: (.*)')
 >>> mo = nameRegex.search('First Name: Al Last Name: Sweigart')
 >>> mo.group(1)
@@ -350,7 +350,7 @@ True
 
 贪心匹配和非贪心匹配
 
-```shell
+```bash
 >>> nongreedyRegex = re.compile(r'<.*?>')
 >>> mo = nongreedyRegex.search('<To serve man> for dinner.>')
 >>> mo.group()
@@ -369,7 +369,7 @@ True
 
 点-星将匹配换行符外的所有字符。传入re.DOTALL作为re.compile()的第二个参 数，可以让句点字符匹配所有字符，包括换行符。
 
-```shell
+```bash
 >>> noNewlineRegex = re.compile('.*')
 >>> noNewlineRegex.search('Serve the public trust.\nProtect the innocent.\nUphold the law.').group()
 'Serve the public trust.'
@@ -410,7 +410,7 @@ True
 
 有时候你只关心匹配的字母，不关心它们是大写还是小写。要让正则表达式不 区分大小写，可以向re.compile()传入re.IGNORECASE或re.I作为第二个参数。
 
-```shell
+```bash
 >>> robocop = re.compile(r'robocop', re.I)
 >>> robocop.search('RoboCop is part man, part machine, all cop.').group()
 'RoboCop'
@@ -428,7 +428,7 @@ True
 
 Regex对象 的sub()方法需要传入两个参数。第一个参数是一个字符串，用于替换发现的匹配。第二 个参数是一个字符串，即正则表达式。sub()方法返回替换完成后的字符串。
 
-```shell
+```bash
 >>> namesRegex = re.compile(r'Agent \w+')
 >>> namesRegex.sub('CENSORED', 'Agent Alice gave the secret documents to Agent Bob.')
 'CENSORED gave the secret documents to CENSORED.'
@@ -440,7 +440,7 @@ Regex对象 的sub()方法需要传入两个参数。第一个参数是一个字
 
 假定想要隐去某些人的姓名，只显示他们姓名的第一个字母。要做到这一点， 可以使用正则表达式Agent (\w)\w*，传入r'\1****'作为sub()方法的第一个参数。字 符串中的\1将由分组1匹配的文本所替代，也就是正则表达式的(\w)分组：
 
-```shell
+```bash
 >>> agentNamesRegex = re.compile(r'Agent (\w)\w*')
 >>> agentNamesRegex.sub(r'\1****', 'Agent Alice told Agent Carol that Agent
 Eve knew Agent Bob was a double agent.')
@@ -492,14 +492,14 @@ A**** told C**** that E**** knew B**** was a double agent.'
 
 现在，不必使用这样难以阅读的正则表达式：
 
-```shell
+```bash
 phoneRegex = re.compile(r'((\d{3}|\(\d{3}\))?(\s|-|\.)?\d{3}(\s|-|\.)\d{4}
  (\s*(ext|x|ext.)\s*\d{2,5})?)')
 ```
 
 你可以将正则表达式放在多行中，并加上注释，像这样：
 
-```shell
+```bash
 phoneRegex = re.compile(r'''(
  (\d{3}|\(\d{3}\))?          	 # area code      
 (\s|-|\.)?             			 # separator 
@@ -568,7 +568,7 @@ PyInputPlus具有几种用于不同类型输入的函数
 
 接收int和float数的inputNum()、inputInt()和inputFloat()函数还具 有min、max、greaterThan和lessThan关键字参数，用于指定有效值范围。
 
-```python
+```bash
 >>> import pyinputplus as pyip
 >>> response = pyip.inputNum('Enter num: ', min=4)
 Enter num:3
@@ -598,7 +598,7 @@ Enter num: 4
 
 在默认情况下，除非将关键字参数blank设置为True，否则不允许输入空格字符
 
-```python
+```bash
 >>> import pyinputplus as pyip
 >>> response = pyip.inputNum('Enter num: ')    
 Enter num:(blank input entered here)
@@ -621,7 +621,7 @@ Enter num: 42
 
 RetryLimitException或TimeoutException异常
 
-```python
+```bash
 >>> import pyinputplus as pyip
 >>> response = pyip.inputNum(limit=2) 
 blah
@@ -642,7 +642,7 @@ pyinputplus.TimeoutException
 
 当你使用这些关键字参数并传入default关键字参数时，该函数将返回默认值，而不 是引发异常。
 
-```python
+```bash
 >>>  response  =  pyip.inputNum(limit=2,  default='N/A') 
 hello
 'hello' is not a number.
@@ -676,7 +676,7 @@ xlii
 
 还可以用blockRegexes关键字参数指定PyInputPlus模块的函数不接收的正则表 达式字符串列表。在交互式环境中输入以下内容，使得inputNum()不接收偶数作为有效 输入。
 
-```python
+```bash
 >>> import pyinputplus as pyip
 >>> response = pyip.inputNum(blockRegexes=[r'[02468]$']) 
 42
@@ -694,17 +694,149 @@ This response is invalid.
 
 #### e. 将自定义验证函数传递给inputCustom()
 
+可以编写函数，以执行自定义
+
+假设一个使用场景：希望用户输入一系列数字，这些数字总和为10
+
+并且需要具备以下功能
+
+- 接收单个字符串参数，即用户输入的内容。
+- 如果字符串验证失败，则引发异常。
+- 如果inputCustom()应该返回不变的该字符串，则返回None（或没有return语 句）。
+- 如果inputCustom()返回的字符串与用户输入的字符串不同，则返回非None值。
+- 作为第一个参数传递给inputCustom()。
+
+<br>
+
+我们可以创建自己的addsUpToTen()函数，然后将其传递给 inputCustom()。
+
+请注意，函数调用看起来像inputCustom(addsUpToTen)而不 是inputCustom(addsUpToTen())，因为我们是将addsUpToTen()函数本身传递给 inputCustom()，而不是调用addsUpToTen()并传递其返回值：
+
+> ### 目标
+>
+> 你希望实现一个功能，用户输入一系列数字，这些数字的总和为10。如果用户输入不符合这个条件，应该引发异常或者返回一个非None的值，指示输入不合法。
+>
+> ### 步骤
+>
+> 1. **编写自定义验证函数**：
+>    - 这个函数需要接收一个字符串参数（用户的输入）。
+>    - 函数应该进行验证：检查输入是否是一系列数字，并且这些数字的总和是否为10。
+>    - 如果验证通过，函数应该返回 int型（或者不返回任何值）。
+>    - 如果验证失败，函数应该引发一个异常（比如 `ValueError`），或者返回一个非None的值（比如 `False`），用于指示输入不合法。
+> 2. **传递自定义函数给 `inputCustom()`**：
+>    - `inputCustom()` 是一个假设的函数，它可能是一个模拟输入函数，接受一个参数作为验证函数。
+>    - 你需要将步骤1中编写的自定义验证函数作为参数传递给 `inputCustom()`。
+
+```bash
+>>> import pyinputplus as pyip
+>>> def addsUpToTen(numbers):
+... 	numbersList = list(numbers)
+... 	for i, digit in enumerate(numbersList):
+...   		numbersList[i] = int(digit)
+... 	if sum(numbersList) != 10:
+...   		raise Exception('The digits must add up to 10, not %s.' % (sum(numbersList)))
+... 	return int(numbers) # Return an int form of numbers.
+... 
+>>> response = pyip.inputCustom(addsUpToTen) # No parentheses after addsUpToTen here.
+123
+The digits must add up to 10, not 6.
+1235
+The digits must add up to 10, not 11.
+1234
+>>> response # inputStr() returned an int, not a string. 
+1234
+>>> response = pyip.inputCustom(addsUpToTen) 
+hello
+invalid literal for int() with base 10: 'h'
+55
+>>> response
+```
+
+<br><br>
+
+### 2.2.2 项目-如何让人忙几个小时
+
+利用PyInputPlus创建一个执行以下操作的简单程序。 
+
+​	1．询问用户是否想知道如何让人忙几小时。 
+
+​	2．如果用户回答no，退出。 
+
+​	3．如果用户回答yes，转到步骤1。
+
+```python
+import pyinputplus as pyip
+while True:
+    prompt = "want to know how to keep a persen busy for hours\n"
+    response = pyip.inputYesNo(prompt)
+    if response == "no":
+        break
+print("Thank you. Have a nice day")
+```
 
 
 
+<br>
 
+<br>
 
+### 2.2.3 项目-乘法校验
 
+创建一个程 序，向用户提出10个乘法问题，其中有效的输入是问题的正确答案。
 
+```python
+import pyinputplus as pyip 
+import random, time
+    numberOfQuestions = 10
+    correctAnswers = 0
+    for questionNumber in range(numberOfQuestions):
+        num1 = random.randint(0,9)
+        num2 = random.randint(0,9)
+        prompt = "#%s:%s x %s = %" (questionNumber,num1,num2)
+        try: 
+            # Right answers are handled by allowRegexes.
+ 			# Wrong answers are handled by blockRegexes, with a custom message.
+ 			pyip.inputStr(prompt, allowRegexes=['^%s$' % (num1 * num2)],
+                          blockRegexes=[('.*', 'Incorrect!')],timeout=8, limit=3)
+        except pyip.TimeoutException: 
+			print('Out  of  time!')
+ 		except pyip.RetryLimitException:
+			print('Out  of  tries!')
+        else:
+ 			# This block runs if no exceptions were raised in the try block. 
+			print('Correct!')
+ 			correctAnswers += 1
+    time.sleep(1) # Brief pause to let user see the result. 
+    print('Score: %s / %s' % (correctAnswers, numberOfQuestions))
+```
+
+<br>
+
+<br>
 
 ## 2.3 读写文件
 
+
+
+
+
+<br>
+
+<br>
+
 ## 2.4 组织文件
 
+### 2.4.1  文件与文件路径
 
+
+
+<br>
+
+<br>
+
+### 2.4.2 文件读写过程
+
+<br>
+
+<br>
 
