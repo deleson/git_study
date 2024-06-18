@@ -1125,3 +1125,235 @@ ps:想要查看什么函数使用了通用暂停和安全故障，可以对准�
 
 # 7.UI自动化项目
 
+主要内容：
+
+1. 开发UI自动化小项目
+2. 简单介绍Windows窗口操作   [PyGetWindow · PyPI](https://pypi.org/project/PyGetWindow/)
+3. 简单介绍官网上的UI自动化项目
+
+
+
+pyautogui里面引入了PyGetWindow组件（同作者），用来实现操作窗口
+
+> PyGetWindow是一个用于在Python中获取和控制窗口的库。它允许你查找、获取、移动、调整和关闭操作系统上的应用程序窗口。这个库特别有用，特别是在需要自动化GUI操作或测试的情况下。PyGetWindow支持Windows、macOS和Linux平台。
+>
+> 主要功能包括：
+>
+> 1. **查找窗口**：可以通过窗口标题、类名等属性查找特定的窗口。
+> 2. **获取窗口信息**：获取窗口的尺寸、位置和其他属性。
+> 3. **移动和调整窗口**：可以移动窗口到指定位置或调整窗口大小。
+> 4. **激活和关闭窗口**：可以将窗口置于前台或关闭窗口。
+
+> 以下是对PyGetWindow库中主要方法的详细介绍和使用示例。
+>
+> ### 安装PyGetWindow
+>
+> 首先，你需要安装PyGetWindow库。可以使用pip命令进行安装：
+>
+> ```
+> bash
+> 复制代码
+> pip install pygetwindow
+> ```
+>
+> ### 导入库
+>
+> ```
+> python
+> 复制代码
+> import pygetwindow as gw
+> ```
+>
+> ### 主要方法和使用示例
+>
+> #### 1. `gw.getAllTitles()`
+>
+> **功能**：获取所有打开窗口的标题。
+>
+> **用法**：
+>
+> ```
+> python复制代码all_titles = gw.getAllTitles()
+> print(all_titles)
+> ```
+>
+> #### 2. `gw.getWindowsWithTitle(title)`
+>
+> **功能**：根据窗口标题查找窗口，返回匹配窗口的列表。
+>
+> **参数**：
+>
+> - `title`：窗口标题（字符串）。
+>
+> **用法**：
+>
+> ```
+> python复制代码notepad_windows = gw.getWindowsWithTitle('Untitled - Notepad')
+> print(notepad_windows)
+> ```
+>
+> #### 3. `WindowObject`
+>
+> **功能**：表示一个窗口对象，包含多个属性和方法。
+>
+> **常用属性**：
+>
+> - `title`：窗口标题。
+> - `left`、`top`、`right`、`bottom`：窗口边界位置。
+> - `width`、`height`：窗口宽度和高度。
+>
+> **常用方法**：
+>
+> - `moveTo(x, y)`：移动窗口到指定位置。
+> - `resizeTo(width, height)`：调整窗口大小。
+> - `activate()`：将窗口置于前台。
+> - `close()`：关闭窗口。
+>
+> **用法**：
+>
+> ```
+> python复制代码# 查找记事本窗口
+> notepad_window = gw.getWindowsWithTitle('Untitled - Notepad')[0]
+> 
+> # 获取窗口信息
+> print(notepad_window.title)
+> print(notepad_window.left, notepad_window.top, notepad_window.width, notepad_window.height)
+> 
+> # 移动窗口
+> notepad_window.moveTo(100, 100)
+> 
+> # 调整窗口大小
+> notepad_window.resizeTo(800, 600)
+> 
+> # 将窗口置于前台
+> notepad_window.activate()
+> 
+> # 关闭窗口
+> notepad_window.close()
+> ```
+>
+> #### 4. `gw.getActiveWindow()`
+>
+> **功能**：获取当前活动窗口。
+>
+> **用法**：
+>
+> ```
+> python复制代码active_window = gw.getActiveWindow()
+> print(active_window.title)
+> ```
+>
+> #### 5. `gw.getAllWindows()`
+>
+> **功能**：获取所有窗口对象。
+>
+> **用法**：
+>
+> ```
+> python复制代码all_windows = gw.getAllWindows()
+> for window in all_windows:
+>     print(window.title, window.left, window.top, window.width, window.height)
+> ```
+>
+> ### 实际示例
+>
+> 假设你要操作多个应用程序窗口，可以组合使用上述方法：
+>
+> ```
+> python复制代码import pygetwindow as gw
+> 
+> # 查找所有窗口
+> all_windows = gw.getAllWindows()
+> 
+> # 打印所有窗口标题
+> for window in all_windows:
+>     print(window.title)
+> 
+> # 查找特定窗口
+> chrome_windows = gw.getWindowsWithTitle('Google Chrome')
+> if chrome_windows:
+>     chrome_window = chrome_windows[0]
+>     chrome_window.moveTo(200, 200)
+>     chrome_window.resizeTo(1024, 768)
+>     chrome_window.activate()
+> 
+> # 查找当前活动窗口
+> active_window = gw.getActiveWindow()
+> print('当前活动窗口:', active_window.title)
+> ```
+>
+> ### 小结
+>
+> PyGetWindow库提供了强大的功能来获取和操作窗口的属性和行为。通过熟悉这些方法，你可以轻松地在Python脚本中控制操作系统上的窗口应用程序，实现自动化和测试等任务。
+
+
+
+项目案例：打开pyautogui官方文档
+
+```python
+import pyautogui
+from pyautogui import countdown,click,doubleClick,write, \
+    press,pixelMatchesColor,screenshot,alert,sleep,getActiveWindow,hotkey,locateOnWindow
+
+
+def start_auto_gui():
+    """
+    1.双击浏览器
+    2.等待浏览器加载
+    3.火狐窗口最大化
+    4.点击搜索
+    5.输入pyautogui
+    6.搜索pyautogui
+    7.等待搜索结果
+    8.点击pyautogui
+    9.屏幕截图
+    10.提示UI自动化结束
+
+    """
+    sleep_time = 1 #通用暂停时间
+    search_count = 0 #设置搜索次数上线
+    print("三秒后开始UI自动化")
+    countdown(3)
+    print("双击搜索查询")
+    hotkey("win", "q")
+    write("internet:pyautogui")
+    press("Enter", presses=2, interval=0.5)
+    while True:
+        win = getActiveWindow()
+        print(win.title)
+        if win.title =="搜索" or \
+                win.title == "pyautogui - 搜索" or \
+                pyautogui.getWindowsWithTitle("搜索") is not False:
+            win.activate()
+            win.maximize()
+            break
+        sleep(sleep_time)
+        search_count+=1
+        if search_count == 5:
+            break
+    print("等待搜索结果加载")
+    sleep(sleep_time)
+    if search_count == 5:
+        print("搜索失败请稍后尝试")
+        return False
+    print("pyautogui完成搜索")
+    print("点击pyautogui文档")
+    click("./img/search.PNG")
+    while pyautogui.getWindowsWithTitle("documentation") is False:
+        click("./img/search.PNG")
+        sleep(sleep_time)
+
+    print("官方文档打开完成")
+    print("屏幕截图")
+    sleep(sleep_time)
+    sleep(sleep_time)
+    screenshot("./doc.png")
+    print("提示UI自动化完成")
+    alert(title="提示",text="UI自动化已完成",timeout=10000)
+
+
+if __name__ =="__main__":
+    start_auto_gui()
+```
+
+接下来介绍官方文档的例子

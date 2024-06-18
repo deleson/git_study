@@ -13,30 +13,29 @@ export default defineConfig({
             {
                 text: '数据存储和处理技术',
                 items: [
-                    {text: 'Redis', link: '/python/database/'},
+                    {text: 'Redis', link: '/study_md/database/Redis7实战'},
 
                 ],
             },
             {
                 text: 'Python自动化',
                 items: [
-                    {text: 'pyautogui', link: '/python/python自动化/pyautogui'},
+                    {text: 'pyautogui', link: '/study_md/python自动化/pyautogui'},
 
                 ],
             },
             {
                 text: 'Python',
                 items: [
-                    {text: 'Python 基础语法', link: '/study_directory/python/python'},
+                    {text: 'Python 基础语法', link: '/study_md/python/python'},
 
                 ],
             },
             {
                 text: 'Python Web',
                 items: [
-                    {text: 'Django基础', link: '/python/django/drf/django'},
-                    {text: 'Django REST Framework（DRF）', link: '/python/django/drf/drf'},
-                    {text: 'DRF源码解析', link: '/python/django/drf/drf_origin'},
+                    {text: 'Django基础', link: '/study_md/django/drf/django'},
+                    {text: 'Django REST Framework（DRF）', link: '/study_md/django/drf/drf'},
                 ]
             },
 
@@ -55,8 +54,8 @@ export default defineConfig({
             {
                 text: '书籍阅读',
                 items: [
-                    {text: '利用python进行数据分析', link: '/python/book/利用python进行数据分析'},
-                    {text: 'Python编程快速上手_让繁琐工作自动化', link: '/python/book/利用python进行数据分析'}
+                    {text: '利用python进行数据分析', link: '/study_md/book/利用python进行数据分析'},
+                    {text: 'Python编程快速上手_让繁琐工作自动化', link: '/study_md/book/利用python进行数据分析'}
                 ]
             }
         ],
