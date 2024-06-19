@@ -14,6 +14,7 @@ export default defineConfig({
                 text: '数据存储和处理技术',
                 items: [
                     {text: 'Redis', link: '/study_md/database/Redis7实战'},
+                    {text: 'Mysql', link: '/study_md/database/Mysql'},
 
                 ],
             },
@@ -45,10 +46,11 @@ export default defineConfig({
                     {text: 'PyTorch', link: '/study_directory/python/pytorch'}
                 ]
             },
+
             {
-                text: 'Python GUI',
+                text: '前端',
                 items: [
-                    {text: 'pyqt', link: '/study_directory/python/pyqt'}
+                    {text: 'Vue', link: '/study_directory/python/pyqt'}
                 ]
             },
             {

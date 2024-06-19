@@ -165,7 +165,7 @@ app01
 
 
 
-![django流程.drawio](../../../public/md_img/django/django流程.drawio.png)
+![django流程.drawio](../../../public/django_img/django/django流程.drawio.png)
 
 ## 6.请求和响应
 
@@ -194,7 +194,7 @@ app01
 - mysql数据库+pymysql
 - django开发操作数据库，可以通过内部的ORM框架（而不是通过pymysql）
 
-![orm介绍.drawio](../../../public/md_img/django/orm介绍.drawio.png)
+![orm介绍.drawio](../../../public/django_img/django/orm介绍.drawio.png)
 
 
 
@@ -1237,7 +1237,7 @@ def index(request):
 
 由此需要引入django的中间件
 
-![中间件.drawio](../../../public/md_img/django/中间件.drawio.png)
+![中间件.drawio](../../../public/django_img/django/中间件.drawio.png)
 
 ### 13.2中间件体验
 

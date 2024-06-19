@@ -1363,7 +1363,7 @@ del obj.value     # 通过del关键字删除属性
 
    前后端不分离
 
-   ![前后端不分离.drawio](../../../public/md_img/drf/前后端不分离.drawio.png)
+   ![前后端不分离.drawio](../../../public/django_img/drf/前后端不分离.drawio.png)
 
    
 
@@ -1371,7 +1371,7 @@ del obj.value     # 通过del关键字删除属性
 
    前后端分离
 
-   ![前后端分离.drawio](../../../public/md_img/drf/前后端分离.drawio.png)
+   ![前后端分离.drawio](../../../public/django_img/drf/前后端分离.drawio.png)
 
    
 
@@ -2226,7 +2226,7 @@ def initialize_request(self, request, *args, **kwargs):
 
 request中的参数**kwargs，其实是url中的< int:v1 >传入的
 
-![request源码](../../../public/md_img/drf/request源码.png)
+![request源码](../../../public/django_img/drf/request源码.png)
 
 > 在 Django REST Framework（DRF）中，处理HTTP请求的方式稍有不同于标准的Django处理方式，主要是因为它使用了一个定制的`Request`对象来提供一些额外功能，特别是针对API开发的需求。以下是DRF中`Request`对象的调用和初始化过程：
 >
@@ -2468,7 +2468,7 @@ obj.dispatch()
 
 ### 1.4.3 认证组件源码
 
-![认证源码](../../../public/md_img/drf/认证源码.png)
+![认证源码](../../../public/django_img/drf/认证源码.png)
 
 ```python
 class Request:
@@ -3885,7 +3885,7 @@ ps:为什么使用redis，主要是出于性能等方面的考虑，如果不设
 
 <br>
 
-![限流源码](../../../public/md_img/drf/限流源码.png)
+![限流源码](../../../public/django_img/drf/限流源码.png)
 
 <br>
 
@@ -5340,9 +5340,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 ### 2.4.5 序列化源码
 
-![认证源码](../../../public/md_img/drf/序列化源码.png)
+![认证源码](../../../public/django_img/drf/序列化源码.png)
 
-![认证源码](../../../public/md_img/drf/序列化源码2.png)
+![认证源码](../../../public/django_img/drf/序列化源码2.png)
 
 <br>
 
