@@ -26,7 +26,7 @@
 
 
 
-![flask动态页面.drawio](C:\Users\86183\Downloads\flask动态页面.drawio.png)
+![flask动态页面.drawio](../../public/Mysql/案例flask+mysql.drawio.pngflask动态页面.drawio.png)
 
 对于目前而言，什么可以做数据的存储
 
@@ -555,7 +555,7 @@ conn.close()
 
 Flask+MySQL
 
-![案例flask+mysql.drawio](C:\Users\86183\Downloads\案例flask+mysql.drawio.png)
+![案例flask+mysql.drawio](../../public/Mysql/案例flask+mysql.drawio.png)
 
 
 
