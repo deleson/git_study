@@ -26,7 +26,7 @@
 
 
 
-![flask动态页面.drawio](../../public/Mysql/案例flask+mysql.drawio.pngflask动态页面.drawio.png)
+![flask动态页面.drawio](../../public/Mysql/flask动态页面.drawio.png)
 
 对于目前而言，什么可以做数据的存储
 
