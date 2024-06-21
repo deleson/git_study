@@ -53,6 +53,7 @@ export default defineConfig({
                 items: [
                     {text: 'Vue', link: '/study_md/front_end/Vue3'},
                     {text: 'javascript', link: '/study_md/front_end/javascript'},
+                    {text: 'css', link: '/study_md/front_end/css'},
                 ]
             },
             {
