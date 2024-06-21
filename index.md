@@ -4,8 +4,7 @@ layout: home
 
 hero:
   name: "个人学习笔记"
-  text: " 欢迎来到我的个人学习笔记网站！这里是我记录学习点滴的地方。
-    不断探索，不断前进，与您分享python的学习历程"
+  text: " 欢迎来到我的个人学习笔记网站！这里是我记录学习点滴的地方。不断探索，不断前进，与您分享python的学习历程"
   tagline: 持续学习，持续进步
   actions:
     - theme: brand
@@ -25,6 +24,6 @@ features:
   - title: 前端知识
     details: |
       学习前端开发的基础知识和最新技术，包括 HTML、CSS、JavaScript 等，构建现代化的用户界面。
-
 ---
+
 
