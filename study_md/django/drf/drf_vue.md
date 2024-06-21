@@ -35,15 +35,7 @@
 > });
 > ```
 >
-> Vue 实例 (`new Vue({...})`) 创建了一个Vue实例，并通过`el`属性指定了挂载的元素，这里是`#app`，表示Vue将管理`<div id="app">`内部的内容。
->
-> `data`属性定义了Vue实例的数据对象，这里的`dataList`是一个数组，存储了对象的列表。
->
-> `methods`属性定义了Vue实例中可以调用的方法，包括`addUser`添加用户、`deleteRow`删除行、`editRow`编辑行等方法。
->
-> 数据绑定 (`{{...}}`) 和双向数据绑定 (`v-model="propertyName"`) 是Vue.js的特有功能，用于将数据与视图同步更新。
->
-> 事件处理 (`v-on:click="methodName"` 和 `@click="methodName"`) 允许监听DOM事件，并在触发时调用Vue实例中的方法。
+> 
 >
 > **JavaScript 的部分：**
 >
