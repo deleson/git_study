@@ -14,24 +14,24 @@
 >
 > 1. **使用 `push()` 方法添加元素到数组末尾：**
 >
->    ```
->    javascript复制代码let arr = [1, 2, 3];
+>    ```javascript
+>    let arr = [1, 2, 3];
 >    arr.push(4);
 >    console.log(arr); // [1, 2, 3, 4]
 >    ```
 >
 > 2. **使用 `unshift()` 方法添加元素到数组开头：**
 >
->    ```
->    javascript复制代码let arr = [2, 3];
+>    ```javascript
+>    let arr = [2, 3];
 >    arr.unshift(1);
 >    console.log(arr); // [1, 2, 3]
 >    ```
 >
 > 3. **使用 `splice()` 方法在指定位置插入元素：**
 >
->    ```
->    javascript复制代码let arr = [1, 2, 4];
+>    ```javascript
+>    let arr = [1, 2, 4];
 >    arr.splice(2, 0, 3);
 >    console.log(arr); // [1, 2, 3, 4]
 >    ```
@@ -40,24 +40,24 @@
 >
 > 1. **使用 `pop()` 方法删除数组末尾的元素：**
 >
->    ```
->    javascript复制代码let arr = [1, 2, 3];
+>    ```javascript
+>    let arr = [1, 2, 3];
 >    arr.pop();
 >    console.log(arr); // [1, 2]
 >    ```
 >
 > 2. **使用 `shift()` 方法删除数组开头的元素：**
 >
->    ```
->    javascript复制代码let arr = [1, 2, 3];
+>    ```javascript
+>    let arr = [1, 2, 3];
 >    arr.shift();
 >    console.log(arr); // [2, 3]
 >    ```
 >
 > 3. **使用 `splice()` 方法删除指定位置的元素：**
 >
->    ```
->    javascript复制代码let arr = [1, 2, 3, 4];
+>    ```javascript
+>    let arr = [1, 2, 3, 4];
 >    arr.splice(1, 1); // 从索引 1 开始删除 1 个元素
 >    console.log(arr); // [1, 3, 4]
 >    ```
@@ -66,8 +66,8 @@
 >
 > 直接通过索引访问并修改数组中的元素：
 >
-> ```
-> javascript复制代码let arr = [1, 2, 3];
+> ```javascript
+> let arr = [1, 2, 3];
 > arr[1] = 10;
 > console.log(arr); // [1, 10, 3]
 > ```
@@ -76,8 +76,8 @@
 >
 > 使用数组的索引进行访问：
 >
-> ```
-> javascript复制代码let arr = [1, 2, 3];
+> ```javascript
+> let arr = [1, 2, 3];
 > console.log(arr[1]); // 2
 > ```
 >
@@ -87,8 +87,8 @@
 >
 > 直接给对象添加新的属性：
 >
-> ```
-> javascript复制代码let obj = { name: 'Alice', age: 25 };
+> ```javascript
+> let obj = { name: 'Alice', age: 25 };
 > obj.city = 'New York';
 > console.log(obj); // { name: 'Alice', age: 25, city: 'New York' }
 > ```
@@ -97,8 +97,8 @@
 >
 > 使用 `delete` 关键字删除对象的属性：
 >
-> ```
-> javascript复制代码let obj = { name: 'Bob', age: 30, city: 'London' };
+> ```javascript
+> let obj = { name: 'Bob', age: 30, city: 'London' };
 > delete obj.age;
 > console.log(obj); // { name: 'Bob', city: 'London' }
 > ```
@@ -107,8 +107,8 @@
 >
 > 直接修改对象的属性值：
 >
-> ```
-> javascript复制代码let obj = { name: 'Charlie', age: 28 };
+> ```javascript
+> let obj = { name: 'Charlie', age: 28 };
 > obj.age = 29;
 > console.log(obj); // { name: 'Charlie', age: 29 }
 > ```
@@ -117,8 +117,8 @@
 >
 > 直接通过属性名访问对象的属性：
 >
-> ```
-> javascript复制代码let obj = { name: 'David', age: 35 };
+> ```javascript
+> let obj = { name: 'David', age: 35 };
 > console.log(obj.age); // 35
 > ```
 >
@@ -133,8 +133,8 @@
 
 > **Vue.js 的部分：**
 >
-> ```
-> javascript复制代码var app = new Vue({
+> ```javascript
+> var app = new Vue({
 >     el: "#app",
 >     data: {
 >         dataList: [
@@ -172,8 +172,8 @@
 >
 > **JavaScript 的部分：**
 >
-> ```
-> javascript复制代码editRow: function(event) {
+> ```javascript
+> editRow: function(event) {
 >     let idx = event.target.dataset.idx;
 >     // 这里可以继续实现编辑功能
 > }
@@ -277,8 +277,8 @@
 >
 > 在 HTML 中，你可以将插值表达式放置在文本内容或者属性值中，例如：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   {{ message }}
 > </div>
 > ```
@@ -291,8 +291,8 @@
 >
 > 在 Vue 实例中，你需要定义数据对象，并将其绑定到 HTML 中的插值表达式。
 >
-> ```
-> javascript复制代码var app = new Vue({
+> ```javascript
+> var app = new Vue({
 >   el: '#app',
 >   data: {
 >     message: 'Hello Vue!'
@@ -312,8 +312,8 @@
 >
 > 使用示例：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <p>{{ message }}</p>
 >   <a v-bind:href="url">{{ linkText }}</a>
 > </div>
@@ -446,8 +446,8 @@ v-bind注意：
 >
 > `v-bind` 指令用于动态地绑定 HTML 元素的属性。以下是一个基本示例：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <img v-bind:src="imageSrc" alt="Sample Image">
 > </div>
 > 
@@ -467,8 +467,8 @@ v-bind注意：
 >
 > `v-bind` 指令有一个简写形式，可以在属性名前加上 `:`。以下是等效的写法：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <img :src="imageSrc" alt="Sample Image">
 > </div>
 > ```
@@ -481,8 +481,8 @@ v-bind注意：
 >
 > 可以使用 `v-bind` 动态绑定类名。以下是一个示例：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <div :class="classObject">这个 div 的类名是动态绑定的</div>
 > </div>
 > 
@@ -505,8 +505,8 @@ v-bind注意：
 >
 > 可以使用 `v-bind` 动态绑定内联样式。以下是一个示例：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <div :style="styleObject">这个 div 的样式是动态绑定的</div>
 > </div>
 > 
@@ -525,7 +525,7 @@ v-bind注意：
 >
 > 在这个示例中，`styleObject` 是一个对象，其中键是 CSS 属性名，值是相应的样式值。这个对象被绑定到 `<div>` 标签的 `style` 属性上。
 >
-> ------
+> 
 >
 > **绑定其他属性**
 >
@@ -533,8 +533,8 @@ v-bind注意：
 >
 > 以下示例展示了如何使用 `v-bind` 动态绑定链接的 `href` 属性：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <a :href="url">点击这里</a>
 > </div>
 > 
@@ -550,14 +550,14 @@ v-bind注意：
 >
 > 在这个示例中，`url` 数据属性的值被绑定到 `<a>` 标签的 `href` 属性上。
 >
-> ------
+> 
 >
 > **动态属性名**
 >
 > `v-bind` 还可以用于动态绑定属性名。以下是一个示例：
 >
-> ```
-> html复制代码<div id="app">
+> ```html
+> <div id="app">
 >   <button v-bind:[attributeName]="buttonValue">按钮</button>
 > </div>
 > 
@@ -582,14 +582,14 @@ v-bind注意：
 
 `v-bind:class` 可以接收一个对象，其中键是类名，值是布尔值。布尔值为 `true` 时，该类名会被应用到元素上。
 
-- ```
+- ```javascript
   classObject
   ```
 
    为对象，键是类名，值是布尔值：
 
-  ```
-  javascript复制代码{
+  ```javascript
+  {
     classA: true,
     classB: false
   }
@@ -599,15 +599,13 @@ v-bind注意：
 
 `v-bind:class` 可以接收一个数组，其中每个元素是一个类名字符串。所有这些类名都会被应用到元素上。
 
-- ```
+- ```javascript
   classArray
   ```
 
    为数组，元素是类名字符串：
 
-  ```
-  javascript
-  复制代码
+  ```javascript
   ['classA', 'classB']
   ```
 
@@ -621,8 +619,8 @@ v-bind注意：
 
    为数组，包含类名字符串和对象：
 
-  ```
-  javascript复制代码[
+  ```javascript
+  [
     'classA',
     {
       classB: true,
@@ -1294,9 +1292,7 @@ deleteRow:function(event){
 >
 > 其语法如下：
 >
-> ```
-> javascript
-> 复制代码
+> ```javascript
 > array.splice(start, deleteCount, item1, item2, ...)
 > ```
 >
@@ -1312,16 +1308,16 @@ deleteRow:function(event){
 >
 > - **`delete`**：`delete` 操作符用于删除对象的属性或数组中的元素，但它不会影响数组的长度，而是将删除的元素设置为 `undefined`。在数组中使用 `delete` 通常不会调整数组的长度，并且可能会导致稀疏数组。
 >
->   ```
->   javascript复制代码let arr = [1, 2, 3];
+>   ```javascript
+>   let arr = [1, 2, 3];
 >   delete arr[1];
 >   console.log(arr); // [1, undefined, 3]
 >   ```
 >
 > - **`pop`**：`pop` 方法用于从数组末尾删除一个元素，并返回该元素。它是 `splice` 的一个特例，只能删除末尾的一个元素，并且不支持插入或替换操作。
 >
->   ```
->   javascript复制代码let arr = [1, 2, 3];
+>   ```javascript
+>   let arr = [1, 2, 3];
 >   let lastElement = arr.pop(); // 返回 3，arr 变为 [1, 2]
 >   ```
 >
