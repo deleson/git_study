@@ -37,6 +37,7 @@ export default defineConfig({
                 items: [
                     {text: 'Django基础', link: '/study_md/django/drf/django'},
                     {text: 'Django REST Framework（DRF）', link: '/study_md/django/drf/drf'},
+                    {text: 'vue+DRF+django', link: '/study_md/django/drf/drf_vue'},
                 ]
             },
 
@@ -50,7 +51,7 @@ export default defineConfig({
             {
                 text: '前端',
                 items: [
-                    {text: 'Vue', link: '/study_directory/python/pyqt'}
+                    {text: 'Vue', link: '/study_md/front_end/Vue3'}
                 ]
             },
             {
