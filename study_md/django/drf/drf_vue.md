@@ -1,8 +1,133 @@
-
-
 # 课程介绍
 
 2022年发布的视频，课程来源vue+DRF+django项目部署
+
+下面是javascript相关语法
+
+
+
+> javaScript 中对数组和对象的增删改查操作是开发中常见且基础的操作。下面我将分别介绍数组和对象的常见操作方法。
+>
+> 数组的增删改查操作
+>
+> 增加元素
+>
+> 1. **使用 `push()` 方法添加元素到数组末尾：**
+>
+>    ```javascript
+>    let arr = [1, 2, 3];
+>    arr.push(4);
+>    console.log(arr); // [1, 2, 3, 4]
+>    ```
+>
+> 2. **使用 `unshift()` 方法添加元素到数组开头：**
+>
+>    ```javascript
+>    let arr = [2, 3];
+>    arr.unshift(1);
+>    console.log(arr); // [1, 2, 3]
+>    ```
+>
+> 3. **使用 `splice()` 方法在指定位置插入元素：**
+>
+>    ```javascript
+>    let arr = [1, 2, 4];
+>    arr.splice(2, 0, 3);
+>    console.log(arr); // [1, 2, 3, 4]
+>    ```
+>
+> 删除元素
+>
+> 1. **使用 `pop()` 方法删除数组末尾的元素：**
+>
+>    ```javascript
+>    let arr = [1, 2, 3];
+>    arr.pop();
+>    console.log(arr); // [1, 2]
+>    ```
+>
+> 2. **使用 `shift()` 方法删除数组开头的元素：**
+>
+>    ```javascript
+>    let arr = [1, 2, 3];
+>    arr.shift();
+>    console.log(arr); // [2, 3]
+>    ```
+>
+> 3. **使用 `splice()` 方法删除指定位置的元素：**
+>
+>    ```javascript
+>    let arr = [1, 2, 3, 4];
+>    arr.splice(1, 1); // 从索引 1 开始删除 1 个元素
+>    console.log(arr); // [1, 3, 4]
+>    ```
+>
+> 修改元素
+>
+> 直接通过索引访问并修改数组中的元素：
+>
+> ```javascript
+> let arr = [1, 2, 3];
+> arr[1] = 10;
+> console.log(arr); // [1, 10, 3]
+> ```
+>
+> 查询元素
+>
+> 使用数组的索引进行访问：
+>
+> ```javascript
+> let arr = [1, 2, 3];
+> console.log(arr[1]); // 2
+> ```
+>
+> 对象的增删改查操作
+>
+> 增加属性
+>
+> 直接给对象添加新的属性：
+>
+> ```javascript
+> let obj = { name: 'Alice', age: 25 };
+> obj.city = 'New York';
+> console.log(obj); // { name: 'Alice', age: 25, city: 'New York' }
+> ```
+>
+> 删除属性
+>
+> 使用 `delete` 关键字删除对象的属性：
+>
+> ```javascript
+> let obj = { name: 'Bob', age: 30, city: 'London' };
+> delete obj.age;
+> console.log(obj); // { name: 'Bob', city: 'London' }
+> ```
+>
+> 修改属性
+>
+> 直接修改对象的属性值：
+>
+> ```javascript
+> let obj = { name: 'Charlie', age: 28 };
+> obj.age = 29;
+> console.log(obj); // { name: 'Charlie', age: 29 }
+> ```
+>
+> 查询属性
+>
+> 直接通过属性名访问对象的属性：
+>
+> ```javascript
+> let obj = { name: 'David', age: 35 };
+> console.log(obj.age); // 35
+> ```
+>
+> 注意事项
+>
+> - **数组和对象的遍历**：可以使用 `for...of` 循环、`forEach()` 方法等遍历数组，使用 `for...in` 循环遍历对象的属性。
+> - **数组和对象的复制**：复制数组可以使用 `slice()` 方法或扩展运算符 `...`，复制对象可以使用 `Object.assign()` 方法或对象解构。
+
+
 
 下面是关于本课程常见的javacript代码进行解析
 
@@ -35,7 +160,15 @@
 > });
 > ```
 >
-> 
+> Vue 实例 (`new Vue({...})`) 创建了一个Vue实例，并通过`el`属性指定了挂载的元素，这里是，表示Vue将管理`<div id="app">`内部的内容。
+>
+> `data`属性定义了Vue实例的数据对象，这里的`dataList`是一个数组，存储了对象的列表。
+>
+> `methods`属性定义了Vue实例中可以调用的方法，包括`addUser`添加用户、`deleteRow`删除行、`editRow`编辑行等方法。
+>
+> 数据绑定 `{{...}}` 和双向数据绑定 `v-model="propertyName"` 是Vue.js的特有功能，用于将数据与视图同步更新。
+>
+> 事件处理 `v-on:click="methodName"` 和 `@click="methodName"` 允许监听DOM事件，并在触发时调用Vue实例中的方法。
 >
 > **JavaScript 的部分：**
 >
