@@ -3,8 +3,8 @@
 layout: home
 
 hero:
-  name: "个人学习笔记"
-  text: " 欢迎来到我的个人学习笔记网站！与您分享python的学习之路"
+  name: "python学习笔记"
+  text: "分享python的学习之路"
   tagline: 持续学习，持续进步
   actions:
     - theme: brand

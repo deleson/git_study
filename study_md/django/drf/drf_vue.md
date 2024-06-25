@@ -177,7 +177,9 @@
 >
 > 通过上述分析，可以清楚地看到Vue.js提供了一套更高级和便捷的方式来操作和管理前端应用程序的数据和交互，同时依赖于JavaScript作为其基础语言和执行环境。这种结合使得开发者能够更高效地开发和维护复杂的前端应用。
 
+<br>
 
+<br>
 
 # 第二部分：前端开发
 
@@ -188,7 +190,7 @@
 
 本课程以vue2为主
 
-
+<br>
 
 ## 1.Vue.js初体验
 
@@ -249,13 +251,13 @@
 
   后期编写前端代码使用IDE:WebStom（与Pycharm是一家子）
 
-
+<br><br>
 
 ## 2.Vue常见指令
 
 想要使用vue.js来进行开发，就必须使用vue.js中提供的指令，明白每个指令是什么意思
 
-
+<br>
 
 ### 2.1 插值表达式
 
@@ -381,6 +383,8 @@
 </body>
 </html>
 ```
+
+<br>
 
 ### 2.2 指令：v-bind
 
@@ -619,9 +623,9 @@ v-bind注意：
   ]
   ```
 
+<br>
 
-
-### 2.2 指令：v-model
+### 2.3 指令：v-model
 
 一般用于在交互的表中中使用，例如input、select、textares等（双向绑定）
 
@@ -745,6 +749,8 @@ v-model常用标签
 </body>
 </html>
 ```
+
+<br>
 
 ### 2.4 指令：v-for
 
@@ -924,6 +930,8 @@ v-model常用标签
 </html>
 ```
 
+<br>
+
 ### 2.5 指令：v-on
 
 事件相关的指令
@@ -978,7 +986,7 @@ v-on:focus
 
 
 
-
+<br>
 
 ### 2.6 案例：数据管理
 
@@ -1452,7 +1460,7 @@ deleteRow:function(event){
 
 上述实现，主要通过修改之前的新建数据的框，并在adduser添加分支逻辑实现编辑功能。
 
-
+<br>
 
 ### 2.7 指令：v-if
 
@@ -1516,6 +1524,8 @@ deleteRow:function(event){
 v-if、v-else-if、v-else是三个分支判断，注意当分支不成立的时候，该分支的内容不会渲染到html中
 
 
+
+<br>
 
 ### 2.8 指令：v-show
 
@@ -1617,6 +1627,8 @@ v-if、v-else-if、v-else是三个分支判断，注意当分支不成立的时�
 
 
 
+<br>
+
 ### 2.9 案例：用户登录
 
 编写案例之前，现在学习一下axios，他是一个HTTP库，可以发送Http请求（在前后端分离中使用较频繁）
@@ -1629,7 +1641,7 @@ v-if、v-else-if、v-else是三个分支判断，注意当分支不成立的时�
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <style src="https//unpkg.com/axios/dist/axios.min.js"></style>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body>
 
@@ -1683,7 +1695,1668 @@ then是请求完成后触发的函数，catch是如果发生异常触发的函�
 
 
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 引入 Vue.js -->
+    <script src="vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        label {
+            width: 60px;
+            display: inline-block;
+            text-align: right;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <input type="button" value="密码登录" @click="isSms=false">
+    <input type="button" value="短信登录" @click="isSms=true">
+    <div v-show="isSms">
+        <p>
+            <label>手机号</label>
+            <input type="text" placeholder="手机号" v-model="sms.mobile">
+        </p>
+        <p>
+            <label>验证码</label>
+            <input type="text" placeholder="验证码" v-model="sms.code">
+        </p>
+    </div>
+    <div v-show="!isSms">
+        <p>
+            <label>用户名</label>
+            <input type="text" placeholder="用户名" v-model="info.username">
+        </p>
+        <p>
+            <label>密码</label>
+            <input type="password" placeholder="密 码" v-model="info.password">
+        </p>
+    </div>
+    <input type="button" value="登录" @click="loginForm">
+
+</div>
+
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            isSms: false,
+            info: {
+                username: "",
+                password: "",
+            },
+            sms: {
+                mobile: "",
+                code: "",
+            }
+        },
+        methods: {
+            loginForm: function () {
+                //1.获取用户输入的值
+                let dataDict = this.isSms ? this.sms : this.info;
+                let url;
+                if (this.isSms){
+                    url = "https//api.luffycity.com/api/v1/auth/mobile/login/?loginWay=mobile";
+                }else{
+                    url = "https://api.luffycity.com/api/v1/auth/password/login/?loginWay=password";
+                }
+                //2.向某个地址发送网络请求axios，以路飞学城的登录为例子
+                //https://api.luffycity.com/api/v1/auth/password/login/?loginWay=password
+                //{"username":"alex123,"password":"999"}
+                //https://api.luffycity.com/api/v1/auth/mobile/login/?loginWay=mobile
+                //{"mobile":18630087660,"code":23132}
+                axios({
+                    method: "post",
+                    url: url,
+                    data: dataDict,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }).then(function (res) {
+                    if(res.data.code == -1){
+                        alert(res.data.msg);
+                        return;
+                    }
+                    //登录成功后跳转
+                    window.location.href = "https//www.luffycity.com"
+                }).catch(function (error) {
+                    alert("请求异常，请重新操作");
+                })
+            }
+        }
+
+    });
+</script>
+
+</body>
+</html>
+
+```
 
 
 
+<br><br>
+
+
+
+## 3.组件化开发
+
+在开发过程中，我们可以将页面中某一部分的功能编写成一个组件，然后再页面上进行引用。
+
+- 有利于划分功能模块的开发（HTML、CSS、JavaScript等相关代码都继承到组件中）
+- 有利于重用
+
+> Vue 的组件化开发是 Vue.js 提供的一种开发模式，它允许开发者将界面划分为独立、可复用的组件。组件可以包含自己的数据、逻辑和模板，从而提高代码的可维护性和可扩展性。
+>
+> 1. 组件的定义与注册 Vue 组件可以通过两种方式定义和注册：全局注册和局部注册。
+>
+> 全局注册： 在全局注册时，组件可以在任何 Vue 实例中使用。
+>
+> ```javascript
+> Vue.component('my-component', {
+>   template: '<div>A custom component!</div>'
+> });
+> ```
+>
+> 局部注册： 在局部注册时，组件只能在注册它的父组件中使用。
+>
+> ```javascript
+> var Child = {
+>   template: '<div>A custom component!</div>'
+> };
+> 
+> new Vue({
+>   el: '#app',
+>   components: {
+>     'my-component': Child
+>   }
+> });
+> ```
+>
+> 1. 组件的使用 一旦组件被注册，就可以在模板中像自定义元素一样使用它们。
+>
+> ```
+> html复制代码<div id="app">
+>   <my-component></my-component>
+> </div>
+> ```
+>
+> 1. 组件的属性 (Props) 组件可以通过 props 接收外部数据。props 是一种自定义的属性，可以在父组件中传递数据给子组件。
+>
+> ```
+> javascript复制代码Vue.component('child', {
+>   props: ['message'],
+>   template: '<div>{{ message }}</div>'
+> });
+> 
+> new Vue({
+>   el: '#app',
+>   data: {
+>     parentMessage: 'Hello from parent'
+>   }
+> });
+> ```
+>
+> 使用 props：
+>
+> ```
+> html复制代码<div id="app">
+>   <child :message="parentMessage"></child>
+> </div>
+> ```
+>
+> 1. 组件的事件 子组件可以通过 `$emit` 方法向父组件发送事件，父组件可以监听这些事件。
+>
+> 子组件：
+>
+> ```
+> javascript复制代码Vue.component('child', {
+>   template: '<button @click="notify">Notify Parent</button>',
+>   methods: {
+>     notify() {
+>       this.$emit('notify');
+>     }
+>   }
+> });
+> ```
+>
+> 父组件：
+>
+> ```
+> javascript复制代码new Vue({
+>   el: '#app',
+>   methods: {
+>     handleNotify() {
+>       alert('Notification received from child');
+>     }
+>   }
+> });
+> ```
+>
+> 使用事件：
+>
+> ```
+> html复制代码<div id="app">
+>   <child @notify="handleNotify"></child>
+> </div>
+> ```
+>
+> 1. 插槽 (Slots) 插槽是 Vue 提供的一种内容分发机制，可以让父组件向子组件传递任意内容。
+>
+> ```
+> javascript复制代码Vue.component('child', {
+>   template: '<div><slot></slot></div>'
+> });
+> 
+> new Vue({
+>   el: '#app'
+> });
+> ```
+>
+> 使用插槽：
+>
+> ```
+> html复制代码<div id="app">
+>   <child>
+>     <p>This is passed from parent</p>
+>   </child>
+> </div>
+> ```
+>
+> 1. 动态组件 Vue 提供了一个 `component` 元素，可以在相同的挂载点动态切换多个组件。
+>
+> ```
+> javascript复制代码new Vue({
+>   el: '#app',
+>   data: {
+>     currentView: 'componentA'
+>   },
+>   components: {
+>     componentA: { template: '<div>Component A</div>' },
+>     componentB: { template: '<div>Component B</div>' }
+>   }
+> });
+> ```
+>
+> 使用动态组件：
+>
+> ```
+> html复制代码<div id="app">
+>   <component :is="currentView"></component>
+> </div>
+> ```
+>
+> 1. 组件通信 在实际开发中，组件之间的通信是非常重要的。常见的组件通信方式有：
+>
+> props：用于父组件向子组件传递数据。 事件：用于子组件向父组件传递消息。 Vuex：用于管理全局状态，适用于复杂的应用。
+>
+> 组件化开发的优势 组件化开发有以下几个优势：
+>
+> 提高代码的可维护性：将代码分解成独立的组件，方便管理和维护。 提高代码的可复用性：组件可以在不同的地方重复使用，减少代码重复。 提高开发效率：组件化开发可以让团队成员专注于各自的组件，提高开发效率。
+>
+> 使用场景 组件化开发适用于各种前端开发场景，特别是以下情况：
+>
+> 大型单页面应用（SPA）：组件化开发可以帮助管理复杂的应用结构。 可复用的 UI 库：创建一组可复用的 UI 组件，供不同项目使用。 团队协作开发：组件化开发可以让团队成员并行开发不同的组件，提高开发效率。
+>
+> 通过组件化开发，Vue 可以帮助开发者构建高效、可维护的前端应用。
+
+<br>
+
+### 3.1 局部组件
+
+组件应用的步骤：
+
+1. 编写组件
+
+2. 挂载组件到Vue中
+
+3. html中引入组件
+
+``` html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="vue.js"></script>
+</head>
+<body>
+<div id="app">
+    <h1>======当前页面======</h1>
+    {{ name }}
+    <h1>======引入子组件======</h1>
+    <Demo></Demo>
+    <Bb></Bb>
+    <hr/>
+    <Bb></Bb>
+
+</div>
+
+<script>
+    //创建子组件
+    const Demo = {
+        data: function () {
+            return {
+                msg: '哈哈哈'
+            };
+        },
+        template: `
+          <div>
+          <h1>{{ msg }}</h1>
+          <input type="text" v-model="msg">
+          <input type="button" @click="showMeg" value="点我">
+          </div>
+        `,
+        methods: {
+            showMsg: function () {
+                alert(this.msg);
+            }
+        }
+    }
+
+    //创建子组件
+    const Bili = {
+        //租金啊中的data是一个方法，并返回值，（与Vue对象创建不同）
+        data: function () {
+            return {
+                dataList: [
+                    {"id": 1, "title": "路费各个"},
+                    {"id": 2, "title": "egegeg1"}
+                ]
+            }
+        },
+        template: `
+          <div>
+          <h1>数据列表</h1>
+          <table border="1">
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>标题</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="item in dataList">
+              <td>{{ item.id }}</td>
+              <td>{{ item.title }}</td>
+            </tr>
+            </tbody>
+          </table>
+          </div>
+        `,
+
+    }
+
+
+    var app = new Vue({
+        el: "#app",
+        data: {name:"king"},
+        components: {
+            //下面两种挂载方式
+            Demo,
+            Bb: Bili
+        },
+        methods: {}
+    })
+
+
+</script>
+</body>
+</html>
+```
+
+
+
+<br>
+
+### 3.2 全局组件
+
+和局部组件的区别在于，不用挂载，直接使用
+
+```javascript
+Vue.component( 'Demo', {
+
+    data: function () {
+        return {
+            msg: '哈哈哈'
+        };
+    },
+    template: `
+      <div>
+      <h1>{{ msg }}</h1>
+      <input type="text" v-model="msg">
+      <input type="button" @click="showMeg" value="点我">
+      </div>
+    `,
+    methods: {
+        showMsg: function () {
+            alert(this.msg);
+        }
+    }
+})
+```
+
+局部变量是创建了一个常量指向这个值，而全局变量是直接放到vue中
+
+<br><br>
+
+## 4.vue-router组件
+
+vue+vue-router组件，可以实现SPA（single Page Application）,即单页面应用
+
+单页面应用，简而言之就是项目只有一个页面。
+
+> 单页面应用（SPA）相比传统的多页面应用（MPA）有一些明显的优势，这些优势通常是导致选择SPA的主要原因：
+>
+> 1. **更流畅的用户体验**：
+>    - **无刷新加载**：在SPA中，页面的切换不需要重新加载整个页面，只需要加载局部内容，通过异步请求数据和更新DOM来实现页面内容的动态变化，这使得用户操作更加流畅，减少了等待时间。
+>    - **快速响应**：由于大部分资源（例如JavaScript、CSS等）只需要加载一次，之后的页面切换只需加载数据，所以整体的响应速度会更快。
+> 2. **前后端分离**：
+>    - SPA通常采用前后端分离的架构，前端负责展示逻辑和用户交互，后端负责提供API接口和数据服务。这种架构使得开发更加模块化和团队协作更高效，前端和后端可以独立开发和部署。
+> 3. **更好的维护性和扩展性**：
+>    - SPA的前端逻辑通常使用组件化的方式进行开发，每个组件负责特定的功能或视图，这样可以使得代码更加模块化、可维护性更强，也更容易进行扩展和重构。
+> 4. **丰富的交互和动画效果**：
+>    - SPA借助现代前端框架（如Vue.js、React等）提供丰富的交互和动画效果，可以提升用户体验，比传统的多页面应用更具吸引力。
+> 5. **适用于复杂应用场景**：
+>    - 对于功能复杂、交互频繁的应用，如社交网络、电商平台等，使用SPA可以更好地管理复杂的前端逻辑和页面状态，提供更好的用户体验。
+>
+> 在选择是否要开发SPA时，通常考虑以下情况：
+>
+> - **应用的复杂度**：如果应用有复杂的前端逻辑和多种交互需求，SPA能更好地管理和展示这些内容。
+> - **用户体验要求**：如果用户期望快速响应、无刷新体验和流畅的页面切换，SPA通常是更好的选择。
+> - **前后端分离需求**：如果团队希望实现前后端完全分离，SPA能更好地支持这种架构。
+> - **开发团队的技术栈**：如果团队已经熟悉了现代前端框架（如Vue.js、React等），开发SPA会更加高效和顺畅。
+>
+> 总之，SPA在提升用户体验、简化开发维护、支持前后端分离等方面具有显著优势，特别适合需要高交互性和复杂页面逻辑的现代Web应用。
+
+一个页面如何呈现多种页面效果呢？
+
+- 基于vue开发多个组件，例如活动组件，课程组件，咨询组件
+- 再页面上vue-router用来管理这些组件，用户点击某个按钮，就显示特定的组件（数据基于Ajax获取）
+
+> 当使用 AJAX（Asynchronous JavaScript and XML）进行数据交换时，通常会涉及到发送 HTTP 请求并处理服务器响应。这种技术使得在不刷新整个页面的情况下，能够通过 JavaScript 发送请求并获取数据，从而改善用户体验和页面性能。以下是 AJAX 的基本使用步骤和一些常见的使用场景：
+>
+> AJAX 的基本步骤
+>
+> 1. **创建 XMLHttpRequest 对象：**
+>
+>    AJAX 最常用的方式是使用 XMLHttpRequest 对象。创建一个新的 XMLHttpRequest 实例：
+>
+>    ```javascript
+>    var xhr = new XMLHttpRequest();
+>    ```
+>
+> 2. **指定请求参数：**
+>
+>    使用 `open` 方法设置 HTTP 请求的方法（GET、POST 等）、URL 和是否异步执行（默认为 true）：
+>
+>    ```javascript
+>    
+>    xhr.open('GET', 'https://api.example.com/data', true);
+>    ```
+>
+>    如果是 POST 请求，可以在 `open` 方法后设置请求头和发送的数据类型：
+>
+>    ```javascript
+>    
+>    xhr.setRequestHeader('Content-Type', 'application/json');
+>    ```
+>
+> 3. **发送请求：**
+>
+>    使用 `send` 方法发送请求。对于 GET 请求，不需要传递参数；对于 POST 请求，可以将数据作为参数传递给 `send` 方法：
+>
+>    ```javascript
+>    xhr.send();
+>    // 或者发送包含数据的 POST 请求
+>    xhr.send(JSON.stringify({ key: 'value' }));
+>    ```
+>
+> 4. **处理响应：**
+>
+>    使用 `onreadystatechange` 属性指定当 `readyState` 属性改变时的回调函数。在回调函数中，通常检查 `xhr.readyState` 和 `xhr.status` 来确定请求状态和响应状态：
+>
+>    ```javascript
+>    xhr.onreadystatechange = function() {
+>        if (xhr.readyState == XMLHttpRequest.DONE) {
+>            if (xhr.status == 200) {
+>                console.log(xhr.responseText);
+>                // 处理响应数据
+>            } else {
+>                console.error('请求失败');
+>            }
+>        }
+>    };
+>    ```
+>
+>    在上述示例中：
+>
+>    - `xhr.readyState == XMLHttpRequest.DONE` 表示请求已完成。
+>    - `xhr.status == 200` 表示服务器成功处理了请求。
+>
+> Fetch API 替代方案
+>
+> Fetch API 是现代 JavaScript 的替代 AJAX 技术，使用更简洁，并返回 Promise 对象。与 XMLHttpRequest 相比，它支持链式调用和更现代化的语法：
+>
+> ```javascript
+> fetch('https://api.example.com/data')
+>     .then(response => {
+>         if (!response.ok) {
+>             throw new Error('请求失败');
+>         }
+>         return response.json();
+>     })
+>     .then(data => {
+>         console.log(data);
+>         // 处理响应数据
+>     })
+>     .catch(error => {
+>         console.error('发生错误:', error);
+>     });
+> ```
+>
+> 使用场景
+>
+> AJAX 可以应用于多种场景，包括但不限于：
+>
+> - **动态加载数据：** 在用户交互过程中，根据用户行为动态获取和展示数据，而不需要刷新整个页面。
+> - **表单提交和验证：** 使用 AJAX 异步提交表单数据，并根据服务器返回的结果更新页面状态或显示验证信息。
+> - **轮询和长轮询：** 定期向服务器发送请求以更新数据或实时通信（如聊天应用）。
+>
+> 注意事项
+>
+> - **跨域问题：** AJAX 请求受同源策略限制，需要考虑跨域请求时的安全性和解决方案（如 CORS 设置或代理）。
+> - **错误处理：** 始终要考虑网络或服务器错误情况下的适当处理，以提供更好的用户体验。
+>
+> 通过 AJAX，前端可以与后端服务器进行异步通信，从而实现动态交互和数据加载，是现代 Web 应用开发中不可或缺的技术之一。
+
+<br>
+
+### 4.1 下载和引用
+
+官方地址：https://router.vuejs.org/zh/
+
+下载地址：https://unpkg.com/vue-router@4
+
+此外还可以使用npm下载和引入
+
+
+
+
+
+
+
+### 4.2 快速上手
+
+```vue
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin:0
+
+        }
+        .container {
+            width: 980px;
+            margin:0 auto;
+        }
+
+        .menu {
+            height: 48px;
+            background-color:#499ef3;
+            line-height: 48px;
+        }
+        .menu a{
+            color:white;
+            text-decoration: none;
+            padding:0 10px;
+        }
+    </style>
+    <script src="vue.js"></script>
+    <script src="vue-router.js"></script>
+</head>
+<body>
+<div id="app">
+    <div class="menu">
+        <div class="container">
+            <router-link to="/">Logo</router-link>
+            <router-link to="/home">首页</router-link>
+            <router-link to="/course">课程</router-link>
+            <router-link to="/news">资讯</router-link>
+        </div>
+    </div>
+    <div class="container">
+        <router-view></router-view>
+    </div>
+</div>
+<script>
+    const Home = {template:`<div>首页内容...</div>`}
+    const Course = {template:`<div>课程内容...</div>`}
+    const News = {template:`<div>资讯内容...</div>`}
+
+    const router = new VueRouter({
+        routers:[
+            {path:'/',component:Home},
+            {path:'/home',component:Home},
+            {path:'/course',component:Course},
+            {path:'/news',component:News},
+        ],
+    })
+
+    var app = new Vue({
+        el:"#app",
+        data:{
+            name:"king",
+        },
+        methods:{},
+        router:router
+    })
+
+
+</script>
+
+
+</body>
+</html>
+```
+
+router-link被点击，调用to组件到router-view中
+
+
+
+
+
+```vue
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        .container {
+            width: 980px;
+            margin: 0 auto;
+        }
+        .menu {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+    </style>
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <div class="menu">
+        <div class="container">
+            <router-link to="/">Logo</router-link>
+            <router-link to="/home">首页</router-link>
+            <router-link to="/course">课程</router-link>
+            <router-link to="/news">资讯</router-link>
+        </div>
+    </div>
+    <div class="container">
+        <router-view></router-view>
+    </div>
+</div>
+<script>
+    const Home = {template: `<div>首页内容...</div>`};
+    const Course = {template: `<div>课程内容...</div>`};
+    const News = {template: `<div>资讯内容...</div>`};
+
+    const router = new VueRouter({
+        routes: [
+            { path: '/', component: Home },
+            { path: '/home', component: Home },
+            { path: '/course', component: Course },
+            { path: '/news', component: News },
+        ],
+    });
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            name: "king",
+        },
+        methods: {},
+        router: router
+    });
+</script>
+</body>
+</html>
+```
+
+PS:顺便说明一下，vue2对应的vue-router版本是2和3，vue3对应版本是3和4，如果版本不对，没有效果
+
+此外上述使用方法只在vue2、vue-router3版本适用（主要是new VueRouter这个地方）
+
+
+
+#### 案例：路飞学城
+
+
+
+
+
+
+
+上述代码涉及到了组件的created函数和mounted函数，下面分析两个函数
+
+- created函数：组件创建完成之后自动触发【此时组件的对象已创建，但还未将页面先关的DOM创建并显示在页面上】
+  - 可以去操作组件，例如this.courseList = ...
+  - 不可以去操作DOM，例如document.getelementById (html对应的DOM未创建)
+- mounted函数：DOM对象已经在页面上生成
+
+接着，说明一下关于then函数的使用，function和箭头函数
+
+- function（res）{}：这个函数的this指向window
+- （res）= >{}：这个函数的this指向vue对象
+
+
+
+
+
+### 4.3 路由与传值
+
+如何来定义动态路由呢？
+
+- 定义路由
+
+  ```javascript
+  const router = new VueRouter({
+      routes:[
+          {path:'/',component:Home},
+          {path:'/course',component:Course,name:"Course"},
+          {path:'/detail/:id',component:Detail,name:"Detail"},
+      ]
+  })
+  ```
+
+- HTML展示
+
+  ```html
+  <div>
+      <router-link to="/">首页</router-link>
+      <router-link to="/course">课程</router-link>
+      
+      #下面是动态的
+      <router-link :to="{path:'/course'}">课程</router-link>
+      <router-link :to="{path:'/course?size=19&page=2'}">课程</router-link>
+      #和上一条一样效果，但是没写死，例如可以写size:data
+      <router-link :to="{path:'/course',query:{size:19,page:2}">课程</router-link>
+      
+      
+      #下面是基于name找路由
+      <router-link :to="{name:'Course'}">课程</router-link>
+      <router-link :to="{name:'Course',query:{size:19,page:2}}">课程</router-link>
+      
+      
+      <router-link :to="{path:'detail/2',query:{size:123}}">Linux</router-link>
+      <router-link :to="{name:'Detail',params:{id:3},query:{size:29}}">网络安全</router-link>
+  </div>
+  
+  <h1>
+      内容区域
+  </h1>
+  <router-view></router-view>
+  ```
+
+- 组件获取URL传值和GET参数
+
+  ```javascript
+  const Detail = {
+      data:function(){
+          return {
+              title:"详细页面",
+              paramDict:null,
+              queryDict:null,
+          }
+      },
+      created:function(){
+          this.paramDict = this.$route.params;
+          this.queryDict = this.$route.query;
+          //发送axios请求，做页面呈现
+      },
+      template:`
+      <div>
+      	<h2>{{title}}</h2>
+      	<div>当前请求的数据{{paramDict}} {{queryDict}}</div>
+      </div>
+      `
+  }
+  ```
+
+
+
+
+
+#### 案例：路飞学城（2）
+
+完成点击课程，将课程的详细页面返回
+
+重点需要修改course组件里面的template
+
+总共需要添加三个部分：
+
+1. course组件里面的template，将对应课程的添加路由组件地址
+2. 添加课程对应的路由组件地址Detail
+3. 将新组件添加到VueRouter组件中
+
+
+
+```vue
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .container {
+            width: 1100px;
+            margin: 0 auto;
+        }
+
+        .menu {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+
+        .menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+
+        .course-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .course-list .item{
+            width: 240px;
+            padding: 10px;
+            border:1px solid #dddddd;
+
+        }
+
+        a {
+            text-decoration: none;
+        }
+        img {
+            width: 80px;
+            height: 50px;
+        }
+    </style>
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+</head>
+<body>
+<div id="app">
+    <div class="menu">
+        <div class="container">
+            <router-link to="/">路飞学城</router-link>
+            <router-link to="/home">首页</router-link>
+            <router-link to="/course">课程</router-link>
+            <router-link to="/news">资讯</router-link>
+        </div>
+    </div>
+    <div class="container">
+        <router-view></router-view>
+    </div>
+</div>
+<script>
+    const Home = {
+        data: function () {
+            return {
+                title: "欢迎使用路飞学城"
+            }
+        },
+        template: `<h2>{{ title }}</h2>`
+    };
+    const Course = {
+        data: function () {
+            return {
+                courseList: []
+            }
+        },
+        created: function () {
+            axios({
+                methods: "get",
+                url: "https://api.luffycity.com/api/v1/course/actual/?limit=5&offset=0",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then((res) => {
+                this.courseList = res.data.data.result;
+            })
+
+        },
+        mounted: function () {
+
+        },
+        template:
+                `
+                    <div class="course-list">
+                      <div class="item" v-for="item in courseList" :key="item.id">
+                        <router-link :to="{name:'Detail',params:{id:item.id}}">
+                          <img :src="item.cover" alt="">
+                          <a>{{ item.name }}</a>
+                        </router-link>
+                      </div>
+                    </div>
+
+                `
+    };
+    const News = {
+        data: function () {
+            return {
+                dataList: []
+            }
+        },
+        created: function () {
+            axios({
+                methods: "get",
+                url: "https://api.luffycity.com/api/v1/course/actual/?limit=5&offset=0",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then((res) => {
+                this.dataList = res.data.data.result;
+            })
+
+        },
+        template: `
+          <ul>
+          <li v-for="item in dataList">{{item.name}}</li>
+          </ul>`
+    };
+
+    const Detail = {
+        data:function(){
+            return {
+                title:"详细页面",
+                courseId:null
+            }
+        },
+        created:function(){
+            this.courseId = this.$route.params.id;
+        },
+        template:`
+          <div>
+          <h2>课程详细页面</h2>
+          <div>当前课程ID为{{ courseId }}</div>
+          </div>
+        `
+
+    }
+
+    const router = new VueRouter({
+        routes: [
+            {path: '/', component: Home},
+            {path: '/home', component: Home},
+            {path: '/course', component: Course},
+            {path: '/news', component: News},
+            {path: '/detail/:id', component: Detail,name:"Detail"},
+
+        ],
+    });
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            name: "king",
+        },
+        methods: {},
+        router: router
+    });
+</script>
+</body>
+</html>
+```
+
+course的template，添加路由指向detail组件
+
+```vue
+template:
+        `
+            <div class="course-list">
+              <div class="item" v-for="item in courseList" :key="item.id">
+                <router-link :to="{name:'Detail',params:{id:item.id}}">
+                  <img :src="item.cover" alt="">
+                  <a>{{ item.name }}</a>
+                </router-link>
+              </div>
+            </div>
+
+        `
+```
+
+detail组件
+
+```vue
+const Detail = {
+    data:function(){
+        return {
+            title:"详细页面",
+            courseId:null
+        }
+    },
+    created:function(){
+        this.courseId = this.$route.params.id;
+    },
+    template:`
+      <div>
+      <h2>课程详细页面</h2>
+      <div>当前课程ID为{{ courseId }}</div>
+      </div>
+    `
+
+}
+```
+
+VueRouter对象添加detail组件
+
+```vue
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: Home},
+        {path: '/home', component: Home},
+        {path: '/course', component: Course},
+        {path: '/news', component: News},
+        {path: '/detail/:id', component: Detail,name:"Detail"},
+
+    ],
+});
+```
+
+上述说明了params的传参方式，query的传参方式类似
+
+ps:\$route的route是vue全局变量，  \$route 表明访问当前路由 
+
+
+
+### 4.4 无法刷新
+
+对于开发过程中，如果涉及到同一个路由的跳转，默认不会重新加载页面，数据无法获取。
+
+例如：在详细页面再出现一个课程推荐，：在课程详细，点击推荐的课程后跳转到详细页面（课程ID不同），此时的课程ID还是加载原来的ID，无法获取推荐课程的ID
+
+同路由跳转，不会触发组件的created方法
+
+<br>
+
+**如何解决?**
+
+在课程详细的组件中设置watch属性即可，watch可以检测$route值，一旦发生便会，就执行相应的函数
+
+```javascript
+const Detail = {
+	data:function(){
+		return{
+            title:"详细页面",
+            courseId:null,
+        }
+	},
+    created:function(){
+        this.courseId = this.$route.params.id;
+        this.getCCourseDetail();
+    },
+    watch:{
+        #设置监听route，to表明要改变的值，from表明原来的值
+        $route:function(to,from){
+            this.courseId = to.params.id;
+            this.getCourseDetail();
+        }
+    },
+    methods:{
+        getCourseDetail:function(){
+            
+        }
+    }
+}
+```
+
+完成同路由跳转的案例
+
+```vue
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .container {
+            width: 1100px;
+            margin: 0 auto;
+        }
+
+        .menu {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+
+        .menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+
+        .course-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .course-list .item {
+            width: 240px;
+            padding: 10px;
+            border: 1px solid #dddddd;
+
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        img {
+            width: 80px;
+            height: 50px;
+        }
+    </style>
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+</head>
+<body>
+<div id="app">
+    <div class="menu">
+        <div class="container">
+            <router-link to="/">路飞学城</router-link>
+            <router-link to="/home">首页</router-link>
+            <router-link to="/course">课程</router-link>
+            <router-link to="/news">资讯</router-link>
+        </div>
+    </div>
+    <div class="container">
+        <router-view></router-view>
+    </div>
+</div>
+<script>
+    const Home = {
+        data: function () {
+            return {
+                title: "欢迎使用路飞学城"
+            }
+        },
+        template: `<h2>{{ title }}</h2>`
+    };
+    const Course = {
+        data: function () {
+            return {
+                courseList: []
+            }
+        },
+        created: function () {
+            axios({
+                methods: "get",
+                url: "https://api.luffycity.com/api/v1/course/actual/?limit=5&offset=0",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then((res) => {
+                this.courseList = res.data.data.result;
+            })
+
+        },
+        mounted: function () {
+
+        },
+        template:
+                `
+                  <div class="course-list">
+                  <div class="item" v-for="item in courseList" :key="item.id">
+                    <router-link :to="{name:'Detail',params:{id:item.id}}">
+                      <img :src="item.cover" alt="">
+                      <a>{{ item.name }}</a>
+                    </router-link>
+                  </div>
+                  </div>
+
+                `
+    };
+    const News = {
+        data: function () {
+            return {
+                dataList: []
+            }
+        },
+        created: function () {
+            axios({
+                methods: "get",
+                url: "https://api.luffycity.com/api/v1/course/actual/?limit=5&offset=0",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then((res) => {
+                this.dataList = res.data.data.result;
+            })
+
+        },
+        template: `
+          <ul>
+          <li v-for="item in dataList">{{ item.name }}</li>
+          </ul>`
+    };
+
+    const Detail = {
+        data: function () {
+            return {
+                title: "详细页面",
+                courseId: null,
+                hotCourseList: [
+                    {id: 1000, title: "python全栈开发"},
+                    {id: 2000, title: "异步编程"},
+                ],
+            }
+        },
+        created: function () {
+            this.courseId = this.$route.params.id;
+            //此处可以根据课程ID，发送ajax请求获取课程详细信息
+        },
+
+        watch: {
+            // #设置监听route，to表明要改变的值，from表明原来的值
+            $route: function (to, from) {
+                this.courseId = to.params.id;
+                //此处同样根据课程ID，发哦是那个ajax请求获取课程详细信息
+                this.getCourseDetail();
+            }
+        },
+        methods:{
+            getCourseDetail :function () {
+                //根据this.courseId获取课程详细信息
+            }
+        },
+
+        template: `
+          <div>
+          <h2>课程详细页面</h2>
+          <div>当前课程ID为: {{ courseId }}</div>
+          <ul>
+            <li v-for="item in hotCourseList">
+              <router-link :to="{name:'Detail',params:{id:item.id}}">{{ item.title }}</router-link>
+            </li>
+          </ul>
+
+          </div>
+        `
+
+    }
+
+    const router = new VueRouter({
+        routes: [
+            {path: '/', component: Home},
+            {path: '/home', component: Home},
+            {path: '/course', component: Course},
+            {path: '/news', component: News},
+            {path: '/detail/:id', component: Detail, name: "Detail"},
+
+        ],
+    });
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            name: "king",
+        },
+        methods: {},
+        router: router
+    });
+</script>
+</body>
+</html>
+```
+
+
+
+### 4.5 路由嵌套和案例
+
+对于页面点击按钮，在页面的部分发送改变，这个可以通过路由的嵌套实现。
+
+```javascript
+const router = new VueRouter({
+    routes:[
+        {
+            path:'/pins/',
+            components:Pins,
+            children:[
+                {
+                //当/pins/hot 匹配成功，
+                //Hot组件会被渲染在Pins的<router-view>中
+                path:'hot',
+                component:Hot
+                },
+                {
+                    //当/pins/following匹配成功，
+                    //Following组件，会被渲染在Pins的<router-view>中
+                    path:'following',
+                    component:Following
+                }
+            ]
+		}
+    ]
+})
+```
+
+
+
+#### 案例：路飞学城（3）
+
+在编写代码的时候遇到下面的情况
+
+```javascript
+   const Hot = {
+        data: function () {
+
+        },
+        template: `
+          <div><h2>Hot界面</h2></div>
+        `
+    };
+
+    const Following = {
+        data: function () {
+
+        },
+        template: `
+          <div><h2>Following界面</h2></div>
+        `
+    };
+```
+
+错误代码
+
+```javascript
+ const Hot = {
+    data: function () {
+        return {}
+    },
+    template: `
+      <div><h2>Hot界面</h2></div>
+    `
+};
+
+const Following = {
+    data: function () {
+        return {}
+    },
+    template: `
+      <div><h2>Following界面</h2></div>
+    `
+};
+```
+
+正确代码
+
+上面的代码差别在于data里的return，（空函数）从而导致了没有渲染到该组件的template
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .container {
+            width: 1100px;
+            margin: 0 auto;
+        }
+
+        .menu {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+
+        .menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+
+        .course-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .course-list .item {
+            width: 240px;
+            padding: 10px;
+            border: 1px solid #dddddd;
+
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        img {
+            width: 80px;
+            height: 50px;
+        }
+    </style>
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+</head>
+<body>
+<div id="app">
+    <div class="menu">
+        <div class="container">
+            <router-link to="/">路飞学城</router-link>
+            <router-link to="/pins">沸点</router-link>
+            <router-link to="/home">首页</router-link>
+            <router-link to="/course">课程</router-link>
+            <router-link to="/news">资讯</router-link>
+        </div>
+    </div>
+    <div class="container">
+        <router-view></router-view>
+    </div>
+</div>
+<script>
+    const Home = {
+        data: function () {
+            return {
+                title: "欢迎使用路飞学城"
+            }
+        },
+        template: `<h2>{{ title }}</h2>`
+    };
+    const Course = {
+        data: function () {
+            return {
+                courseList: []
+            }
+        },
+        created: function () {
+            axios({
+                methods: "get",
+                url: "https://api.luffycity.com/api/v1/course/actual/?limit=5&offset=0",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then((res) => {
+                this.courseList = res.data.data.result;
+            })
+
+        },
+        mounted: function () {
+
+        },
+        template:
+                `
+                  <div class="course-list">
+                  <div class="item" v-for="item in courseList" :key="item.id">
+                    <router-link :to="{name:'Detail',params:{id:item.id}}">
+                      <img :src="item.cover" alt="">
+                      <a>{{ item.name }}</a>
+                    </router-link>
+                  </div>
+                  </div>
+
+                `
+    };
+    const News = {
+        data: function () {
+            return {
+                dataList: []
+            }
+        },
+        created: function () {
+            axios({
+                methods: "get",
+                url: "https://api.luffycity.com/api/v1/course/actual/?limit=5&offset=0",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then((res) => {
+                this.dataList = res.data.data.result;
+            })
+
+        },
+        template: `
+          <ul>
+          <li v-for="item in dataList">{{ item.name }}</li>
+          </ul>`
+    };
+
+    const Detail = {
+        data: function () {
+            return {
+                title: "详细页面",
+                courseId: null,
+                hotCourseList: [
+                    {id: 1000, title: "python全栈开发"},
+                    {id: 2000, title: "异步编程"},
+                ],
+            }
+        },
+        created: function () {
+            this.courseId = this.$route.params.id;
+            //此处可以根据课程ID，发送ajax请求获取课程详细信息
+        },
+
+        watch: {
+            // #设置监听route，to表明要改变的值，from表明原来的值
+            $route: function (to, from) {
+                this.courseId = to.params.id;
+                //此处同样根据课程ID，发哦是那个ajax请求获取课程详细信息
+                this.getCourseDetail();
+            }
+        },
+        methods: {
+            getCourseDetail: function () {
+                //根据this.courseId获取课程详细信息
+            }
+        },
+
+        template: `
+          <div>
+          <h2>课程详细页面</h2>
+          <div>当前课程ID为: {{ courseId }}</div>
+          <ul>
+            <li v-for="item in hotCourseList">
+              <router-link :to="{name:'Detail',params:{id:item.id}}">{{ item.title }}</router-link>
+            </li>
+          </ul>
+
+          </div>
+        `
+    };
+
+    const Pins = {
+        data: function () {
+            return {}
+        },
+        template: `
+          <div>
+          <h2>沸点专区</h2>
+          <router-link :to="{name:'Hot'}">热点</router-link>
+          <router-link :to="{name:'Following'}">关注</router-link>
+          <router-view></router-view> <!-- 用于渲染子组件 -->
+          </div>
+        `
+    };
+
+
+     const Hot = {
+        data: function () {
+            return {}
+        },
+        template: `
+          <div><h2>Hot界面</h2></div>
+        `
+    };
+
+    const Following = {
+        data: function () {
+            return {}
+        },
+        template: `
+          <div><h2>Following界面</h2></div>
+        `
+    };
+
+
+    const router = new VueRouter({
+        routes: [
+            {path: '/', component: Home},
+            {path: '/home', component: Home},
+            {path: '/course', component: Course},
+            {path: '/news', component: News},
+            {path: '/detail/:id', component: Detail, name: "Detail"},
+            {
+                path: '/pins', component: Pins, name: "Pins",
+                children: [
+                    {
+                        //当/pins/hot 匹配成功，
+                        //Hot组件会被渲染在Pins的<router-view>中
+                        path: 'hot',
+                        component: Hot,
+                        name: 'Hot'
+                    },
+                    {
+                        //当/pins/following匹配成功，
+                        //Following组件会被渲染在Pins的<router-view>中
+                        path: 'following',
+                        component: Following,
+                        name: 'Following'
+                    }
+                ]
+            }
+        ],
+    });
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            name: "king",
+        },
+        methods: {},
+        router: router
+    });
+</script>
+</body>
+</html>
+```
+
+
+
+
+
+
+
+#### 案例：嵌套的后台管理
 
