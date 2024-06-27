@@ -3360,3 +3360,884 @@ const Following = {
 
 #### 案例：嵌套的后台管理
 
+```javascript
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .header {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+
+
+        .header a {
+
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+
+        .body .left-menu {
+            width: 180px;
+            border: 1px solid #dddddd;
+            border-bottom: 0;
+            position: absolute;
+            left: 1px;
+            top: 50px;
+            bottom: 0;
+            overflow: auto;
+            background-color: #f3f5f7;
+
+        }
+
+        .body .left-menu .head {
+            border-bottom: 1px solid #dddddd;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+        }
+
+        .body .left-menu a {
+            display: block;
+            text-decoration: none;
+            padding: 10px;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .body .right-body {
+            position: absolute;
+            left: 183px;
+            top: 50px;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            padding: 10px;
+        }
+
+
+    </style>
+
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <div class="header">
+        <router-link to="/">Logo</router-link>
+        <router-link to="/home">首页</router-link>
+        <router-link to="/task">任务宝</router-link>
+        <router-link to="/message">消息宝</router-link>
+    </div>
+    <div class="body">
+        <router-view></router-view>
+    </div>
+
+
+</div>
+
+<script>
+    const Home = {
+        data:function () {
+            return {
+                title:"欢迎使用xx系统"
+            }
+        },
+        template:`
+        <h2>{{title}}</h2>
+        `
+    }
+
+    const Task = {
+        data:function(){
+            return {
+
+            }
+        },
+
+        template:`
+          <div>
+            <div class = "left-menu">
+              <div class="head">任务宝</div>
+              <router-link :to="{name:'Fans'}">粉丝</router-link>
+              <router-link :to="{name:'Spread'}">推广码</router-link>
+              <router-link :to="{name:'Statistics'}">数据统计</router-link>
+            </div>
+          <div class="right-body">
+            <router-view></router-view>
+          </div>
+          </div>
+        `
+    };
+
+    const Fans={template:`<h3>粉丝页面</h3>`};
+    const Spread = {template:`<h3>推广码页面</h3>`};
+    const Statistics = {template:`<h3>数据统计页面</h3>`};
+
+
+
+    const Message = {
+        data:function(){
+            return {}
+        },
+
+        template:`
+        <div>
+          <div class="left-menu">
+            <div class="head">消息宝</div>
+            <router-link :to="{name:'Sop'}">Sop</router-link>
+            <router-link :to="{name:'Send'}">推送管理</router-link>
+
+          </div>
+          <div class="right-body">
+            <router-view></router-view>
+          </div>
+        </div>
+        `
+    };
+
+    const Sop = {template:`<h3>SOP页面</h3>`};
+    const Send = {template:`<h3>推送管理页面</h3>`};
+
+
+    const router = new VueRouter({
+        routes:[
+            {path:'/',component:Home},
+            {path:'/home',component:Home},
+            {
+                path:'/task',
+                component:Task,
+                name:'Task',
+                children:[
+                    {
+                        //  设置默认跳转Fans组件
+                        path:'',
+                        redirect:{name:'Fans'}
+                    },
+                    {
+                        path:'fans',
+                        component:Fans,
+                        name:'Fans'
+                    },
+                    {
+                        path:'spread',
+                        component:Spread,
+                        name:'Spread'
+                    },
+                    {
+                        path:'statistics',
+                        component:Statistics,
+                        name:'Statistics'
+                    },
+                ]
+            },
+            {
+                path:'/message',
+                component:Message,
+                name:'Message',
+                children:[
+                    {
+                        path:'sop',
+                        component:Sop,
+                        name:'Sop'
+                    },
+                    {
+                        path:'send',
+                        component:Send,
+                        name:'Send'
+                    },
+                ]
+            },
+        ]
+    })
+
+    var app = new Vue({
+        el:"#app",
+        data:{},
+        methods:{},
+        router:router
+    })
+
+
+
+</script>
+
+</body>
+</html>
+```
+
+上述代码实现了一个嵌套的后台界面，注意与传统的html编写的不同，上述代码不是通过
+
+- 不是frame实现
+- 不是浮动布局实现区域划分
+
+仅仅是通过vue嵌套实现区域划分
+
+
+
+
+
+
+
+
+
+### 4.6 编程式导航
+
+除了使用` router-link`创建a标签来定义导航链接，我们还可以借助router的实例方法，通过编写代码来实现。
+
+想要导航到不同的URL，则使用`router.push`方法。这个方法会向history栈添加一个新记录，所以，当用户点击浏览器后退按钮时，则回到之前的URL。
+
+- router.push
+
+  ``` javascript
+  //字符串
+  router.push('home')
+  
+  //对象
+  router.push({path:'home'})
+  
+  //命名的路由
+  route.push({name:'user',params:{userId:'123'}})
+  
+  //带参数查询，变成/register?plan=private
+  route.push({path:'register',query:{plan:'private'}})
+  ```
+
+  
+
+- router.replace
+
+  ``` javascript
+  //字符串
+  router.replace(‘home’)
+  
+  //对象
+  router.replace({path:'home'})
+  
+  //命名的路由
+  router.replace({name:'user',params:{userId:'123'}})
+  
+  //带查询参数，变成/register?plan=private
+  router.replace({path:'user',params:{plan:'private'})
+  ```
+
+  跟router.push很像，唯一的不同就是，他不会向history添加向记录，而是替换当前的history记录
+
+  
+
+- router.go这个方法的参数就是一个整数，意思是在history记录中向前或者向后多少步
+
+  ``` javascript
+  //在浏览器记录中前进异步，等同于history.forward()
+  router.go(1)
+  
+  //后退异步记录，等同于history.back()
+  router.go(-1)
+  
+  //前进三步记录
+  router.go(3)
+  
+  //如果history记录不够用，那就失败
+  router.go(-100)
+  router.go(100)
+  
+  
+  ```
+
+
+
+
+
+#### 案例：登录跳转（含顶部）
+
+```javascript
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .header {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+
+
+        .header a {
+
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+
+        .body .left-menu {
+            width: 180px;
+            border: 1px solid #dddddd;
+            border-bottom: 0;
+            position: absolute;
+            left: 1px;
+            top: 50px;
+            bottom: 0;
+            overflow: auto;
+            background-color: #f3f5f7;
+
+        }
+
+        .body .left-menu .head {
+            border-bottom: 1px solid #dddddd;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+        }
+
+        .body .left-menu a {
+            display: block;
+            text-decoration: none;
+            padding: 10px;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .body .right-body {
+            position: absolute;
+            left: 183px;
+            top: 50px;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            padding: 10px;
+        }
+
+
+    </style>
+
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <div class="header">
+        <router-link to="/">Logo</router-link>
+        <router-link to="/home">首页</router-link>
+        <router-link to="/task">任务宝</router-link>
+        <router-link to="/message">消息宝</router-link>
+
+        <div style="float: right">
+            <router-link to="/login">登录</router-link>
+        </div>
+    </div>
+    <div class="body">
+        <router-view></router-view>
+    </div>
+
+
+</div>
+
+<script>
+    const Home = {
+        data: function () {
+            return {
+                title: "欢迎使用xx系统"
+            }
+        },
+        template: `
+          <h2>{{ title }}</h2>
+        `
+    }
+
+    const Task = {
+        data: function () {
+            return {}
+        },
+
+        template: `
+          <div>
+          <div class="left-menu">
+            <div class="head">任务宝</div>
+            <router-link :to="{name:'Fans'}">粉丝</router-link>
+            <router-link :to="{name:'Spread'}">推广码</router-link>
+            <router-link :to="{name:'Statistics'}">数据统计</router-link>
+          </div>
+          <div class="right-body">
+            <router-view></router-view>
+          </div>
+          </div>
+        `
+    };
+
+    const Fans = {template: `<h3>粉丝页面</h3>`};
+    const Spread = {template: `<h3>推广码页面</h3>`};
+    const Statistics = {template: `<h3>数据统计页面</h3>`};
+
+
+    const Message = {
+        data: function () {
+            return {}
+        },
+
+        template: `
+          <div>
+          <div class="left-menu">
+            <div class="head">消息宝</div>
+            <router-link :to="{name:'Sop'}">Sop</router-link>
+            <router-link :to="{name:'Send'}">推送管理</router-link>
+
+          </div>
+          <div class="right-body">
+            <router-view></router-view>
+          </div>
+          </div>
+        `
+    };
+
+    const Sop = {template: `<h3>SOP页面</h3>`};
+    const Send = {template: `<h3>推送管理页面</h3>`};
+
+    const Login = {
+        data:function(){
+            return {
+                user:'',
+                pwd:''
+            }
+        },
+        methods:{
+            doLogin:function(){
+                if(this.user.length > 0 && this.pwd.length>0){
+                    this.$router.push({name:"Task"});
+                }
+            }
+
+        },
+        template: `
+          <div style="width: 500px;margin: 100px auto">
+            <input type="text" placeholder="用户名" v-model="user">
+            <input type="password" placeholder="密 码" v-model="pwd">
+            <input type="button" value="提 交" @click="doLogin">
+          </div>
+        `
+    }
+
+    const router = new VueRouter({
+        routes: [
+            {path: '/', component: Home},
+            {path: '/login', component: Login},
+            {path: '/home', component: Home},
+            {
+                path: '/task',
+                component: Task,
+                name: 'Task',
+                children: [
+                    {
+                        //  设置默认跳转Fans组件
+                        path: '',
+                        redirect: {name: 'Fans'}
+                    },
+                    {
+                        path: 'fans',
+                        component: Fans,
+                        name: 'Fans'
+                    },
+                    {
+                        path: 'spread',
+                        component: Spread,
+                        name: 'Spread'
+                    },
+                    {
+                        path: 'statistics',
+                        component: Statistics,
+                        name: 'Statistics'
+                    },
+                ]
+            },
+            {
+                path: '/message',
+                component: Message,
+                name: 'Message',
+                children: [
+                    {
+                        path: 'sop',
+                        component: Sop,
+                        name: 'Sop'
+                    },
+                    {
+                        path: 'send',
+                        component: Send,
+                        name: 'Send'
+                    },
+                ]
+            },
+        ]
+    })
+
+    var app = new Vue({
+        el: "#app",
+        data: {},
+        methods: {},
+        router: router
+    })
+
+
+</script>
+
+</body>
+</html>
+```
+
+
+
+
+
+#### 案例：登录跳转（不含顶部）
+
+```javascript
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .header {
+            height: 48px;
+            background-color: #499ef3;
+            line-height: 48px;
+        }
+
+
+        .header a {
+
+            color: white;
+            text-decoration: none;
+            padding: 0 10px;
+        }
+
+        .body .left-menu {
+            width: 180px;
+            border: 1px solid #dddddd;
+            border-bottom: 0;
+            position: absolute;
+            left: 1px;
+            top: 50px;
+            bottom: 0;
+            overflow: auto;
+            background-color: #f3f5f7;
+
+        }
+
+        .body .left-menu .head {
+            border-bottom: 1px solid #dddddd;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+        }
+
+        .body .left-menu a {
+            display: block;
+            text-decoration: none;
+            padding: 10px;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .body .right-body {
+            position: absolute;
+            left: 183px;
+            top: 50px;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            padding: 10px;
+        }
+
+
+    </style>
+
+    <script src="vue.js"></script>
+    <script src="vue-router3.65.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <router-view></router-view>
+
+
+</div>
+
+<script>
+    const Home = {
+        data: function () {
+            return {
+                title: "欢迎使用xx系统"
+            }
+        },
+        template: `
+          <div>
+          <div class="header">
+            <router-link to="/">logo</router-link>
+            <router-link to="/home">首页</router-link>
+            <router-link :to="{name:'Task'}">任务宝</router-link>
+            <router-link :to="{name:'Message'}">消息宝</router-link>
+
+            <div style="float: right;">
+              <router-link to="/login">登录</router-link>
+            </div>
+          </div>
+          <div class="body">
+            <router-view></router-view>
+          </div>
+          </div>
+        `
+    };
+
+    const Index = { template: `<h2>这是个首页</h2>`};
+
+    const Task = {
+        data: function () {
+            return {}
+        },
+
+        template: `
+          <div>
+          <div class="left-menu">
+            <div class="head">任务宝</div>
+            <router-link :to="{name:'Fans'}">粉丝</router-link>
+            <router-link :to="{name:'Spread'}">推广码</router-link>
+            <router-link :to="{name:'Statistics'}">数据统计</router-link>
+          </div>
+          <div class="right-body">
+            <router-view></router-view>
+          </div>
+          </div>
+        `
+    };
+
+    const Fans = {template: `<h3>粉丝页面</h3>`};
+    const Spread = {template: `<h3>推广码页面</h3>`};
+    const Statistics = {template: `<h3>数据统计页面</h3>`};
+
+
+    const Message = {
+        data: function () {
+            return {}
+        },
+
+        template: `
+          <div>
+          <div class="left-menu">
+            <div class="head">消息宝</div>
+            <router-link :to="{name:'Sop'}">Sop</router-link>
+            <router-link :to="{name:'Send'}">推送管理</router-link>
+
+          </div>
+          <div class="right-body">
+            <router-view></router-view>
+          </div>
+          </div>
+        `
+    };
+
+    const Sop = {template: `<h3>SOP页面</h3>`};
+    const Send = {template: `<h3>推送管理页面</h3>`};
+
+    const Login = {
+        data: function () {
+            return {
+                user: '',
+                pwd: ''
+            }
+        },
+        methods: {
+            doLogin: function () {
+                if (this.user.length > 0 && this.pwd.length > 0) {
+                    this.$router.push({name: "Home"});
+                }
+            }
+
+        },
+        template: `
+          <div style="width: 500px;margin: 100px auto">
+          <input type="text" placeholder="用户名" v-model="user">
+          <input type="password" placeholder="密 码" v-model="pwd">
+          <input type="button" value="提 交" @click="doLogin">
+          </div>
+        `
+    }
+
+    const router = new VueRouter({
+        routes: [
+            {
+                path: '/',
+                // component: Home,
+                redirect: '/login'
+            },
+            {path: '/login', component: Login, name: 'Login'},
+            {
+                path: '/home',
+                component: Home,
+                name: "Home",
+                children: [
+                    {
+                        path: '',
+                        component: Index,
+                        name: "Index"
+                    },
+                    {
+                        path: 'task',
+                        component: Task,
+                        name: "Task",
+                        children: [
+                            {
+                                path: 'fans',
+                                component: Fans,
+                                name: 'Fans'
+                            },
+                            {
+                                path: 'spread',
+                                component: Spread,
+                                name: 'Spread'
+                            },
+                            {
+                                path: 'statistics',
+                                component: Statistics,
+                                name: 'Statistics'
+                            },
+                        ]
+                    },
+                    {
+                        path: 'message',
+                        component: Message,
+                        name: "Message",
+                        children: [
+                            {
+                                path: 'sop',
+                                component: Sop,
+                                name: 'Sop'
+                            },
+                            {
+                                path: 'send',
+                                component: Send,
+                                name: 'Send'
+                            },
+                        ]
+                    },
+                ]
+            },
+        ]
+    });
+
+    var app = new Vue({
+        el: "#app",
+        data: {},
+        methods: {},
+        router: router
+    })
+
+
+</script>
+
+</body>
+</html>
+```
+
+
+
+
+
+### 4.7 导航守卫
+
+在基于vue-router实现访问跳转时，都会执行一个钩子。
+
+``` javascript
+const router = new VueRouter({...})
+                              
+router.beforeEach((to,from,next) =>){
+    //to: Route即将要进入的目标 路由对象
+    //from: Route当前导航正要离开的路由
+    //next() 继续向后执行
+    //next(false) 中断导航，保持当前所在的页面
+    //next('/') next({path:'/'}) next({name:'Login'}}) 跳转到指定页面
+}
+```
+
+注意：可以基于他实现，未登录跳转登录页面
+
+
+
+#### 案例：登录拦截（全局）
+
+未登录时，访问后台管理页面，自动跳转到登录页面
+
+
+
+设置Login组件登录，实现session设置
+
+```javascript
+methods: {
+    doLogin: function () {
+        if (this.user.length > 0 && this.pwd.length > 0) {
+            sessionStorage.setItem("isLogin",true);
+            this.$router.push({name: "Home"});
+        }
+    }
+```
+
+
+
+在钩子函数中查询session
+
+```javascript
+router.beforeEach((to,from,next) => {
+    //如果已经登录，则可以继续访问目标地址
+    if(sessionStorage.getItem('isLogin')){
+        next();
+        return ;
+    }
+
+    //未登录，访问登录界面
+    if (to.name =="Login"){
+        next();
+        return ;
+    }
+    next({name:"Login"});
+});
+```
+
+
+
+
+
+#### 案例：登录拦截（路由）
+
+针对某些路由进行校验登录
+
+在全局的实现通过router.beforeEach实现
+
+在路由的实现通过在route内部的对应组件，添加beforeEnter实现，从而实现子路由登录校验
+
+```javascript
+beforeEnter:(to,from,next) =>{
+    
+},
+```
+
