@@ -444,7 +444,7 @@ Add EsLint for code quality? No
 
 创建的项目目录如下图所示（vscode打开）
 
-![vite](../../public/vue3/vite创建项目.PNG)
+![vite](../../public/vue3/vite_create.PNG)
 
 介绍相关目录和文件
 

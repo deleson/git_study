@@ -51,7 +51,7 @@ export default defineConfig({
             {
                 text: '前端',
                 items: [
-                    {text: 'Vue', link: '/study_md/front_end/Vue3'},
+                    {text: 'Vue3', link: '/study_md/front_end/Vue3'},
                     {text: 'javascript', link: '/study_md/front_end/javascript'},
                     {text: 'css', link: '/study_md/front_end/css'},
                     {text: 'html', link: '/study_md/front_end/html'},
