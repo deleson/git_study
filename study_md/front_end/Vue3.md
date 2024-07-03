@@ -500,7 +500,7 @@ npm run server
 
 ## 2.2 基于vite创建（推荐）
 
-vite是新一代前端构建工具，官网地址：https//vitejs.cn ,vite的优势如下：
+vite是新一代前端构建工具，官网地址：`https//vitejs.cn` ,vite的优势如下：
 
 - 轻量快速的热重载（HMR），能实现极速的服务启动。
 - 对TypeScript，JSX、CSS等支持开箱即用
@@ -737,7 +737,10 @@ Options类型的API，数据、方法、计算属性等，是分散在data、met
 
 就需要分别修改data、methods、computed，不便于维护和复用
 
-具体的详细分析[做了一夜动画，就为让大家更好的理解Vue3的Composition Api - 哔哩哔哩 (bilibili.com)](https://www.bilibili.com/read/cv10685553/)
+> 具体的详细分析[做了一夜动画，就为让大家更好的理解Vue3的Composition Api - 哔哩哔哩 (bilibili.com)](https://www.bilibili.com/read/cv10685553/)
+>
+
+
 
 
 
@@ -945,7 +948,9 @@ export default{
 
 2. 安装完成后，还要在vite.config.ts中import引入，引入名字可以任意
 
- 	` import xxx from 'vite-plugin-vue-setup-extend'`
+```
+` import xxx from 'vite-plugin-vue-setup-extend'`
+```
 
 3. vite.config.ts中追加调用
 
@@ -1045,9 +1050,9 @@ age.value += 1
 </style>
 ```
 
-打印reactive包含的对象，得到是Proxy对象（原生js就有的），Proxy是代理
+打印`reactive`包含的对象，得到是`Proxy`对象（原生js就有的），`Proxy`是代理
 
-只要用reacitve包裹，里面对象所有的变量都是响应式的，无论有多少层（就算是100层字典也一样）
+只要用`reacitve`包裹，里面对象所有的变量都是响应式的，无论有多少层（就算是100层字典也一样）
 
 
 
