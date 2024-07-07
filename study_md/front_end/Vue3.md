@@ -388,6 +388,503 @@ let personList:Persons = [
 
 <br>
 
+##  5.axios
+
+### axios介绍
+
+Axios 是一个基于 Promise 的 HTTP 客户端，适用于浏览器和 Node.js。它由 Matt Zabriskie 开发，并在 GitHub 上开源发布，受到前端开发者的广泛欢迎。Axios 的出现背景主要是为了解决以下几个问题：
+
+1. **简化 AJAX 请求**：在使用原生 JavaScript 进行 AJAX 请求时，代码通常比较冗长且不够直观。Axios 提供了一个更简洁和直观的 API，使得发送 HTTP 请求变得更加简单。
+2. **Promise 支持**：原生的 XMLHttpRequest 不支持 Promise，而 Promise 是现代 JavaScript 中处理异步操作的标准方式。Axios 内置了对 Promise 的支持，使得处理异步请求更加方便。
+3. **统一的 API**：无论是在浏览器还是在 Node.js 环境中，Axios 提供了统一的 API，这使得代码可以在不同环境中无缝运行。
+4. **更好的错误处理**：Axios 提供了更好的错误处理机制，相比于原生的 XMLHttpRequest，更加易于捕获和处理请求错误。
+
+<br>
+
+> Promise 基础
+>
+> 在开始之前，先了解一下 Promise。Promise 是 JavaScript 异步编程的一种解决方案，用来处理异步操作（如网络请求）。一个 Promise 有三种状态：
+>
+> 1. **Pending**（进行中）：操作尚未完成。
+> 2. **Fulfilled**（已成功）：操作完成，且成功。
+> 3. **Rejected**（已失败）：操作完成，但失败。
+>
+> Promise 可以通过 `then` 方法来处理成功的结果，通过 `catch` 方法来处理错误。
+>
+> **Axios 使用 Promise**
+>
+> Axios 的每个请求方法（如 `get`, `post` 等）都会返回一个 Promise，因此你可以使用 `then` 和 `catch` 方法来处理请求的结果。
+>
+> `then` 方法
+>
+> `then` 方法用于处理成功的响应。它接受两个参数：
+>
+> 1. **onFulfilled**（可选）：当 Promise 状态变为 `fulfilled` 时调用的函数。
+> 2. **onRejected**（可选）：当 Promise 状态变为 `rejected` 时调用的函数。
+>
+> ```javascript
+> axios.get('https://jsonplaceholder.typicode.com/posts/1')
+>   .then(response => {
+>     // 当请求成功时，这里的代码会被执行
+>     console.log(response.data);
+>   })
+>   .catch(error => {
+>     // 当请求失败时，这里的代码会被执行
+>     console.error('Error:', error);
+>   });
+> ```
+>
+> 在上面的例子中，当 GET 请求成功时，`then` 方法会接收到一个 `response` 对象。这个对象包含许多属性，比如：
+>
+> - `data`：服务器返回的数据。
+> - `status`：HTTP 状态码（如 200 表示成功）。
+> - `statusText`：HTTP 状态文本（如 "OK"）。
+> - `headers`：响应头。
+> - `config`：请求的配置信息。
+> - `request`：表示请求的 XMLHttpRequest 对象（浏览器）或 http.ClientRequest 对象（Node.js）。
+>
+> `catch` 方法
+>
+> `catch` 方法用于处理错误。它只接受一个参数，即错误处理函数：
+>
+> ```javascript
+> axios.get('https://jsonplaceholder.typicode.com/posts/1')
+>   .then(response => {
+>     console.log(response.data);
+>   })
+>   .catch(error => {
+>     // 错误处理
+>     console.error('Error:', error);
+>   });
+> ```
+>
+> 在上面的例子中，如果 GET 请求失败，`catch` 方法会被调用，并接收到一个 `error` 对象。这个对象包含许多属性，比如：
+>
+> - `message`：错误消息。
+> - `response`：服务器返回的响应（如果有的话）。
+> - `request`：表示请求的 XMLHttpRequest 对象（浏览器）或 http.ClientRequest 对象（Node.js）（如果请求已发送）。
+> - `config`：请求的配置信息。
+>
+> 更详细的错误处理
+>
+> 在 `catch` 方法中，你可以对不同类型的错误进行详细处理：
+>
+> ```javascript
+> axios.get('https://jsonplaceholder.typicode.com/posts/1')
+>   .then(response => {
+>     console.log(response.data);
+>   })
+>   .catch(error => {
+>     if (error.response) {
+>       // 请求已发出，但服务器响应了状态码不在 2xx 范围内
+>       console.error('Error data:', error.response.data);
+>       console.error('Error status:', error.response.status);
+>       console.error('Error headers:', error.response.headers);
+>     } else if (error.request) {
+>       // 请求已发出，但没有收到响应
+>       console.error('Error request:', error.request);
+>     } else {
+>       // 发生了一些错误，在设置请求时触发
+>       console.error('Error message:', error.message);
+>     }
+>     console.error('Error config:', error.config);
+>   });
+> ```
+>
+> 链式调用
+>
+> 你可以链式调用多个 `then` 和 `catch` 方法来处理多个异步操作：
+>
+> ```javascript
+> axios.get('https://jsonplaceholder.typicode.com/posts/1')
+>   .then(response => {
+>     console.log('First request:', response.data);
+>     return axios.get('https://jsonplaceholder.typicode.com/posts/2');
+>   })
+>   .then(response => {
+>     console.log('Second request:', response.data);
+>   })
+>   .catch(error => {
+>     console.error('Error:', error);
+>   });
+> ```
+>
+> 在上面的例子中，第一个 `then` 方法处理了第一个 GET 请求并返回第二个 GET 请求的 Promise，第二个 `then` 方法处理第二个 GET 请求的结果。`catch` 方法会捕获所有请求中的错误。
+>
+> 总结
+>
+> - **`then` 方法**：用于处理成功的响应，接受两个参数（成功回调和失败回调）。
+> - **`catch` 方法**：用于处理错误，接受一个参数（错误回调）。
+> - **`response` 对象**：包含服务器返回的各种信息（如数据、状态码、状态文本、响应头等）。
+> - **`error` 对象**：包含错误的详细信息（如错误消息、响应、请求、配置信息等）。
+>
+> 通过这些内容，你应该能够更好地理解如何使用 Axios 处理 HTTP 请求及其响应。
+
+好的，下面我们详细介绍 Axios 中配置请求的参数。你可以在全局配置、实例配置、或单个请求中使用这些配置参数。
+
+
+
+
+
+### axios基本使用
+
+
+
+**配置请求参数**
+
+Axios 的配置选项可以在创建实例时设置，也可以在单个请求中设置。常用的配置选项包括：
+
+- `url`: 请求的地址
+- `method`: 请求的方法（如 `get`, `post`, `put`, `delete` 等）
+- `baseURL`: 将自动加在 `url` 前面，除非 `url` 是一个绝对 URL
+- `headers`: 自定义 HTTP 头
+- `params`: URL 查询参数对象
+- `data`: 请求体数据
+- `timeout`: 请求超时时间（毫秒）
+- `auth`: 基本认证 `{ username: '', password: '' }`
+- `responseType`: 服务器响应的数据类型，如 `json`, `blob`, `document`, `arraybuffer`, `text`, `stream`
+- `cancelToken`: 用于取消请求的标记
+- `withCredentials`: 跨域请求时是否需要使用凭证
+
+全局配置
+
+你可以在创建 Axios 实例时设置全局配置：
+
+```javascript
+const axiosInstance = axios.create({
+  baseURL: 'https://api.example.com',
+  timeout: 1000,
+  headers: {'X-Custom-Header': 'foobar'}
+});
+```
+
+单个请求配置
+
+你也可以在每个请求中单独设置这些配置：
+
+配置示例
+
+```javascript
+axios({
+  method: 'post', // 请求方法
+  url: 'https://jsonplaceholder.typicode.com/posts', // 请求地址
+  baseURL: 'https://api.example.com', // 基础 URL
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer your-token'
+  }, // 自定义头部
+  params: {
+    userId: 1
+  }, // URL 查询参数
+  data: {
+    title: 'foo',
+    body: 'bar',
+    userId: 1
+  }, // 请求体数据
+  timeout: 1000, // 超时时间
+  responseType: 'json', // 响应类型
+  withCredentials: true, // 跨域请求时是否使用凭证
+  cancelToken: new axios.CancelToken(cancel => {
+    // 取消请求的标记
+  })
+})
+.then(response => {
+  console.log(response.data);
+})
+.catch(error => {
+  console.error('Error:', error);
+});
+```
+
+配置选项详解
+
+- **`url`**: 请求的地址。如果设置了 `baseURL`，并且 `url` 是相对地址，则 `baseURL` 会加在 `url` 前面。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    baseURL: 'https://jsonplaceholder.typicode.com'
+  });
+  ```
+
+- **`method`**: 请求的方法。默认是 `get`。
+
+  ```javascript
+  axios({
+    method: 'post',
+    url: '/posts'
+  });
+  ```
+
+- **`baseURL`**: 将自动加在 `url` 前面，除非 `url` 是一个绝对 URL。这有助于为 Axios 实例设置一个基础 URL。
+
+  ```javascript
+  const axiosInstance = axios.create({
+    baseURL: 'https://jsonplaceholder.typicode.com'
+  });
+  ```
+
+- **`headers`**: 自定义 HTTP 头。可以用于设置认证信息、内容类型等。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    headers: {
+      'Authorization': 'Bearer your-token',
+      'Content-Type': 'application/json'
+    }
+  });
+  ```
+
+- **`params`**: URL 查询参数对象。会自动转换为查询字符串并附加到 URL 后面。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    params: {
+      userId: 1
+    }
+  });
+  ```
+
+- **`data`**: 请求体数据。用于 `post`, `put`, `patch` 等请求方法。
+
+  ```javascript
+  axios({
+    method: 'post',
+    url: '/posts',
+    data: {
+      title: 'foo',
+      body: 'bar',
+      userId: 1
+    }
+  });
+  ```
+
+- **`timeout`**: 请求超时时间（毫秒）。如果请求超过这个时间，Promise 会被 `reject`。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    timeout: 1000
+  });
+  ```
+
+- **`auth`**: 基本认证 `{ username: '', password: '' }`。会自动设置 `Authorization` 头。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    auth: {
+      username: 'user',
+      password: 'pass'
+    }
+  });
+  ```
+
+- **`responseType`**: 服务器响应的数据类型。默认是 `json`。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    responseType: 'json'
+  });
+  ```
+
+- **`cancelToken`**: 用于取消请求的标记。
+
+  ```javascript
+  const CancelToken = axios.CancelToken;
+  const source = CancelToken.source();
+
+  axios({
+    url: '/posts',
+    cancelToken: source.token
+  });
+
+  // 取消请求
+  source.cancel('Operation canceled by the user.');
+  ```
+
+- **`withCredentials`**: 跨域请求时是否需要使用凭证。默认是 `false`。
+
+  ```javascript
+  axios({
+    url: '/posts',
+    withCredentials: true
+  });
+  ```
+
+
+
+
+
+拦截器（interceptors）是 Axios 提供的一个强大功能，用于在发送请求或响应到达 then 或 catch 之前拦截它们。拦截器允许你在请求或响应被处理前对它们进行改变或者执行额外的操作。让我来详细解释一下拦截器和 `.then/.catch` 的区别和作用：
+
+### 拦截器（Interceptors）
+
+在 Axios 中，拦截器允许你在请求或响应被处理前对它们进行拦截和转换。主要有两种类型的拦截器：
+
+1. **请求拦截器**：在请求被发送之前执行的操作，比如添加认证信息、设置请求头等。
+   
+2. **响应拦截器**：在接收到响应之前执行的操作，比如处理数据格式、统一处理错误等。
+
+示例代码：
+
+```javascript
+// 添加请求拦截器
+axios.interceptors.request.use(config => {
+    // 在请求发送之前做些什么
+    console.log('请求拦截器:', config);
+    return config;
+}, error => {
+    // 对请求错误做些什么
+    console.error('请求拦截器错误:', error);
+    return Promise.reject(error);
+});
+
+// 添加响应拦截器
+axios.interceptors.response.use(response => {
+    // 对响应数据做些什么
+    console.log('响应拦截器:', response);
+    return response;
+}, error => {
+    // 对响应错误做些什么
+    console.error('响应拦截器错误:', error);
+    return Promise.reject(error);
+});
+
+// 发送请求
+axios.get('https://api.example.com/data')
+  .then(response => {
+    // 处理成功的情况
+    console.log('请求成功:', response.data);
+  })
+  .catch(error => {
+    // 处理失败的情况
+    console.error('请求失败:', error);
+  });
+```
+
+`.then` 和 `.catch`
+
+`.then` 和 `.catch` 是 Promise 提供的方法，用于处理异步操作的成功和失败情况。它们不是拦截器，而是 Promise 链式调用的一部分，用于在请求成功或失败时执行相应的操作。
+
+- **`.then` 方法**：用于处理请求成功时的逻辑，接收一个成功回调函数作为参数。
+  
+- **`.catch` 方法**：用于处理请求失败时的逻辑，接收一个错误回调函数作为参数。
+
+示例代码：
+
+```javascript
+axios.get('https://api.example.com/data')
+  .then(response => {
+    console.log('请求成功:', response.data);
+    // 处理成功逻辑
+  })
+  .catch(error => {
+    console.error('请求失败:', error);
+    // 处理失败逻辑
+  });
+```
+
+**区别和作用**
+
+- **拦截器（interceptors）**：
+  - 允许在请求或响应被处理前对它们进行拦截和处理。
+  - 可以在请求或响应被发送或接收之前，对其进行全局性的处理，比如添加认证信息、统一处理错误等。
+
+- **`.then` 和 `.catch`**：
+  - 是 Promise 的方法，用于处理异步操作的成功和失败情况。
+  - 只能在单个请求的链式调用中使用，处理特定请求的成功或失败。
+
+总结
+
+拦截器（interceptors）和 `.then/.catch` 都是 Axios 提供的处理请求和响应的重要机制，但它们的作用和使用方式有所不同。拦截器用于全局处理请求和响应的中间过程，而 `.then/.catch` 用于处理单个请求的成功和失败结果。
+
+<br>
+
+# 6.localStorage
+
+localStorage 是 Web Storage API 的一部分，是一种在客户端（浏览器）中存储数据的方式。它允许你将数据以键值对的形式存储在浏览器中，即使浏览器关闭并重新打开，这些数据仍然保留。这使得 localStorage 成为一种持久化存储数据的简单方式。
+
+localStorage 的特点
+
+- **持久性**: 数据会在浏览器会话中持久存在，直到显式删除它。
+- **存储容量**: 通常每个域名可以存储 5-10MB 的数据。
+- **数据类型**: 只能存储字符串数据，如果需要存储复杂数据类型，需要先将其转换为 JSON 字符串。
+- **同源策略**: localStorage 遵循同源策略，不同域名下的数据互不可见。
+
+常见方法
+
+localStorage 提供了一些方法来进行数据存取和管理：
+
+- **setItem(key, value)**: 将数据存储到 localStorage 中。
+- **getItem(key)**: 从 localStorage 中读取数据。
+- **removeItem(key)**: 从 localStorage 中删除数据。
+- **clear()**: 清除所有存储在 localStorage 中的数据。
+- **key(index)**: 获取存储中的第 `index` 个键名。
+
+使用示例
+
+存储数据
+
+将一个对象存储到 localStorage 中：
+```javascript
+let user = {
+  name: "Alice",
+  age: 25
+};
+
+// 将对象转换为 JSON 字符串并存储到 localStorage 中
+localStorage.setItem('user', JSON.stringify(user));
+```
+
+读取数据
+
+从 localStorage 中读取并解析对象：
+```javascript
+let storedUser = localStorage.getItem('user');
+if (storedUser) {
+  let user = JSON.parse(storedUser);
+  console.log(user.name); // 输出: Alice
+}
+```
+
+删除数据
+
+从 localStorage 中删除数据：
+```javascript
+localStorage.removeItem('user');
+```
+
+清空所有数据
+
+清空 localStorage 中的所有数据：
+```javascript
+localStorage.clear();
+```
+
+实际应用
+
+localStorage 通常用于以下场景：
+- **保存用户偏好**: 例如主题设置、语言选择等。
+- **保存表单数据**: 用户在填写表单过程中关闭页面，再次打开时可以恢复填写的数据。
+- **缓存数据**: 缓存一些不会频繁改变的数据，减少服务器请求。
+
+localStorage 与 sessionStorage 的区别
+
+- **localStorage**: 数据持久存在，直到显式删除。
+- **sessionStorage**: 数据在页面会话期间存在，关闭浏览器或标签页后数据被清除。
+
+安全性
+
+需要注意的是，localStorage 中存储的数据对同源下的所有脚本都是可见的，因此不要存储敏感数据，例如用户密码、敏感的个人信息等。对于这些数据，应使用更安全的存储方式（如服务器端存储）并确保数据传输的安全性（如使用 HTTPS）。
+
+
+
+
+
 
 
 # 0.课程介绍
@@ -1828,6 +2325,8 @@ ref添加标签，情况如下：
 
 ## 3.12 props的使用
 
+在Vue.js中，`prop`（property 的缩写）是用于父组件向子组件传递数据的一种机制。`props`使得组件之间的数据传递更加灵活和直观。通过使用`props`，父组件可以将数据和方法传递给子组件，子组件通过访问这些`props`来进行渲染和操作
+
 如何在父组件传递参数给子组件？如下示例
 
 App.vue中传入字符串a，传入list变量值为personList变量
@@ -2007,6 +2506,53 @@ vue3常用的钩子：挂载完毕、更新完毕、卸载之前
 
 ## 3.14 自定义Hooks
 
+作用：让一个功能的数据和方法贴在一起
+
+首先要新建一个hooks文件夹，里面的ts文件命名规则是use+要操作的对象
+
+新建一个useDog.ts文件放在hooks文件夹里面，文件里面使用export暴露一个匿名函数
+
+```vue
+import { reactive} from 'vue';
+import axios from 'axios';
+
+//https://dog.ceo/api/breed/pembroke/images/random ,一个接口，随机返回一个狗图片
+
+
+export default function (){
+    let dogList = reactive([''])
+
+    async function  addDog(){
+        try {
+            let result = await axios.get('https://dog.ceo/api/breed/pembroke/images/random')
+            dogList.push(result.data.message)
+        } catch(error){
+            alert(error)
+        }
+    
+    }
+
+    //向外部提供东西
+    return {dogList,addDog}
+}
+```
+
+在主要的vue文件中引入
+
+```vue
+<script lang="ts" setup name="person">
+import useSum from '@/hooks/useSum';
+import useDog from '@/hooks/useDog';
+
+const {sum,add} = useSum()
+const {dogList,addDog} = useDog()
+
+
+</script>
+```
+
+<br>
+
 
 
 
@@ -2015,11 +2561,1503 @@ vue3常用的钩子：挂载完毕、更新完毕、卸载之前
 
 # 4.路由
 
+对路由的理解：
 
+- 路由就是一组key-value的对应关系
+- 多个路由，需要经过路由器的管理
+
+前端里面需要路由，是为了实现SPA（单页面应用），即一个html
+
+<br>
+
+## 4.1 路由_基本切换效果
+
+首先以一个基本的后台管理页面为例子，要设置
+
+- 导航区、展示区
+- 请来路由器
+- 指定路由具体规则（什么路径，对应什么组件）
+- 形成一个一个的【？？？.vue】
+
+1. 首先使用路由器，需要安装路由器
+
+` npm i vue-router`
+
+2. src目录下创建router文件夹
+
+3. router文件夹内部新建文件，index.ts，创建一个路由器，并暴露出去
+   1. 编写相关的Home组件等，并在index.ts中引入
+   2. 引入createRouter，createWebHistory
+   3. 创建路由器
+   4. 暴露路由器
+
+```vue
+//创建一个路由器并暴露
+
+//第一步：引入createRouter
+import {createRouter,createWebHistory} from 'vue-router'
+
+//引入所有路由组件
+import Home from  '@/components/Home.vue';
+import News from  '@/components/News.vue';
+import About from  '@/components/About.vue';
+
+
+//第二步：创建路由器
+const router = createRouter({
+    history:createWebHistory(),     //路由器的工作模式（暂不讲解）
+    routes:[
+        {
+            path:'/home',
+            component:Home
+        },
+        {
+            path:'/news',
+            component:News
+        },
+        {
+            path:'/about',
+            component:About
+        }
+    ]
+})
+
+
+// 第三步：将router暴露出去
+export default router
+```
+
+4. 在main.ts中引入路由器，并使用路由器
+
+```vue
+// 引入createApp用于创建应用
+import {createApp} from 'vue'
+//引入App根组件
+import App from './App.vue'
+
+//引入路由器.index.ts省略
+import router from './router'
+
+//创建一个应用
+const app = createApp(App)
+
+
+//使用路由器
+app.use(router)
+
+//挂载整个应用到app容器中
+app.mount('#app')
+```
+
+5. 将路由器视图放到指定的展示区（App.vue中）
+
+```vue
+<template>
+
+    <div class="app">
+        <h2 class="title">Vue路由测试</h2>
+        <!-- 导航区 -->
+        <div class="navigate">
+            <a href="">首页</a>
+            <a href="">新闻</a>
+            <a href="">关于</a>
+        </div>
+
+        <!-- 展示区 -->
+        <div class="main-content">
+            <RouterView></RouterView>
+        </div>
+
+    </div>
+
+
+</template>
+
+<script lang="ts" setup name="APP">
+import { RouterView } from 'vue-router';
+
+</script>
+```
+
+6. 为点击事件添加路由导航
+
+```vue
+<template>
+
+    <div class="app">
+        <h2 class="title">Vue路由测试</h2>
+        <!-- 导航区 -->
+        <div class="navigate">
+            <RouterLink to="/home" active-class="xiaozhupeiqi">首页</RouterLink>
+            <RouterLink to="/news" active-class="xiaozhupeiqi">新闻</RouterLink>
+            <RouterLink to="/about" active-class="xiaozhupeiqi">关于</RouterLink>
+        </div>
+
+        <!-- 展示区 -->
+        <div class="main-content">
+            <RouterView></RouterView>
+        </div>
+
+    </div>
+
+
+</template>
+
+<script lang="ts" setup name="APP">
+import { RouterView,RouterLink } from 'vue-router';
+
+</script>
+
+<style>
+ .title {
+    text-align: center;
+    word-spacing: 5px;
+    margin: 30px 0;
+    height: 70px;
+    line-height: 70px;
+    background-image: linear-gradient(45deg, gray, white);
+    border-radius: 10px;
+    box-shadow: 0 0 2px;
+    font-size: 30px;
+  }
+  .navigate {
+    display: flex;
+    justify-content: space-around;
+    margin: 0 100px;
+  }
+  .navigate a {
+    display: block;
+    text-align: center;
+    width: 90px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 10px;
+    background-color: gray;
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    letter-spacing: 5px;
+  }
+  .navigate a.xiaozhupeiqi {
+    background-color: #64967E;
+    color: #ffc268;
+    font-weight: 900;
+    text-shadow: 0 0 1px black;
+    font-family: 微软雅黑;
+  }
+  .main-content {
+    margin: 0 auto;
+    margin-top: 30px;
+    border-radius: 10px;
+    width: 90%;
+    height: 400px;
+    border: 1px solid;
+  }
+</style>
+```
+
+
+
+## 4.2 两个注意点
+
+- 路由组件通常放在pages或views文件夹，一般组件通常存放在components文件夹
+- 通过点击导航，视觉上”消失“了的路由组件，默认是被销毁的，需要的时候再去挂载
+
+component文件夹内部的是一般组件
+
+路由组件通常在pages/views文件夹中
+
+
+
+<br>
+
+
+
+## 4.3 路由器工作模式
+
+history模式
+
+​	Vue2：mode:'history'
+
+​	Vue3:：history：createWebHistory()
+
+hash模式
+
+
+
+<br>
+
+1.histoy模式
+
+- 优点：URL更加美观，不带有#，更接近于传统网站URL
+
+- 缺点：后期项目上线，需要服务器配合处理路径问题，否则刷新会有404错误
+
+  ```vue
+  const router = createRouter({
+  	history:createWebHistory(),
+  	...
+  })
+  ```
+
+2.hash模式
+
+- 优点：兼容性更好，因为不需要服务器端处理路径
+
+- 缺点：URL带有#不太美观，且在SEO优化方面相对较差
+
+  ```vue
+  const router = createRouter({
+  	history:createWebHash(),
+  	...
+  })
+  ```
+
+  
+
+
+
+<br>
+
+## 4.4 路由to的两种写法
+
+1. to的字符串写法
+
+   ```vue
+   <router active-class="active" to='/home'></router>
+   ```
+
+   
+
+2. to的对象写法(名字跳转/路径跳转)
+
+   ```vue
+   <router active-class='active' :to="{path:'/home'}"></router>
+   ```
+
+   当然可以！在 Vue Router 中，`to` 属性用于指定路由目标，有两种主要写法：字符串写法和对象写法。以下是对这两种写法的详细解释和示例。
+
+   
+
+> 1.`to` 的字符串写法
+>
+> 字符串写法是最简单和直接的方式，通常用于简单的路径导航。
+>
+> 示例
+>
+> ```vue
+> <router-link active-class="active" to="/home">Home</router-link>
+> ```
+>
+> 解释
+>
+> - **`<router-link>`**：Vue Router 提供的组件，用于创建导航链接。
+> - **`to="/home"`**：字符串写法，直接指定目标路径为 `/home`。
+> - **`active-class="active"`**：指定当链接对应的路由被激活时，应用的 CSS 类名。默认类名是 `router-link-active`，这里重写为 `active`。
+>
+> 当用户点击这个链接时，浏览器会导航到 `/home` 路径，对应的组件会被渲染。
+>
+> 2.`to` 的对象写法
+>
+> 对象写法提供了更多的灵活性，可以指定路径、路由参数、查询参数等。
+>
+> 示例
+>
+> ```vue
+> <router-link active-class="active" :to="{ path: '/home' }">Home</router-link>
+> ```
+>
+> 解释
+>
+> - **`:to="{ path: '/home' }"`**：对象写法，使用 `path` 字段指定目标路径为 `/home`。
+> - **`active-class="active"`**：同样指定激活时的 CSS 类名。
+>
+> 对象写法允许你在一个对象中定义更多的路由选项。
+>
+> 更多对象写法示例
+>
+> ```vue
+> <router-link :to="{ name: 'home' }">Home by name</router-link>
+> 
+> <router-link :to="{ path: '/home', query: { sort: 'asc' } }">Home with query</router-link>
+> 
+> <router-link :to="{ path: '/user', params: { userId: 123 } }">User</router-link>
+> ```
+>
+> - **按名称导航**：使用路由名称导航，而不是路径。
+>   ```vue
+>   <router-link :to="{ name: 'home' }">Home by name</router-link>
+>   ```
+>
+> - **带查询参数**：附加查询参数到路径中。
+>   ```vue
+>   <router-link :to="{ path: '/home', query: { sort: 'asc' } }">Home with query</router-link>
+>   ```
+>
+> - **带路由参数**：通过路由参数导航。
+>   ```vue
+>   <router-link :to="{ path: '/user', params: { userId: 123 } }">User</router-link>
+>   ```
+>
+> 何时使用哪种写法
+>
+> - **字符串写法**：适合简单的路径导航，没有参数或查询参数的情况。
+> - **对象写法**：适合需要传递参数、查询参数或使用路由名称的情况。对象写法更灵活和可扩展，适用于复杂的导航需求。
+>
+> 通过这两种写法，Vue Router 提供了简洁和灵活的路由导航方式，适应不同的使用场景和需求。
+
+<br>
+
+## 4.5 命名路由
+
+可以在router文件夹内部的index.ts种创建路由器时候，里面设置各个路由规则时可以设置路由名字
+
+```vue
+    routes:[
+        {
+            name:'zhuye',
+            path:'/home',
+            component:Home
+        },
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News
+        },
+        {
+            name:'guanyu',
+            path:'/about',
+            component:About
+        }
+    ]
+```
+
+命令了路由之后，可以通过第二种to方法实现通过name来跳转
+
+```vue
+<router-link :to="{ name:"shouye" }">Home with query</router-link>
+```
+
+<br>
+
+## 4.6 嵌套路由
+
+具体步骤如下：
+
+1. 在父级组件中写好导航区和展示区（以news.vue为例子）
+2. 写好子级组件Detail.vue并放到page文件夹
+3. 配置路由，在index.ts中配置news父级路由的children，在children数组里面配置子组件Detail.vue
+
+
+
+父组件news.vue
+
+```vue
+<template>
+  <!-- 导航区 -->
+  <div class="news">
+    <ul>
+      <li v-for="news in newsList" :key="news.id">
+        <RouterLink to="/news/detail">{{ news.title }}</RouterLink>
+
+      </li>
+    </ul>
+    <!-- 展示区 -->
+    <div class="news-content">
+      <RouterView></RouterView>
+
+    </div>
+  </div>
+</template>
+
+
+<script setup lang="ts" name="News">
+import { reactive } from 'vue';
+import { RouterView, RouterLink } from 'vue-router';
+
+const newsList = reactive([
+  { id: '1', title: 'shit', content: '12' },
+  { id: '2', title: 'cgeg', content: '33' },
+  { id: '3', title: 'weegw', content: '44' },
+])
+</script>
+
+<style scoped>
+/* 新闻 */
+.news {
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.news ul {
+  margin-top: 30px;
+  list-style: none;
+  padding-left: 10px;
+}
+
+.news li>a {
+  font-size: 18px;
+  line-height: 40px;
+  text-decoration: none;
+  color: #64967E;
+  text-shadow: 0 0 1px rgb(0, 84, 0);
+}
+
+.news-content {
+  width: 70%;
+  height: 90%;
+  border: 1px solid;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+</style>
+```
+
+子组件Detail.vue
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：xxx</li>
+      <li>标题：xxx</li>
+      <li>内容：xxx</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  
+  </script>
+  
+  <style scoped>
+    .news-list {
+      list-style: none;
+      padding-left: 20px;
+    }
+  
+    .news-list>li {
+      line-height: 30px;
+    }
+  </style>
+```
+
+路由规则设置
+
+```typescript
+//创建一个路由器并暴露
+
+//第一步：引入createRouter
+import {createRouter,createWebHistory} from 'vue-router'
+
+//引入所有路由组件
+import Home from  '@/pages/Home.vue';
+import News from  '@/pages/News.vue';
+import About from  '@/pages/About.vue';
+import Detail from '@/pages/Detail.vue';
+
+
+//第二步：创建路由器
+const router = createRouter({
+    history:createWebHistory(),     //路由器的工作模式（暂不讲解）
+    routes:[
+        {
+            name:'zhuye',
+            path:'/home',
+            component:Home
+        },
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+                    path:'detail',
+                    component:Detail
+                }
+            ]
+        },
+        {
+            name:'guanyu',
+            path:'/about',
+            component:About
+        }
+    ]
+})
+
+
+// 第三步：将router暴露出去
+export default router
+```
+
+<br>
+
+
+
+## 4.7 路由query参数
+
+如何在跳转路由的时候传参？
+
+下面介绍query参数传参
+
+News.vue组件设置传参
+
+```vue
+传参方法一:v-bind、反引号、模板字符串嵌入js
+<li v-for="news in newsList" :key="news.id">
+    <!-- 里面要通过反引号变成模板字符串，模板字符串嵌入js代码要使用${} -->
+    <RouterLink :to="`/news/detail${news.id}&title=${news.title}&title=${news.content}`">{{ news.title }}</RouterLink>
+</li>
+
+
+传参方法二:对象传参（可以使用path或name）
+<RouterLink :to="{
+                 path:'/news/detail',
+                 query:{
+                 id:news.id,
+                 title:news.title,
+                 content:news.content
+                 }
+                 }">{{ news.title }}</RouterLink>
+```
+
+
+
+index.ts设置路由规则
+
+```vue
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+                    path:'detail',
+                    component:Detail
+                }
+            ]
+        },
+```
+
+
+
+
+
+Detail.vue组件接受传参（可以解构赋值，但是直接解构响应式对象的数据失去响应式）
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：{{ route.query.id }}</li>
+      <li>标题：{{ route.query.title }}</li>
+      <li>内容：{{ route.query.content }}</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  import { useRoute } from 'vue-router';
+  let route = useRoute()
+  //解构赋值
+  //let {query} = toRefs(route)
+  
+  </script>
+```
+
+
+
+<br>
+
+## 4.8 路由params参数
+
+News.vue组件设置传参
+
+```vue
+<template>
+  <!-- 导航区 -->
+  <div class="news">
+    <ul>
+      <li v-for="news in newsList" :key="news.id">
+        <!-- 里面要通过反引号变成模板字符串，模板字符串嵌入js代码要使用${} -->
+        <RouterLink to="`/news/detail${news.id}&/${news.title}&/${news.content}`">{{ news.title }}
+        </RouterLink>
+
+      </li>
+    </ul>
+    <!-- 展示区 -->
+    <div class="news-content">
+      <RouterView></RouterView>
+
+    </div>
+  </div>
+</template>
+
+
+传参方法二:对象传参（使用name）
+        <RouterLink :to="{
+                 name:'xiangqing',
+                 params:{
+                 id:news.id,
+                 title:news.title,
+                 content:news.content
+                 }
+                 }">{{ news.title }}</RouterLink>
+```
+
+注意：对象传值，必须使用name不能使用path
+
+index.ts设置路由规则
+
+```vue
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+					name:'xiangqing'
+                    path:'detail/:id/:title/:content',
+                    component:Detail
+                }
+            ]
+        },
+```
+
+在设置路由规则的使用后面加？可以控制可传可不传
+
+
+
+Detail.vue组件接受传参
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：{{ route.params.id }}</li>
+      <li>标题：{{ route.params.title }}</li>
+      <li>内容：{{ route.params.content }}</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  import { useRoute } from 'vue-router';
+  let route = useRoute()
+  
+  
+  </script>
+  
+  <style scoped>
+    .news-list {
+      list-style: none;
+      padding-left: 20px;
+    }
+  
+    .news-list>li {
+      line-height: 30px;
+    }
+  </style>
+```
+
+
+
+<br>
+
+## 4.9 路由props配置
+
+在 Vue Router 中，当 `props` 选项设置为 `true` 时，路由参数会作为组件的 props 传递给组件。这样可以让你的组件更清晰地接收和使用路由参数。
+
+具体来说，在你的代码中，`Detail` 组件的路径是 `detail/:id/:title/:content`。当你导航到这个路径时，例如 `/news/detail/1/some-title/some-content`，路由参数 `id`、`title` 和 `content` 会被作为 props 传递给 `Detail` 组件。
+
+
+
+作用：让路由组件更方面的收到参数（可以将路由参数作为props传给组件）
+
+
+
+首先配置路由规则
+
+```vue
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+                    name:'xiangqing',
+                    path:'detail/:id/:title/:content',
+                    component:Detail,
+                    props:true
+                }
+            ]
+        
+```
+
+Detail.vue中重写接受参数代码
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：{{ id }}</li>
+      <li>标题：{{ title }}</li>
+      <li>内容：{{content }}</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  defineProps(['id','title','content'])
+  
+  
+  </script>
+  
+```
+
+<br>
+
+props有三种写法：
+
+- 将所有收到的params参数作为props传给路由组件（布尔模式）
+
+  ```vue
+  props:true
+  ```
+
+- 可以自己决定将什么作为props传给路由组件（函数模式）
+
+  ```vue
+  props(route){return {route.query}}
+  ```
+
+- 也可以自己决定将什么props传给路由组件（对象写法）
+
+  ```vue
+  props:{a:100,b:200}
+  ```
+
+  
+
+
+
+> `props: true` 主要是用于将路由路径中的动态参数（`params`）传递给组件的。对于 `query` 参数，需要另外的处理方法。
+>
+> 传递 `query` 参数
+>
+> 如果你想将 `query` 参数也传递给组件，可以使用一个函数来配置 `props`。这个函数可以合并 `params` 和 `query` 参数，并将它们一起作为 props 传递给组件。
+>
+> ```javascript
+> {
+>   name: 'xiangqing',
+>   path: 'detail/:id/:title/:content',
+>   component: Detail,
+>   props: route => ({ 
+>     ...route.params,
+>     ...route.query 
+>   })
+> }
+> ```
+>
+> 这样，无论是 `params` 还是 `query` 参数，都会作为 props 传递给 `Detail` 组件。
+>
+
+
+
+<br>
+
+## 4.10 路由replace属性
+
+路由器的路由导航方式有两种
+
+- push模式 ：将历史记录推入栈中
+- replace模式：直接覆盖历史记录
+
+路由器默认是push模式
+
+如果要修改为replace模式，只需要在RouterLink标签的属性里面加入replace
+
+<br>
+
+## 4.11 编程式导航
+
+之前在template中写的RouteLink标签最终在html中变成a标签
+
+如果想要使用button来跳转，那么就不能使用RouterLink实现
+
+或者是想要实现3秒后跳转，都不能使用RouterLink
+
+
+
+```vue
+  <script setup lang="ts" name="Home">
+  import { onMounted } from 'vue';
+  
+  onMounted(()=>{
+    setTimeout(()=>{
+      //在此处编写一段代码，让路由实现跳转
+    },3000)
+  })
+
+  </script>
+```
+
+要实现上述的效果，就需要编程式路由导航，脱离RouterLink实现跳转
+
+```vue
+  import { onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  
+  const router = useRouter()
+
+
+  onMounted(()=>{
+    setTimeout(()=>{
+      //在此处编写一段代码，让路由实现跳转
+      router.push('/news')
+    },3000)
+  })
+
+```
+
+实际使用过程中，编程式路由导航远远大于RouterLink
+
+下面是添加button跳转的案例
+
+```vue
+<template>
+  <!-- 导航区 -->
+  <div class="news">
+    <ul>
+      <li v-for="news in newsList" :key="news.id">
+        <!-- 里面要通过反引号变成模板字符串，模板字符串嵌入js代码要使用${} -->
+        <button @click="showDetail(news)">查看新闻</button>
+        <RouterLink :to="{
+          name: 'xiangqing',
+          params: {
+            id: news.id,
+            title: news.title,
+            content: news.content
+          }
+        }">{{ news.title }}</RouterLink>
+
+      </li>
+    </ul>
+    <!-- 展示区 -->
+    <div class="news-content">
+      <RouterView></RouterView>
+
+    </div>
+  </div>
+</template>
+
+
+
+
+<script setup lang="ts" name="News">
+import { idText } from 'typescript';
+import { reactive } from 'vue';
+import { RouterView, RouterLink, useRouter } from 'vue-router';
+
+const newsList = reactive([
+  { id: '1', title: 'shit', content: '12' },
+  { id: '2', title: 'cgeg', content: '33' },
+  { id: '3', title: 'weegw', content: '44' },
+])
+
+const router = useRouter()
+
+interface NewsInter{
+  id:string,
+  title:string,
+  content:string
+}
+
+function showDetail(news:NewsInter) {
+  //router.replace也可以
+  router.push({
+    name: 'xiangqing',
+    params: {
+      id: news.id,
+      title: news.title,
+      content: news.content
+    }
+  })
+}
+```
+
+router.push里面能写的内容和template里面RouterLink里面的to一样
+
+- 字符串写法
+- 对象写法
+
+注意：在vue2里面编程式导航重复跳转会报错
+
+
+
+<br>
+
+## 4.12 重定向
+
+一般页面进入的时候有个默认的页面，可以使用重定向实现
+
+```vue
+        {
+            path:'/',
+            redirect:'/home'
+        }
+```
+
+
+
+
+
+<br>
 
 # 5.pinia
 
+pinia，vue.js的状态管理库
+
+集中式状态（数据）管理
+
+Pinia 是一个专门为 Vue.js 设计的状态管理库，旨在简化和优化 Vue.js 应用程序中的状态管理。它由 Vue.js 核心团队的成员开发和维护，提供了一种现代化的方式来管理应用程序的状态。
+
+<br>
+
+Pinia 的主要特点和用途：
+
+1. **Vue.js 3 的原生支持**：Pinia 是为 Vue.js 3 设计的状态管理库，利用了 Vue 3 的 Composition API，提供了更灵活和强大的状态管理能力。
+2. **类型安全和响应式**：Pinia 使用 TypeScript 和响应式数据结构，可以实现类型安全的状态管理，使得代码更加健壮和易于维护。
+3. **零依赖**：Pinia 是一个零依赖的库，不依赖于 Vuex 或其他状态管理库，因此可以轻量地集成到你的 Vue.js 项目中。
+4. **插件化和模块化**：Pinia 支持插件和模块化的状态管理，允许你将应用程序状态分解为独立的模块，并且可以灵活地组合和重用这些模块。
+5. **优化性能**：Pinia 在内部实现了许多优化，例如惰性加载和局部更新，有助于提升应用程序的性能表现。
+
+
+
+使用场景：
+
+- **复杂的状态管理需求**：当你的 Vue.js 应用程序有复杂的状态管理需求，例如大量组件间的状态共享、异步数据处理或者多模块协作时，Pinia 可以提供更清晰和可维护的解决方案。
+- **TypeScript 支持**：如果你的项目使用 TypeScript，并且需要类型安全的状态管理，Pinia 提供了良好的支持和集成。
+- **Vue 3 Composition API 的使用者**：Pinia 与 Vue 3 的 Composition API 紧密集成，可以更自然地利用 Composition API 来管理状态。
+
+
+
+如果不使用 Pinia 会怎么样？
+
+如果你选择不使用 Pinia，而是采用传统的 Vuex 或者其他状态管理库，可能会面临以下一些情况：
+
+- **复杂度增加**：传统的 Vuex 在处理复杂状态时可能需要编写更多的模板代码和样板代码，使得代码结构变得复杂和难以维护。
+- **性能影响**：一些传统状态管理库可能在性能方面表现较弱，特别是在大规模应用程序中，可能会影响页面加载和响应速度。
+- **TypeScript 集成困难**：某些状态管理库在 TypeScript 集成方面可能不够友好，可能需要更多的手动类型定义或类型转换。
+
+总体而言，Pinia 提供了一种现代化和优化的状态管理解决方案，尤其适合于需要更清晰、灵活和性能优化的 Vue.js 应用程序。选择是否使用 Pinia 取决于你的项目需求和团队的偏好，以及是否希望利用 Vue 3 的最新功能来优化开发体验和性能。
+
+
+
+<br>
+
+## 5.1 准备一个效果
+
+下面这个是加减功能组件
+
+```vue
+<template>
+  <div class="count">
+    <h2>当前求和为：{{ sum }}</h2>
+    <select v-model.number="n">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <button @click="add">加</button>
+    <button @click="minus">减</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Count">
+  import { ref } from "vue";
+  // 数据
+  let sum = ref(1) // 当前求和
+  let n = ref(1) // 用户选择的数字
+
+  // 方法
+  function add(){
+    sum.value += n.value
+  }
+  function minus(){
+    sum.value -= n.value
+  }
+</script>
+```
+
+v-model.number的使用，是因为默认的处理是字符串
+
+下面是获取文本的组件
+
+```vue
+<template>
+  <div class="talk">
+    <button @click="getLoveTalk">获取一句土味情话</button>
+    <ul>
+      <li v-for="talk in talkList" :key="talk.id">{{talk.title}}</li>
+    </ul>
+  </div>
+</template>
+
+<script setup lang="ts" name="LoveTalk">
+  import {reactive} from 'vue'
+  import axios from "axios";
+  import {nanoid} from 'nanoid'
+  // 数据
+  let talkList = reactive([
+    {id:'ftrfasdf01',title:'今天你有点怪，哪里怪？怪好看的！'},
+    {id:'ftrfasdf02',title:'草莓、蓝莓、蔓越莓，今天想我了没？'},
+    {id:'ftrfasdf03',title:'心里给你留了一块地，我的死心塌地'}
+  ])
+  // 方法
+  async function getLoveTalk(){
+    // 发请求，下面这行的写法是：连续解构赋值+重命名
+    let {data:{content:title}} = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+    // 把请求回来的字符串，包装成一个对象
+    let obj = {id:nanoid(),title}
+    // 放到数组中
+    talkList.unshift(obj)
+  }
+</script>
+```
+
+unshift是在开头添加，push实在末尾添加
+
+
+
+## 5.2 搭建pinia环境
+
+1.首先安装
+
+`npm i pinia`
+
+2.main.ts引入pinia
+
+`import {createPinia} from 'pinia'`
+
+3.main.ts中创建pinia
+
+`const pinia = createPinia()`
+
+4.main.ts中安装pinia
+
+` app.use(pinia)`
+
+
+
+```vue
+// 引入createApp用于创建应用
+import {createApp} from 'vue'
+// 引入App根组件
+import App from './App.vue'
+
+//引入pinia
+import { createPinia } from 'pinia'
+
+// 创建一个应用
+const app = createApp(App)
+
+const pinia = createPinia()
+
+// 挂载整个应用到app容器中
+
+app.use(pinia)
+app.mount('#app')
+```
+
+
+
+
+
+<br>
+
+## 5.3 存储+读取数据
+
+讲解如何用pinia存储和读取数据
+
+首选需要创建store文件夹，这个是pinia落地的文件夹
+
+然后再store文件内部创建两个ts文件：Count.ts、LoveTalk.ts
+
+```vue
+import {defineStore} from 'pinia'
+
+export const useCountStore = defineStore('count',{
+  // 真正存储数据的地方
+  state(){
+    return {
+      sum:6
+    }
+  }
+})
+```
+
+```vue
+import {defineStore} from 'pinia'
+
+export const useTalkStore = defineStore('talk',{
+  // 真正存储数据的地方
+  state(){
+    return {
+      talkList:[
+        {id:'ftrfasdf01',title:'今天你有点怪，哪里怪？怪好看的！'},
+        {id:'ftrfasdf02',title:'草莓、蓝莓、蔓越莓，今天想我了没？'},
+        {id:'ftrfasdf03',title:'心里给你留了一块地，我的死心塌地'}
+      ]
+    }
+  }
+})
+```
+
+然后修改Count.vue中的sum（删掉）,引入pinia仓库中的对应数据
+
+```vue
+<template>
+  <div class="count">
+    <h2>当前求和为：{{ countStore.sum }}</h2>
+    <select v-model.number="n">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <button @click="add">加</button>
+    <button @click="minus">减</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Count">
+  import { ref,reactive } from "vue";
+  import {useCountStore} from '@/store/count'
+
+  const countStore = useCountStore()
+
+  // 以下两种方式都可以拿到state中的数据
+  // console.log('@@@',countStore.sum)
+  // console.log('@@@',countStore.$state.sum)
+
+/*   let obj = reactive({
+    a:1,
+    b:2,
+    c:ref(3)
+  })
+  let x = ref(9)
+  console.log(obj.a)
+  console.log(obj.b)
+  console.log(obj.c) */
+
+
+  // 数据
+  let n = ref(1) // 用户选择的数字
+  // 方法
+  function add(){
+    
+  }
+  function minus(){
+    
+  }
+</script>
+
+```
+
+`console.log('@@@',countStore.sum)`这个代码不需要.value，是因为嵌套的响应式数据，在访问响应式数据内部的响应式数据时不用加.value
+
+```vue
+<template>
+  <div class="talk">
+    <button @click="getLoveTalk">获取一句土味情话</button>
+    <ul>
+      <li v-for="talk in talkStore.talkList" :key="talk.id">{{talk.title}}</li>
+    </ul>
+  </div>
+</template>
+
+<script setup lang="ts" name="LoveTalk">
+  import {reactive} from 'vue'
+  import axios from "axios";
+  import {nanoid} from 'nanoid'
+  import {useTalkStore} from '@/store/loveTalk'
+
+  const talkStore = useTalkStore()
+  
+  // 方法
+  async function getLoveTalk(){
+    // 发请求，下面这行的写法是：连续解构赋值+重命名
+    // let {data:{content:title}} = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+    // 把请求回来的字符串，包装成一个对象
+    // let obj = {id:nanoid(),title}
+    // 放到数组中
+    // talkList.unshift(obj)
+  }
+</script>
+
+```
+
+上述过程实现了将静态数据存储并读取的过程，但是不能对数据进行修改再保存
+
+<br>
+
+## 5.4 修改数据（三种方式）
+
+具体的修改数据的三种实现方法如下：
+
+
+
+```vue
+  function add(){
+    // 第一种修改方式
+    // countStore.sum += 1
+
+    // 第二种修改方式
+    /* countStore.$patch({
+      sum:888,
+      school:'尚硅谷',
+      address:'北京'
+    }) */
+
+    // 第三种修改方式
+    countStore.increment(n.value)
+
+  }
+```
+
+其中的第三种方法要再对应的仓库里面设置actions
+
+```vue
+import {defineStore} from 'pinia'
+
+export const useCountStore = defineStore('count',{
+  //actions里面放置的是一个一个的方法，用于响应组件中的“动作”
+  actions:{
+    increment(value:any){
+      //this是当前的store
+      this.sum+=value
+    }
+  },
+  // 真正存储数据的地方
+  state(){
+    return {
+      sum:888,
+      school:'尚硅谷',
+      address:'北京'
+      
+    }
+  }
+})
+```
+
+第三种方法适合，有复杂逻辑的数据修改（有极限值等等），或者有复用需求的
+
+<br>
+
+
+
+## 5.5 storeToRefs
+
+之前说过，对数据的解构会丢失数据的响应式
+
+为了保证数据的响应式可以使用toRefs，但是在这个pinia仓库里面使用toRefs是少见的，因为toRefs会把内部所有的数据和方法都编程ref格式，这个是不必要的，下面是storeToRefs解决方案
+
+```vue
+  // 使用useCountStore，得到一个专门保存count相关的store
+  const countStore = useCountStore()
+  // storeToRefs只会关注sotre中数据，不会对方法进行ref包裹
+  const {sum,school,address} = storeToRefs(countStore)
+  // console.log('!!!!!',storeToRefs(countStore))
+```
+
+这个方法和toRefs不同，这个函数不会把pinia仓库内部的方法给变成ref
+
+
+
+<br>
+
+## 5.6 getters
+
+概念：当state中的数据，需要经过处理后再使用，可以使用getters配置
+
+追加getter配置
+
+```vue
+// 引入defineStore用于创建store
+import {defineStore} from 'pinia'
+
+// 定义并暴露一个store
+export const useCountStore = defineStore('count',{
+  // 动作
+  actions:{
+    /************/
+  },
+  // 状态
+  state(){
+    return {
+      sum:1,
+      school:'atguigu'
+    }
+  },
+  // 计算
+  getters:{
+    bigSum:(state):number => state.sum *10,
+	//:string表示返回string类型
+    upperSchool():string{
+      return this. school.toUpperCase()
+    }
+  }
+})
+```
+
+组件中读取getters
+
+```vue
+const {increment,decrement} = countStore
+let {sum,school,bigSum,upperSchool} = storeToRefs(countStore)
+```
+
+注意：vue3最好不要使用this
+
+
+
+<br>
+
+## 5.7 $subscribe
+
+store中都有这个函数，调用该函数要传入一个函数
+
+通过 store 的 `$subscribe()` 方法侦听 `state` 及其变化
+
+```vue
+talkStore.$subscribe((mutate,state)=>{
+  console.log('LoveTalk',mutate,state)
+  localStorage.setItem('talk',JSON.stringify(talkList.value))
+})
+```
+
+- mutate是本次修改的信息
+- state是真正的数据
+
+`localStorage.setItem('talk', JSON.stringify(talkList.value)) `会将 `talkList.value` 转换为 JSON 字符串并存储到浏览器的 localStorage 中，键名为 talk（js语法）
+
+上述代码将字符串存储再localStorage里面，可以再store的state里面设置读取出来
+
+```vue
+state(){
+ return{
+	talkList:JSON.parse(localStorage.getItem('talkList') as string) || []
+  }
+}
+```
+
+通过将数据保存再localStroage中，从而实现数据在浏览器关闭情况下，可以再现之前的数据
+
+<br>
+
+## 5.8 store组合式写法
+
+之前对于store的写法其实是选项式写法
+
+```vue
+export const useTalkStore = defineStore('talk',{
+  actions:{
+    async getATalk(){
+      // 发请求，下面这行的写法是：连续解构赋值+重命名
+      let {data:{content:title}} = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+      // 把请求回来的字符串，包装成一个对象
+      let obj = {id:nanoid(),title}
+      // 放到数组中
+      this.talkList.unshift(obj)
+    }
+  },
+  // 真正存储数据的地方
+  state(){
+    return {
+      talkList:JSON.parse(localStorage.getItem('talkList') as string) || []
+    }
+  }
+})
+```
+
+下面则是组合式写法
+
+```vue
+import { reactive } from 'vue'
+
+export const useTalkStore = defineStore('talk', ()=> {
+
+  //talkList就是state
+  const talkList = reactive(
+    JSON.parse(localStorage.getItem('talkList') as string) || []
+  )
+
+  //getATalk函数相当于action
+  async function getATalk() {
+    // 发请求，下面这行的写法是：连续解构赋值+重命名
+    let { data: { content: title } } = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+    // 把请求回来的字符串，包装成一个对象
+    let obj = { id: nanoid(), title }
+    // 放到数组中
+    talkList.unshift(obj)
+  }
+  return { talkList, getATalk }
+})
+```
+
+组合式就是
+
+- 数据直接使用reactive定义
+- action直接写成函数
+- 返回所有的数据和函数
+
+<br>
+
 # 6.组件通信
+
+组件通信概述
+
+组件通信是前端开发中用于在不同组件之间传递数据和事件的关键技术。根据组件之间的关系，常见的通信方式如下：
+
+1. 父子组件通信
+
+**父组件向子组件传递数据**：
+- 使用 `props` 属性传递数据。
+
+**子组件向父组件传递数据**：
+- 使用事件和回调函数传递数据。
+
+2. 兄弟组件通信
+
+**通过共同的父组件**：
+
+- 共同的父组件管理状态，通过 `props` 和回调函数传递数据。
+
+**使用状态管理工具**：
+
+- 使用全局状态管理工具如 Redux、Vuex 或 React Context。
+
+3. 跨层级组件通信
+
+**事件总线**：
+
+- 通过发布-订阅模式传递数据（如第三方事件总线库）。
+
+**上下文（Context）**：
+
+- 使用上下文（Context）在跨层级组件间传递数据。
+
+4. 全局状态管理
+
+使用全局状态管理工具来管理和共享应用的全局状态：
+- **Vuex**: Vue.js 的状态管理模式。
+- **Redux**: React 的常用状态管理库。
+- **MobX**: 另一种状态管理库，常用于 React。
+
+总结
+
+组件通信是构建复杂前端应用的基础。根据组件关系选择合适的通信方式有助于保持代码清晰和易于维护。
+
+<img src="../../public/vue3/组件通信.png" alt="image-20231119185900990" style="zoom:60%;" />
+
+
+
+
+
+
 
 # 7.其他API
 
