@@ -2545,3 +2545,1067 @@ const {dogList,addDog} = useDog()
 ```
 
 <br>
+
+# 4.路由
+
+对路由的理解：
+
+- 路由就是一组key-value的对应关系
+- 多个路由，需要经过路由器的管理
+
+前端里面需要路由，是为了实现SPA（单页面应用），即一个html
+
+<br>
+
+## 4.1 路由_基本切换效果
+
+首先以一个基本的后台管理页面为例子，要设置
+
+- 导航区、展示区
+- 请来路由器
+- 指定路由具体规则（什么路径，对应什么组件）
+- 形成一个一个的【？？？.vue】
+
+1. 首先使用路由器，需要安装路由器
+
+` npm i vue-router`
+
+2. src目录下创建router文件夹
+
+3. router文件夹内部新建文件，index.ts，创建一个路由器，并暴露出去
+   1. 编写相关的Home组件等，并在index.ts中引入
+   2. 引入createRouter，createWebHistory
+   3. 创建路由器
+   4. 暴露路由器
+
+```vue
+//创建一个路由器并暴露
+
+//第一步：引入createRouter
+import {createRouter,createWebHistory} from 'vue-router'
+
+//引入所有路由组件
+import Home from  '@/components/Home.vue';
+import News from  '@/components/News.vue';
+import About from  '@/components/About.vue';
+
+
+//第二步：创建路由器
+const router = createRouter({
+    history:createWebHistory(),     //路由器的工作模式（暂不讲解）
+    routes:[
+        {
+            path:'/home',
+            component:Home
+        },
+        {
+            path:'/news',
+            component:News
+        },
+        {
+            path:'/about',
+            component:About
+        }
+    ]
+})
+
+
+// 第三步：将router暴露出去
+export default router
+```
+
+4. 在main.ts中引入路由器，并使用路由器
+
+```vue
+// 引入createApp用于创建应用
+import {createApp} from 'vue'
+//引入App根组件
+import App from './App.vue'
+
+//引入路由器.index.ts省略
+import router from './router'
+
+//创建一个应用
+const app = createApp(App)
+
+
+//使用路由器
+app.use(router)
+
+//挂载整个应用到app容器中
+app.mount('#app')
+```
+
+5. 将路由器视图放到指定的展示区（App.vue中）
+
+```vue
+<template>
+
+    <div class="app">
+        <h2 class="title">Vue路由测试</h2>
+        <!-- 导航区 -->
+        <div class="navigate">
+            <a href="">首页</a>
+            <a href="">新闻</a>
+            <a href="">关于</a>
+        </div>
+
+        <!-- 展示区 -->
+        <div class="main-content">
+            <RouterView></RouterView>
+        </div>
+
+    </div>
+
+
+</template>
+
+<script lang="ts" setup name="APP">
+import { RouterView } from 'vue-router';
+
+</script>
+```
+
+6. 为点击事件添加路由导航
+
+```vue
+<template>
+
+    <div class="app">
+        <h2 class="title">Vue路由测试</h2>
+        <!-- 导航区 -->
+        <div class="navigate">
+            <RouterLink to="/home" active-class="xiaozhupeiqi">首页</RouterLink>
+            <RouterLink to="/news" active-class="xiaozhupeiqi">新闻</RouterLink>
+            <RouterLink to="/about" active-class="xiaozhupeiqi">关于</RouterLink>
+        </div>
+
+        <!-- 展示区 -->
+        <div class="main-content">
+            <RouterView></RouterView>
+        </div>
+
+    </div>
+
+
+</template>
+
+<script lang="ts" setup name="APP">
+import { RouterView,RouterLink } from 'vue-router';
+
+</script>
+
+<style>
+ .title {
+    text-align: center;
+    word-spacing: 5px;
+    margin: 30px 0;
+    height: 70px;
+    line-height: 70px;
+    background-image: linear-gradient(45deg, gray, white);
+    border-radius: 10px;
+    box-shadow: 0 0 2px;
+    font-size: 30px;
+  }
+  .navigate {
+    display: flex;
+    justify-content: space-around;
+    margin: 0 100px;
+  }
+  .navigate a {
+    display: block;
+    text-align: center;
+    width: 90px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 10px;
+    background-color: gray;
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    letter-spacing: 5px;
+  }
+  .navigate a.xiaozhupeiqi {
+    background-color: #64967E;
+    color: #ffc268;
+    font-weight: 900;
+    text-shadow: 0 0 1px black;
+    font-family: 微软雅黑;
+  }
+  .main-content {
+    margin: 0 auto;
+    margin-top: 30px;
+    border-radius: 10px;
+    width: 90%;
+    height: 400px;
+    border: 1px solid;
+  }
+</style>
+```
+
+
+
+## 4.2 两个注意点
+
+- 路由组件通常放在pages或views文件夹，一般组件通常存放在components文件夹
+- 通过点击导航，视觉上”消失“了的路由组件，默认是被销毁的，需要的时候再去挂载
+
+component文件夹内部的是一般组件
+
+路由组件通常在pages/views文件夹中
+
+
+
+<br>
+
+
+
+## 4.3 路由器工作模式
+
+history模式
+
+​	Vue2：mode:'history'
+
+​	Vue3:：history：createWebHistory()
+
+hash模式
+
+
+
+<br>
+
+1.histoy模式
+
+- 优点：URL更加美观，不带有#，更接近于传统网站URL
+
+- 缺点：后期项目上线，需要服务器配合处理路径问题，否则刷新会有404错误
+
+  ```vue
+  const router = createRouter({
+  	history:createWebHistory(),
+  	...
+  })
+  ```
+
+2.hash模式
+
+- 优点：兼容性更好，因为不需要服务器端处理路径
+
+- 缺点：URL带有#不太美观，且在SEO优化方面相对较差
+
+  ```vue
+  const router = createRouter({
+  	history:createWebHash(),
+  	...
+  })
+  ```
+
+  
+
+
+
+<br>
+
+## 4.4 路由to的两种写法
+
+1. to的字符串写法
+
+   ```vue
+   <router active-class="active" to='/home'></router>
+   ```
+
+   
+
+2. to的对象写法(名字跳转/路径跳转)
+
+   ```vue
+   <router active-class='active' :to="{path:'/home'}"></router>
+   ```
+
+   当然可以！在 Vue Router 中，`to` 属性用于指定路由目标，有两种主要写法：字符串写法和对象写法。以下是对这两种写法的详细解释和示例。
+
+   
+
+> 1.`to` 的字符串写法
+>
+> 字符串写法是最简单和直接的方式，通常用于简单的路径导航。
+>
+> 示例
+>
+> ```vue
+> <router-link active-class="active" to="/home">Home</router-link>
+> ```
+>
+> 解释
+>
+> - **`<router-link>`**：Vue Router 提供的组件，用于创建导航链接。
+> - **`to="/home"`**：字符串写法，直接指定目标路径为 `/home`。
+> - **`active-class="active"`**：指定当链接对应的路由被激活时，应用的 CSS 类名。默认类名是 `router-link-active`，这里重写为 `active`。
+>
+> 当用户点击这个链接时，浏览器会导航到 `/home` 路径，对应的组件会被渲染。
+>
+> 2.`to` 的对象写法
+>
+> 对象写法提供了更多的灵活性，可以指定路径、路由参数、查询参数等。
+>
+> 示例
+>
+> ```vue
+> <router-link active-class="active" :to="{ path: '/home' }">Home</router-link>
+> ```
+>
+> 解释
+>
+> - **`:to="{ path: '/home' }"`**：对象写法，使用 `path` 字段指定目标路径为 `/home`。
+> - **`active-class="active"`**：同样指定激活时的 CSS 类名。
+>
+> 对象写法允许你在一个对象中定义更多的路由选项。
+>
+> 更多对象写法示例
+>
+> ```vue
+> <router-link :to="{ name: 'home' }">Home by name</router-link>
+> 
+> <router-link :to="{ path: '/home', query: { sort: 'asc' } }">Home with query</router-link>
+> 
+> <router-link :to="{ path: '/user', params: { userId: 123 } }">User</router-link>
+> ```
+>
+> - **按名称导航**：使用路由名称导航，而不是路径。
+>
+>   ```vue
+>   <router-link :to="{ name: 'home' }">Home by name</router-link>
+>   ```
+>
+> - **带查询参数**：附加查询参数到路径中。
+>
+>   ```vue
+>   <router-link :to="{ path: '/home', query: { sort: 'asc' } }">Home with query</router-link>
+>   ```
+>
+> - **带路由参数**：通过路由参数导航。
+>
+>   ```vue
+>   <router-link :to="{ path: '/user', params: { userId: 123 } }">User</router-link>
+>   ```
+>
+> 何时使用哪种写法
+>
+> - **字符串写法**：适合简单的路径导航，没有参数或查询参数的情况。
+> - **对象写法**：适合需要传递参数、查询参数或使用路由名称的情况。对象写法更灵活和可扩展，适用于复杂的导航需求。
+>
+> 通过这两种写法，Vue Router 提供了简洁和灵活的路由导航方式，适应不同的使用场景和需求。
+
+<br>
+
+## 4.5 命名路由
+
+可以在router文件夹内部的index.ts种创建路由器时候，里面设置各个路由规则时可以设置路由名字
+
+```vue
+    routes:[
+        {
+            name:'zhuye',
+            path:'/home',
+            component:Home
+        },
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News
+        },
+        {
+            name:'guanyu',
+            path:'/about',
+            component:About
+        }
+    ]
+```
+
+命令了路由之后，可以通过第二种to方法实现通过name来跳转
+
+```vue
+<router-link :to="{ name:"shouye" }">Home with query</router-link>
+```
+
+<br>
+
+## 4.6 嵌套路由
+
+具体步骤如下：
+
+1. 在父级组件中写好导航区和展示区（以news.vue为例子）
+2. 写好子级组件Detail.vue并放到page文件夹
+3. 配置路由，在index.ts中配置news父级路由的children，在children数组里面配置子组件Detail.vue
+
+
+
+父组件news.vue
+
+```vue
+<template>
+  <!-- 导航区 -->
+  <div class="news">
+    <ul>
+      <li v-for="news in newsList" :key="news.id">
+        <RouterLink to="/news/detail">{{ news.title }}</RouterLink>
+
+      </li>
+    </ul>
+    <!-- 展示区 -->
+    <div class="news-content">
+      <RouterView></RouterView>
+
+    </div>
+  </div>
+</template>
+
+
+<script setup lang="ts" name="News">
+import { reactive } from 'vue';
+import { RouterView, RouterLink } from 'vue-router';
+
+const newsList = reactive([
+  { id: '1', title: 'shit', content: '12' },
+  { id: '2', title: 'cgeg', content: '33' },
+  { id: '3', title: 'weegw', content: '44' },
+])
+</script>
+
+<style scoped>
+/* 新闻 */
+.news {
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.news ul {
+  margin-top: 30px;
+  list-style: none;
+  padding-left: 10px;
+}
+
+.news li>a {
+  font-size: 18px;
+  line-height: 40px;
+  text-decoration: none;
+  color: #64967E;
+  text-shadow: 0 0 1px rgb(0, 84, 0);
+}
+
+.news-content {
+  width: 70%;
+  height: 90%;
+  border: 1px solid;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+</style>
+```
+
+子组件Detail.vue
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：xxx</li>
+      <li>标题：xxx</li>
+      <li>内容：xxx</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  
+  </script>
+  
+  <style scoped>
+    .news-list {
+      list-style: none;
+      padding-left: 20px;
+    }
+  
+    .news-list>li {
+      line-height: 30px;
+    }
+  </style>
+```
+
+路由规则设置
+
+```typescript
+//创建一个路由器并暴露
+
+//第一步：引入createRouter
+import {createRouter,createWebHistory} from 'vue-router'
+
+//引入所有路由组件
+import Home from  '@/pages/Home.vue';
+import News from  '@/pages/News.vue';
+import About from  '@/pages/About.vue';
+import Detail from '@/pages/Detail.vue';
+
+
+//第二步：创建路由器
+const router = createRouter({
+    history:createWebHistory(),     //路由器的工作模式（暂不讲解）
+    routes:[
+        {
+            name:'zhuye',
+            path:'/home',
+            component:Home
+        },
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+                    path:'detail',
+                    component:Detail
+                }
+            ]
+        },
+        {
+            name:'guanyu',
+            path:'/about',
+            component:About
+        }
+    ]
+})
+
+
+// 第三步：将router暴露出去
+export default router
+```
+
+<br>
+
+
+
+## 4.7 路由query参数
+
+如何在跳转路由的时候传参？
+
+下面介绍query参数传参
+
+News.vue组件设置传参
+
+```vue
+传参方法一:v-bind、反引号、模板字符串嵌入js
+<li v-for="news in newsList" :key="news.id">
+    <!-- 里面要通过反引号变成模板字符串，模板字符串嵌入js代码要使用${} -->
+    <RouterLink :to="`/news/detail${news.id}&title=${news.title}&title=${news.content}`">{{ news.title }}</RouterLink>
+</li>
+
+
+传参方法二:对象传参（可以使用path或name）
+<RouterLink :to="{
+                 path:'/news/detail',
+                 query:{
+                 id:news.id,
+                 title:news.title,
+                 content:news.content
+                 }
+                 }">{{ news.title }}</RouterLink>
+```
+
+
+
+index.ts设置路由规则
+
+```vue
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+                    path:'detail',
+                    component:Detail
+                }
+            ]
+        },
+```
+
+
+
+
+
+Detail.vue组件接受传参（可以解构赋值，但是直接解构响应式对象的数据失去响应式）
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：{{ route.query.id }}</li>
+      <li>标题：{{ route.query.title }}</li>
+      <li>内容：{{ route.query.content }}</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  import { useRoute } from 'vue-router';
+  let route = useRoute()
+  //解构赋值
+  //let {query} = toRefs(route)
+  
+  </script>
+```
+
+
+
+<br>
+
+## 4.8 路由params参数
+
+News.vue组件设置传参
+
+```vue
+<template>
+  <!-- 导航区 -->
+  <div class="news">
+    <ul>
+      <li v-for="news in newsList" :key="news.id">
+        <!-- 里面要通过反引号变成模板字符串，模板字符串嵌入js代码要使用${} -->
+        <RouterLink to="`/news/detail${news.id}&/${news.title}&/${news.content}`">{{ news.title }}
+        </RouterLink>
+
+      </li>
+    </ul>
+    <!-- 展示区 -->
+    <div class="news-content">
+      <RouterView></RouterView>
+
+    </div>
+  </div>
+</template>
+
+
+传参方法二:对象传参（使用name）
+        <RouterLink :to="{
+                 name:'xiangqing',
+                 params:{
+                 id:news.id,
+                 title:news.title,
+                 content:news.content
+                 }
+                 }">{{ news.title }}</RouterLink>
+```
+
+注意：对象传值，必须使用name不能使用path
+
+index.ts设置路由规则
+
+```vue
+        {
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+					name:'xiangqing'
+                    path:'detail/:id/:title/:content',
+                    component:Detail
+                }
+            ]
+        },
+```
+
+在设置路由规则的使用后面加？可以控制可传可不传
+
+
+
+Detail.vue组件接受传参
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：{{ route.params.id }}</li>
+      <li>标题：{{ route.params.title }}</li>
+      <li>内容：{{ route.params.content }}</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  import { useRoute } from 'vue-router';
+  let route = useRoute()
+  
+  
+  </script>
+  
+  <style scoped>
+    .news-list {
+      list-style: none;
+      padding-left: 20px;
+    }
+  
+    .news-list>li {
+      line-height: 30px;
+    }
+  </style>
+```
+
+
+
+<br>
+
+## 4.9 路由props配置
+
+在 Vue Router 中，当 `props` 选项设置为 `true` 时，路由参数会作为组件的 props 传递给组件。这样可以让你的组件更清晰地接收和使用路由参数。
+
+具体来说，在你的代码中，`Detail` 组件的路径是 `detail/:id/:title/:content`。当你导航到这个路径时，例如 `/news/detail/1/some-title/some-content`，路由参数 `id`、`title` 和 `content` 会被作为 props 传递给 `Detail` 组件。
+
+
+
+作用：让路由组件更方面的收到参数（可以将路由参数作为props传给组件）
+
+
+
+首先配置路由规则
+
+```vue
+            name:'xinwen',
+            path:'/news',
+            component:News,
+            children:[
+                {
+                    name:'xiangqing',
+                    path:'detail/:id/:title/:content',
+                    component:Detail,
+                    props:true
+                }
+            ]
+        
+```
+
+Detail.vue中重写接受参数代码
+
+```vue
+<template>
+    <ul class="news-list">
+      <li>编号：{{ id }}</li>
+      <li>标题：{{ title }}</li>
+      <li>内容：{{content }}</li>
+    </ul>
+  </template>
+  
+  <script setup lang="ts" name="About">
+  defineProps(['id','title','content'])
+  
+  
+  </script>
+  
+```
+
+<br>
+
+props有三种写法：
+
+- 将所有收到的params参数作为props传给路由组件（布尔模式）
+
+  ```vue
+  props:true
+  ```
+
+- 可以自己决定将什么作为props传给路由组件（函数模式）
+
+  ```vue
+  props(route){return {route.query}}
+  ```
+
+- 也可以自己决定将什么props传给路由组件（对象写法）
+
+  ```vue
+  props:{a:100,b:200}
+  ```
+
+  
+
+
+
+> `props: true` 主要是用于将路由路径中的动态参数（`params`）传递给组件的。对于 `query` 参数，需要另外的处理方法。
+>
+> 传递 `query` 参数
+>
+> 如果你想将 `query` 参数也传递给组件，可以使用一个函数来配置 `props`。这个函数可以合并 `params` 和 `query` 参数，并将它们一起作为 props 传递给组件。
+>
+> ```javascript
+> {
+> name: 'xiangqing',
+> path: 'detail/:id/:title/:content',
+> component: Detail,
+> props: route => ({ 
+>  ...route.params,
+>  ...route.query 
+> })
+> }
+> ```
+>
+> 这样，无论是 `params` 还是 `query` 参数，都会作为 props 传递给 `Detail` 组件。
+
+
+
+<br>
+
+## 4.10 路由replace属性
+
+路由器的路由导航方式有两种
+
+- push模式 ：将历史记录推入栈中
+- replace模式：直接覆盖历史记录
+
+路由器默认是push模式
+
+如果要修改为replace模式，只需要在RouterLink标签的属性里面加入replace
+
+<br>
+
+## 4.11 编程式导航
+
+之前在template中写的RouteLink标签最终在html中变成a标签
+
+如果想要使用button来跳转，那么就不能使用RouterLink实现
+
+或者是想要实现3秒后跳转，都不能使用RouterLink
+
+
+
+```vue
+  <script setup lang="ts" name="Home">
+  import { onMounted } from 'vue';
+  
+  onMounted(()=>{
+    setTimeout(()=>{
+      //在此处编写一段代码，让路由实现跳转
+    },3000)
+  })
+
+  </script>
+```
+
+要实现上述的效果，就需要编程式路由导航，脱离RouterLink实现跳转
+
+```vue
+  import { onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  
+  const router = useRouter()
+
+
+  onMounted(()=>{
+    setTimeout(()=>{
+      //在此处编写一段代码，让路由实现跳转
+      router.push('/news')
+    },3000)
+  })
+
+```
+
+实际使用过程中，编程式路由导航远远大于RouterLink
+
+下面是添加button跳转的案例
+
+```vue
+<template>
+  <!-- 导航区 -->
+  <div class="news">
+    <ul>
+      <li v-for="news in newsList" :key="news.id">
+        <!-- 里面要通过反引号变成模板字符串，模板字符串嵌入js代码要使用${} -->
+        <button @click="showDetail(news)">查看新闻</button>
+        <RouterLink :to="{
+          name: 'xiangqing',
+          params: {
+            id: news.id,
+            title: news.title,
+            content: news.content
+          }
+        }">{{ news.title }}</RouterLink>
+
+      </li>
+    </ul>
+    <!-- 展示区 -->
+    <div class="news-content">
+      <RouterView></RouterView>
+
+    </div>
+  </div>
+</template>
+
+
+
+
+<script setup lang="ts" name="News">
+import { idText } from 'typescript';
+import { reactive } from 'vue';
+import { RouterView, RouterLink, useRouter } from 'vue-router';
+
+const newsList = reactive([
+  { id: '1', title: 'shit', content: '12' },
+  { id: '2', title: 'cgeg', content: '33' },
+  { id: '3', title: 'weegw', content: '44' },
+])
+
+const router = useRouter()
+
+interface NewsInter{
+  id:string,
+  title:string,
+  content:string
+}
+
+function showDetail(news:NewsInter) {
+  //router.replace也可以
+  router.push({
+    name: 'xiangqing',
+    params: {
+      id: news.id,
+      title: news.title,
+      content: news.content
+    }
+  })
+}
+```
+
+router.push里面能写的内容和template里面RouterLink里面的to一样
+
+- 字符串写法
+- 对象写法
+
+注意：在vue2里面编程式导航重复跳转会报错
+
+
+
+<br>
+
+## 4.12 重定向
+
+一般页面进入的时候有个默认的页面，可以使用重定向实现
+
+```vue
+        {
+            path:'/',
+            redirect:'/home'
+        }
+```
+
+
+
+
+
+<br>
+
+# 5.pinia
+
+pinia，vue.js的状态管理库
+
+集中式状态（数据）管理
+
+Pinia 是一个专门为 Vue.js 设计的状态管理库，旨在简化和优化 Vue.js 应用程序中的状态管理。它由 Vue.js 核心团队的成员开发和维护，提供了一种现代化的方式来管理应用程序的状态。
+
+<br>
+
+Pinia 的主要特点和用途：
+
+1. **Vue.js 3 的原生支持**：Pinia 是为 Vue.js 3 设计的状态管理库，利用了 Vue 3 的 Composition API，提供了更灵活和强大的状态管理能力。
+2. **类型安全和响应式**：Pinia 使用 TypeScript 和响应式数据结构，可以实现类型安全的状态管理，使得代码更加健壮和易于维护。
+3. **零依赖**：Pinia 是一个零依赖的库，不依赖于 Vuex 或其他状态管理库，因此可以轻量地集成到你的 Vue.js 项目中。
+4. **插件化和模块化**：Pinia 支持插件和模块化的状态管理，允许你将应用程序状态分解为独立的模块，并且可以灵活地组合和重用这些模块。
+5. **优化性能**：Pinia 在内部实现了许多优化，例如惰性加载和局部更新，有助于提升应用程序的性能表现。
+
+
+
+使用场景：
+
+- **复杂的状态管理需求**：当你的 Vue.js 应用程序有复杂的状态管理需求，例如大量组件间的状态共享、异步数据处理或者多模块协作时，Pinia 可以提供更清晰和可维护的解决方案。
+- **TypeScript 支持**：如果你的项目使用 TypeScript，并且需要类型安全的状态管理，Pinia 提供了良好的支持和集成。
+- **Vue 3 Composition API 的使用者**：Pinia 与 Vue 3 的 Composition API 紧密集成，可以更自然地利用 Composition API 来管理状态。
+
+
+
+如果不使用 Pinia 会怎么样？
+
+如果你选择不使用 Pinia，而是采用传统的 Vuex 或者其他状态管理库，可能会面临以下一些情况：
+
+- **复杂度增加**：传统的 Vuex 在处理复杂状态时可能需要编写更多的模板代码和样板代码，使得代码结构变得复杂和难以维护。
+- **性能影响**：一些传统状态管理库可能在性能方面表现较弱，特别是在大规模应用程序中，可能会影响页面加载和响应速度。
+- **TypeScript 集成困难**：某些状态管理库在 TypeScript 集成方面可能不够友好，可能需要更多的手动类型定义或类型转换。
+
+总体而言，Pinia 提供了一种现代化和优化的状态管理解决方案，尤其适合于需要更清晰、灵活和性能优化的 Vue.js 应用程序。选择是否使用 Pinia 取决于你的项目需求和团队的偏好，以及是否希望利用 Vue 3 的最新功能来优化开发体验和性能。
+
+
+
+<br>
+
+## 5.1 准备一个效果
+
+下面这个是加减功能组件
+
+```vue
+<template>
+  <div class="count">
+    <h2>当前求和为：{{ sum }}</h2>
+    <select v-model.number="n">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <button @click="add">加</button>
+    <button @click="minus">减</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Count">
+  import { ref } from "vue";
+  // 数据
+  let sum = ref(1) // 当前求和
+  let n = ref(1) // 用户选择的数字
+
+  // 方法
+  function add(){
+    sum.value += n.value
+  }
+  function minus(){
+    sum.value -= n.value
+  }
+</script>
+```
+
+v-model.number的使用，是因为默认的处理是字符串
+
+下面是获取文本的组件
+
+```vue
+<template>
+  <div class="talk">
+    <button @click="getLoveTalk">获取一句土味情话</button>
+    <ul>
+      <li v-for="talk in talkList" :key="talk.id">{{talk.title}}</li>
+    </ul>
+  </div>
+</template>
+
+<script setup lang="ts" name="LoveTalk">
+  import {reactive} from 'vue'
+  import axios from "axios";
+  import {nanoid} from 'nanoid'
+  // 数据
+  let talkList = reactive([
+    {id:'ftrfasdf01',title:'今天你有点怪，哪里怪？怪好看的！'},
+    {id:'ftrfasdf02',title:'草莓、蓝莓、蔓越莓，今天想我了没？'},
+    {id:'ftrfasdf03',title:'心里给你留了一块地，我的死心塌地'}
+  ])
+  // 方法
+  async function getLoveTalk(){
+    // 发请求，下面这行的写法是：连续解构赋值+重命名
+    let {data:{content:title}} = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+    // 把请求回来的字符串，包装成一个对象
+    let obj = {id:nanoid(),title}
+    // 放到数组中
+    talkList.unshift(obj)
+  }
+</script>
+```
+
+unshift是在开头添加，push实在末尾添加
