@@ -4050,3 +4050,20 @@ export const useTalkStore = defineStore('talk', ()=> {
 总结
 
 组件通信是构建复杂前端应用的基础。根据组件关系选择合适的通信方式有助于保持代码清晰和易于维护。
+
+<img src="../../public/vue3/组件通信.png" alt="image-20231119185900990" style="zoom:60%;" />
+
+## 6.1  通信方式一：props
+
+## 6.2 通信方式二：自定义事件
+
+
+
+
+
+
+
+# 7.其他API
+
+# 8.Vue3新组件
+
