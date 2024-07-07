@@ -1504,11 +1504,9 @@ age.value += 1
 }
 ```
 
-
-
 <br>
 
-## 3.4 reactive创建：对象类型的响应式数据
+## 3.4 `reactive`创建：对象类型的响应式数据
 
 ```vue
 <template>
@@ -1631,7 +1629,7 @@ ref可以定义基本类型，还可以定义对象类型的
 
 区别
 
-1. ref创建的变量必须使用.value(js中)，也可使用volar插件自动添加
+1. ref创建的变量必须使用`.value`(js中)，也可使用volar插件自动添加
 
 2. reactive重新分配一个新对象，就会失去响应式（可以使用object.assign去整体替换)，这个是局限性
 
@@ -4050,6 +4048,8 @@ export const useTalkStore = defineStore('talk', ()=> {
 总结
 
 组件通信是构建复杂前端应用的基础。根据组件关系选择合适的通信方式有助于保持代码清晰和易于维护。
+
+<img src="../../public/vue3/组件通信.png" alt="image-20231119185900990" style="zoom:60%;" />
 
 
 
