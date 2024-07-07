@@ -3846,3 +3846,207 @@ export const useCountStore = defineStore('count',{
 
 
 
+## 5.5 storeToRefs
+
+之前说过，对数据的解构会丢失数据的响应式
+
+为了保证数据的响应式可以使用toRefs，但是在这个pinia仓库里面使用toRefs是少见的，因为toRefs会把内部所有的数据和方法都编程ref格式，这个是不必要的，下面是storeToRefs解决方案
+
+```vue
+  // 使用useCountStore，得到一个专门保存count相关的store
+  const countStore = useCountStore()
+  // storeToRefs只会关注sotre中数据，不会对方法进行ref包裹
+  const {sum,school,address} = storeToRefs(countStore)
+  // console.log('!!!!!',storeToRefs(countStore))
+```
+
+这个方法和toRefs不同，这个函数不会把pinia仓库内部的方法给变成ref
+
+
+
+<br>
+
+## 5.6 getters
+
+概念：当state中的数据，需要经过处理后再使用，可以使用getters配置
+
+追加getter配置
+
+```vue
+// 引入defineStore用于创建store
+import {defineStore} from 'pinia'
+
+// 定义并暴露一个store
+export const useCountStore = defineStore('count',{
+  // 动作
+  actions:{
+    /************/
+  },
+  // 状态
+  state(){
+    return {
+      sum:1,
+      school:'atguigu'
+    }
+  },
+  // 计算
+  getters:{
+    bigSum:(state):number => state.sum *10,
+	//:string表示返回string类型
+    upperSchool():string{
+      return this. school.toUpperCase()
+    }
+  }
+})
+```
+
+组件中读取getters
+
+```vue
+const {increment,decrement} = countStore
+let {sum,school,bigSum,upperSchool} = storeToRefs(countStore)
+```
+
+注意：vue3最好不要使用this
+
+
+
+<br>
+
+## 5.7 $subscribe
+
+store中都有这个函数，调用该函数要传入一个函数
+
+通过 store 的 `$subscribe()` 方法侦听 `state` 及其变化
+
+```vue
+talkStore.$subscribe((mutate,state)=>{
+  console.log('LoveTalk',mutate,state)
+  localStorage.setItem('talk',JSON.stringify(talkList.value))
+})
+```
+
+- mutate是本次修改的信息
+- state是真正的数据
+
+`localStorage.setItem('talk', JSON.stringify(talkList.value)) `会将 `talkList.value` 转换为 JSON 字符串并存储到浏览器的 localStorage 中，键名为 talk（js语法）
+
+上述代码将字符串存储再localStorage里面，可以再store的state里面设置读取出来
+
+```vue
+state(){
+ return{
+	talkList:JSON.parse(localStorage.getItem('talkList') as string) || []
+  }
+}
+```
+
+通过将数据保存再localStroage中，从而实现数据在浏览器关闭情况下，可以再现之前的数据
+
+<br>
+
+## 5.8 store组合式写法
+
+之前对于store的写法其实是选项式写法
+
+```vue
+export const useTalkStore = defineStore('talk',{
+  actions:{
+    async getATalk(){
+      // 发请求，下面这行的写法是：连续解构赋值+重命名
+      let {data:{content:title}} = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+      // 把请求回来的字符串，包装成一个对象
+      let obj = {id:nanoid(),title}
+      // 放到数组中
+      this.talkList.unshift(obj)
+    }
+  },
+  // 真正存储数据的地方
+  state(){
+    return {
+      talkList:JSON.parse(localStorage.getItem('talkList') as string) || []
+    }
+  }
+})
+```
+
+下面则是组合式写法
+
+```vue
+import { reactive } from 'vue'
+
+export const useTalkStore = defineStore('talk', ()=> {
+
+  //talkList就是state
+  const talkList = reactive(
+    JSON.parse(localStorage.getItem('talkList') as string) || []
+  )
+
+  //getATalk函数相当于action
+  async function getATalk() {
+    // 发请求，下面这行的写法是：连续解构赋值+重命名
+    let { data: { content: title } } = await axios.get('https://api.uomg.com/api/rand.qinghua?format=json')
+    // 把请求回来的字符串，包装成一个对象
+    let obj = { id: nanoid(), title }
+    // 放到数组中
+    talkList.unshift(obj)
+  }
+  return { talkList, getATalk }
+})
+```
+
+组合式就是
+
+- 数据直接使用reactive定义
+- action直接写成函数
+- 返回所有的数据和函数
+
+<br>
+
+# 6.组件通信
+
+组件通信概述
+
+组件通信是前端开发中用于在不同组件之间传递数据和事件的关键技术。根据组件之间的关系，常见的通信方式如下：
+
+1. 父子组件通信
+
+**父组件向子组件传递数据**：
+
+- 使用 `props` 属性传递数据。
+
+**子组件向父组件传递数据**：
+
+- 使用事件和回调函数传递数据。
+
+2. 兄弟组件通信
+
+**通过共同的父组件**：
+
+- 共同的父组件管理状态，通过 `props` 和回调函数传递数据。
+
+**使用状态管理工具**：
+
+- 使用全局状态管理工具如 Redux、Vuex 或 React Context。
+
+3. 跨层级组件通信
+
+**事件总线**：
+
+- 通过发布-订阅模式传递数据（如第三方事件总线库）。
+
+**上下文（Context）**：
+
+- 使用上下文（Context）在跨层级组件间传递数据。
+
+4. 全局状态管理
+
+使用全局状态管理工具来管理和共享应用的全局状态：
+
+- **Vuex**: Vue.js 的状态管理模式。
+- **Redux**: React 的常用状态管理库。
+- **MobX**: 另一种状态管理库，常用于 React。
+
+总结
+
+组件通信是构建复杂前端应用的基础。根据组件关系选择合适的通信方式有助于保持代码清晰和易于维护。
