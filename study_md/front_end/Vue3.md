@@ -1666,15 +1666,446 @@ ref可以定义基本类型，还可以定义对象类型的
 
 
 
+<br>
+
+
+
+## 3.7 toRefs与toRef
 
 
 
 
 
+
+
+```vue
+let person = reactive({
+name:"king",
+age:18
+})
+
+let {name,age} = person
+```
+
+上述方法进行赋值后，对name和age的数据不再是响应式
+
+如何让解构后数据变成响应式的？
+
+引入toRefs即可
+
+```vue
+import{reactive,toRefs} from 'vue' 
+let person = reactive({
+name:"king",
+age:18
+})
+
+let {name,age} = toRefs(person)
+```
+
+此时name和age变成ObjectRefImpl对象，所以修改需要添加`.value`，此时修改name和age也会同时修改person对应的数据（类似引用）
+
+<br>
+
+除了toRefs外，还有toRef，这个是基本类型转换（toRefs是对象解构）
+
+<br>
+
+## 3.8 computed计算属性
+
+在vue2中，计算属性使用如下
+
+```vue
+<script>
+export default{
+    computed:{
+        
+    }
+}
+</script>	
+```
+
+在vue3中，使用方法如下
+
+```vue
+<template>
+    <!-- html -->
+    <div class="person">
+        姓：<input type=text v-model="firstname"> <br>
+        名：<input type=text v-model="lastname"> <br>
+        全名：<span>{{fullname }}</span>
+    </div>
+
+</template>
+
+
+<script lang="ts" setup name="person223">
+import {ref,computed} from 'vue'
+let firstname = ref('king')
+let lastname  = ref('shit')
+
+//定义计算属性，只读
+let fullname  = computed(()=>{
+  return firstname.value.slice(0,1).toUpperCase() + firstname.value.slice(1) + '-' + lastname.value
+})
+
+```
+
+只要计算属性发生变化，就会调用一次，但是如果多次调用相同的计算属性，只会调用一次
+
+计算属性是有缓存的（另外方法没有缓存）
+
+上述方法的计算数学是只读的，如何让计算属性可读可写？操作如下
+
+```vue
+let fullname = computed({
+    get(){
+        return firstname.value.slice(0,1).toUpperCase() + firstname.value.slice(1) + '-' + lastname.value
+    },
+    set(val){
+        console.log('set',val)
+    }
+})
+
+```
+
+设置set和get函数，只要对fullname（计算属性）进行赋值，那么就会调用set函数，并传入fullname当前值
+
+注意：即使赋值改变了fullname的数据，计算属性相关的firstname和lastname不变，当前页面展示的函数老的fullname
+
+所以要确实改变计算属性，需要对set进行操作
+
+```	vue
+    set(val){
+		const [str1,str2] = val.split('-')
+        firstname.value = str1
+		lastname.value  = str2
+    }
+```
+
+<br>
+
+## 3.9 watch监视
+
+```vue
+import {watch} from 'vue'
+
+//监视
+watch(监视谁,回调函数)
+```
+
+
+
+
+
+- 作用：监视数据的变化（和vue2的watch作用一致）
+- 特点：Vue3中的watch只能监视以下四种数据
+  1. ref定义的数据
+  2. reactive定义的数据
+  3. 函数返回一个值(getter函数)
+  4. 一个包含上述内容的数组
+
+我们在vue3中使用watch的时候，通常会遇到以下几种情况：
+
+### 情况一
+
+监听ref定义的【基本类型】数据：直接写数据名即可，监视的是其value值的改变。
+
+```vue
+<template>
+    <!-- html -->
+    <div class="person">
+        <h1>情况一：监视【ref】定义的基本类型数据</h1>
+        <h2>目前求和为:{{ sum }}</h2>
+        <button @click="changSum">点击sum+1</button>
+    </div>
+
+</template>
+
+
+<script lang="ts" setup name="person223">
+import { ref,watch} from 'vue';
+
+
+//数据
+let sum = ref(0)
+
+//方法
+function changSum(){
+    sum.value+=1
+}
+
+//监视
+watch(sum,(newValue,oldValue)=>{
+    console.log('sum改变了',newValue,oldValue)
+})
+
+</script>
+```
+
+监视器的sum不用使用.value
+
+
+
+如何解除监视（例如sum大于10时候，解除监视）？
+
+```vue
+const stopWatch = watch(sum,(newValue,oldValue)=>{
+    console.log('sum改变了',newValue,oldValue)
+	if(nelValue){
+		stopWatch()
+	}
+})
+```
+
+<br>
+
+### 情况二
+
+监视ref定义的【对象类型】数据：直接写数据名，监视的是对象的【地址值】，若像监视对象内部的数据，要手动开启深度监视
+
+> 注意：
+>
+> - 若修改的是ref定义的对象中的属性，newVaule和oldValue都是新值，因为他们是同一个对象
+> - 若修改整个ref定义的对象，newValue是新值，oldValue是旧值，因为不是同一个对象了
+
+```vue
+<template>
+    <!-- html -->
+    <div class="person">
+        <h1>情况二:监视【ref】定义的对象类型数据</h1>
+        <h2>姓名：{{person.name}}</h2>
+        <h2>年龄：{{person.age}}</h2>
+        <button @click="changeName">修改名字</button>
+        <button @click="changeAge">修改年龄</button>
+        <button @click="changePerson">修改人</button>
+
+    </div>
+
+</template>
+
+
+<script lang="ts" setup name="person223">
+
+import { ref, watch } from 'vue'
+let person = ref({
+    name: 'king',
+    age: 18
+})
+
+function changeName(){
+    person.value.name+='~'
+}
+
+function changeAge(){
+    person.value.age+=1
+}
+
+function changePerson(){
+    person.value = {name:'lgeg',age:1545}
+}
+
+
+//监视，情况一，监视ref的对象类型的数据，监视的是对象的地址值
+watch(person,(newValue,oldValue)=>{
+    console.log('person变化了',newValue,oldValue)
+})
+
+
+</script>
+```
+
+直接监视，是对对象类型的地址进行监视（即只有changePerson才调用watch）
+
+若想监视对象内部属性的变化，则要手动开启深度监视。
+
+```vue
+//监视，情况一，监视ref的对象类型的数据，监视的是对象的地址值
+watch(person,(newValue,oldValue)=>{
+    console.log('person变化了',newValue,oldValue)
+},{deep:true})
+```
+
+即在第三个参数进行配置deep：true（此外这里还能配置其他东西）
+
+
+
+<bt>
+
+### 情况三
+
+监视reactive定义的【对象类型】数据，且默认开启了深度监视（不能关闭）
+
+注意与ref的不同，就是对象赋值是不成立的（即不可整体修改）
+
+此外使用assign修改整个对象，本质是修改原有对象的内部数据，而ref的对象赋值则是整个对象修改
+
+```vue
+    <!-- html -->
+    <div class="person">
+        <h1>情况三:监视【reactive】定义的对象类型数据</h1>
+        <h2>姓名：{{person.name}}</h2>
+        <h2>年龄：{{person.age}}</h2>
+        <button @click="changeName">修改名字</button>
+        <button @click="changeAge">修改年龄</button>
+        <button @click="changePerson">修改人</button>
+
+    </div>
+
+</template>
+
+
+<script lang="ts" setup name="person223">
+
+import { reactive,watch} from 'vue'
+let person = reactive({
+    name: 'king',
+    age: 18
+})
+
+function changeName(){
+    person.name+='~'
+}
+
+function changeAge(){
+    person.age+=1
+}
+
+function changePerson(){
+    Object.assign(person,{name:"kingseg",age:150})
+}
+
+watch(person,(newValue,oldValue)=>{
+    console.log('person改变了',newValue,oldValue)
+})
+
+</script>
+
+```
 
 
 
 <br>
 
+### 情况四
 
+监视ref或reactive定义的【对象类型】数据中的**某个属性**，注意点如下：
+
+1. 若该属性值不是【对象类型】，需要写成函数形式
+2. 若该属性值依然是【对象类型】，可以直接编，也可以写成函数，不过建议写成函数
+
+结论：监视对象里的属性，最好写函数式，
+
+基本结构
+
+```vue
+<template>
+    <!-- html -->
+    <div class="person">
+        <h1>情况四:监视【reactive】定义的对象类型数据</h1>
+        <h2>姓名：{{ person.name }}</h2>
+        <h2>年龄：{{ person.age }}</h2>
+        <h2>汽车：{{ person.car.c1 }}、{{ person.car.c2 }}</h2>
+
+        <button @click="changeName">修改名字</button>
+        <button @click="changeAge">修改年龄</button>
+        <button @click="changeC1">修改第一台车</button>
+        <button @click="changeC2">修改第二台车</button>
+        <button @click="changeCar">修改整个车</button>
+
+    </div>
+
+</template>
+
+
+<script lang="ts" setup name="person223">
+import {reactive} from 'vue'
+
+let person = reactive({
+    name:'gkge',
+    age:15,
+    car:{
+        c1:'ege',
+        c2:'geg'
+    }
+})
+
+//方法
+function changeName(){
+    person.name+='~'
+}
+
+function changeAge(){
+    person.age+=1
+}
+
+function changeC1(){
+    person.car.c1 = 'king'
+}
+
+function changeC2(){
+    person.car.c2 = 'shit'
+}
+
+function changeCar(){
+    person.car = {c1:'no',c2:'yes'}
+}
+
+
+</script>
+
+
+```
+
+监视对象内部的基本类型
+
+```vue
+watch(()=>{return person.name},(newvalue,oldValue)=>{
+    console.log('person.name变化了',newvalue,oldValue)
+})
+```
+
+要用箭头函数嵌套的原因在于，watch只能监控四种值（不用person.name)
+
+
+
+监视对象内部的对象类型
+
+```vue
+watch(person.car,(newValue,oldValue)=>{
+    console.log('person.car变化了',newValue,oldValue)
+})
+```
+
+可以直接传入，但是此时只能监视car内部属性，不能监视car本身（即car本身改变不会调用watch），原因在于car改变后，监视会丢失
+
+```vue
+watch(()=>person.car,(newValue,oldValue)=>{
+    console.log('person.car变化了',newValue,oldValue)
+})
+```
+
+这种使用函数返回值的监视，监视的是对象的地址，此时不能监视对象内部（即car内部），但是可以监视car本身的变化
+
+因此如何实现修改内部和整体都能监视？
+
+可以在函数返回值监视的基础上，添加deep：true，即开启深度监视即可实现
+
+<br>
+
+
+
+### 情况五
+
+监视上述多个数据
+
+```vue
+watch([()=>person.name,()=>person.car.c1],(newValue,oldValue)=>{
+    console.log('person.car变化了',newValue,oldValue)
+},{deep:true})
+```
+
+使用[]包含需要监视的数据
+
+<br>
 
