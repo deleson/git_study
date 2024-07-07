@@ -1234,10 +1234,18 @@ Options类型的API，数据、方法、计算属性等，是分散在data、met
 
 就需要分别修改data、methods、computed，不便于维护和复用
 
-> 具体的详细分析[做了一夜动画，就为让大家更好的理解Vue3的Composition Api - 哔哩哔哩 (bilibili.com)](https://www.bilibili.com/read/cv10685553/)
+> 出处[做了一夜动画，就为让大家更好的理解Vue3的Composition Api - 哔哩哔哩 (bilibili.com)](https://www.bilibili.com/read/cv10685553/)
 >
 
+选项式api
 
+<img src="../../public/vue3/option1.gif" alt="1.gif" style="zoom:70%;border-radius:20px" /><img src="../../public/vue3/option2.gif" alt="2.gif" style="zoom:70%;border-radius:20px" />
+
+组合式api
+
+<img src="../../public/vue3/Composition1.gif" alt="3.gif" style="height:300px;border-radius:10px"    />
+
+<img src="../../public/vue3/Composition2.gif" alt="4.gif" style="height:300px;border-radius:10px"  />
 
 
 
