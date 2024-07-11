@@ -881,6 +881,16 @@ localStorage 与 sessionStorage 的区别
 
 需要注意的是，localStorage 中存储的数据对同源下的所有脚本都是可见的，因此不要存储敏感数据，例如用户密码、敏感的个人信息等。对于这些数据，应使用更安全的存储方式（如服务器端存储）并确保数据传输的安全性（如使用 HTTPS）。
 
+<br>
+
+
+
+# 7.\$event
+
+`@input="userName =(<HTMLInputElement>$event.target).value"`
+
+上述代码出现了\$event的使用，这个是什么？
+
 
 
 
@@ -1239,11 +1249,15 @@ Options类型的API，数据、方法、计算属性等，是分散在data、met
 
 选项式api
 
-<img src="../../public/vue3/option1.gif" alt="1.gif" style="zoom:70%;border-radius:20px" /><img src="../../public/vue3/option2.gif" alt="2.gif" style="zoom:70%;border-radius:20px" />
+<img src="../../public/vue3/option1.gif" alt="1.gif" style="zoom:70%;border-radius:20px" />
+
+<br><img src="../../public/vue3/option2.gif" alt="2.gif" style="zoom:70%;border-radius:20px" />
 
 组合式api
 
 <img src="../../public/vue3/Composition1.gif" alt="3.gif" style="height:300px;border-radius:10px"    />
+
+<br>
 
 <img src="../../public/vue3/Composition2.gif" alt="4.gif" style="height:300px;border-radius:10px"  />
 
@@ -2162,7 +2176,7 @@ watch需要实现声明要监视的值，而watchEffect则是使用了多少个�
 作用：用于注册模板引用
 
 - 用在普通的DOM标签上，获取的时DOM节点
-- 用在组件标签上，获取的时组件实例对象
+- 用在组件标签上，获取的是组件实例对象
 
 下面是原生js获取DOM节点的方法（通过id和getElementById方法）
 
@@ -2232,82 +2246,39 @@ function showLog(){
 `App.vue`中
 
 ```vue
+<!-- 父组件App.vue -->
 <template>
-    <!-- html -->
-      <Person ref="people"/>
-      <h2 ref="city">南京</h2>
-      <button @click="showLog">测试</button>
+  <Person ref="ren"/>
+  <button @click="test">测试</button>
 </template>
 
-<script lang="ts" setup name="APP">
-  // JS 或 TS 
-    import Person from './components/Person.vue'
-    import { ref } from 'vue'
+<script lang="ts" setup name="App">
+  import Person from './components/Person.vue'
+  import {ref} from 'vue'
 
-    let city = ref()
-    let people = ref()
+  let ren = ref()
 
-    function showLog(){
-      console.log(people.value)
-    }
-
+  function test(){
+    console.log(ren.value.name)
+    console.log(ren.value.age)
+  }
 </script>
-
-<style>
-    /* 样式 */
-   
-
-</style>
 ```
 
-`peron.vue`中
+`person.vue`中
 
 ```vue
-<template>
-    <!-- html -->
-    <div class="person">
-        <h1>中国</h1>
-        <!-- 将整个h2节点存储在ref容器里 -->
-        <h2 ref="city">北京</h2>
-        <h3>广东</h3>
-        <button @click="showLog">点我输出h2这个元素</button>
- 
-
-    </div>
-
-</template>
-
-
-<script lang="ts" setup name="person">
-import { ref,defineExpose} from 'vue'
-
-//创建一个city，用于存储ref标记的内容
-let city = ref()
-let a = ref(0)
-let b = ref(1)
-let c = ref(2)
-
-function showLog(){
-    console.log(city.value)
-}
-
-defineExpose({a,b,c})
-
-
+<!-- 子组件Person.vue中要使用defineExpose暴露内容 -->
+<script lang="ts" setup name="Person">
+  import {ref,defineExpose} from 'vue'
+	// 数据
+  let name = ref('张三')
+  let age = ref(18)
+  /****************************/
+  /****************************/
+  // 使用defineExpose将组件中的数据交给外部
+  defineExpose({name,age})
 </script>
-<style scoped>
-/* 样式 */
-.person {
-    background-color: skyblue;
-    box-shadow: 0 0 10px;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-button {
-    margin-right: 10px;
-}
-</style>
 ```
 
 打印ref组件，得到的是组件实例，如果想要获取组件内部的定义对象，那么需要在内部定义defineExpose
@@ -3858,7 +3829,7 @@ export const useCountStore = defineStore('count',{
 
 之前说过，对数据的解构会丢失数据的响应式
 
-为了保证数据的响应式可以使用toRefs，但是在这个pinia仓库里面使用toRefs是少见的，因为toRefs会把内部所有的数据和方法都编程ref格式，这个是不必要的，下面是storeToRefs解决方案
+为了保证数据的响应式可以使用toRefs，但是在这个pinia仓库里面使用toRefs是少见的，因为toRefs会把内部所有的数据和方法都变成ref格式，这个是不必要的，下面是storeToRefs解决方案
 
 ```vue
   // 使用useCountStore，得到一个专门保存count相关的store
@@ -4063,15 +4034,1353 @@ export const useTalkStore = defineStore('talk', ()=> {
 
 ## 6.1  通信方式一：props
 
+概述：`props`是使用频率最高的一种通信方式，常用与 ：**父 ↔ 子**。
+
+- 若 **父传子**：属性值是**非函数**。
+- 若 **子传父**：属性值是**函数**。
+
+
+
+父组件如下：
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+		<h4>汽车：{{ car }}</h4>
+		<h4 v-show="toy">子给的玩具：{{ toy }}</h4>
+		<Child :car="car" :sendToy="getToy"/>
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+	import Child from './Child.vue'
+	import {ref} from 'vue'
+	// 数据
+	let car = ref('奔驰')
+	let toy = ref('')
+	// 方法
+	function getToy(value:string){
+		toy.value = value
+	}
+</script>
+```
+
+子组件如下：
+
+```VUE
+<template>
+  <div class="child">
+    <h3>子组件</h3>
+		<h4>玩具：{{ toy }}</h4>
+		<h4>父给的车：{{ car }}</h4>
+		<button @click="sendToy(toy)">把玩具给父亲</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Child">
+	import {ref} from 'vue'
+	// 数据
+	let toy = ref('奥特曼')
+	// 声明接收props
+	defineProps(['car','sendToy'])
+</script>
+
+```
+
+通过上述可以知道
+
+父传子：
+
+1. 父组件传递(字符串内car是定义的ref响应式数据)
+
+   `<child :car="car">`
+
+2. 子组件接收
+
+   ```vue
+   // 声明接收props
+   defineProps(['car','sendToy'])
+   
+   //template中使用
+   <h4>父给的车：{{ car }}</h4>
+   ```
+
+<br>
+
+子传父
+
+1. 父组件定义方法并传递
+
+   ```vue
+   //script
+   let toy = ref('')
+   function getToy(value:string){
+   	toy.value = value
+   }
+   
+   //template
+   <Child :car="car" :sendToy="getToy"/>
+   ```
+
+2. 子组件调用父组件的函数，给予父组件数据
+
+   ```vue
+   <button @click="sendToy(toy)">把玩具给父亲</button>
+   ```
+
+3. 父组件接收
+
+   ```vue
+   <h4 v-show="toy">子给的玩具：{{ toy }}</h4>
+   ```
+
+   
+
+<br>
+
 ## 6.2 通信方式二：自定义事件
 
+在 Vue 中，"自定义事件"这个术语特指子组件通过 `emit` 触发的事件，然后由父组件监听和处理的机制。
+
+1. 概述：自定义事件常用于：**子 => 父。**
+2. 注意区分好：原生事件、自定义事件。
+
+- 原生事件：
+  - 事件名是特定的（`click`、`mosueenter`等等）	
+  - 事件对象`$event`: 是包含事件相关信息的对象（`pageX`、`pageY`、`target`、`keyCode`）
+- 自定义事件：
+  - 事件名是任意名称
+  - <strong style="color:red">事件对象`$event`: 是调用`emit`时所提供的数据，可以是任意类型！！！</strong >
+
+<br>
+
+正常事件传递的时候，如果没有传参，那么就会默认传入事件对象，如果有传参，那么就只会传入所需参数
+
+如何让传参的函数也传入事件对象？
+
+只需在调用函数的时候传递`$event`即可
+
+<br>
+
+具体的自定义事件的使用流程如下：
+
+1. 父组件中编写函数，并将函数与子组件进行事件绑定
+
+   ```vue
+       //只要send-toy事件被触发，那么就会调用saveToy函数
+   	<Child @send-toy="saveToy"/>
+   	
+   
+   
+   	function saveToy(value:string){
+   		console.log('saveToy',value)
+   		toy.value = value
+   	}
+   ```
+
+   
+
+2. 子组件声明事件
+
+   ```vue
+   //script
+   const emit = definEmits(['send-toy'])
+   ```
+
+3. 子组件设置调用函数的触发（点击、挂载三秒后等等）
+
+   ```vue
+   <button @click="emit('send-toy',toy)">测试</button>
+   ```
+
+​		注意子组件触发函数的时候需要声明事件和传入参数
+
+<br>
+
+父组件
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+		<h4 v-show="toy">子给的玩具：{{ toy }}</h4>
+		<!-- 给子组件Child绑定事件 -->
+    <Child @send-toy="saveToy"/>
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+  import Child from './Child.vue'
+	import { ref } from "vue";
+	// 数据
+	let toy = ref('')
+	// 用于保存传递过来的玩具
+	function saveToy(value:string){
+		console.log('saveToy',value)
+		toy.value = value
+	}
+</script>
+```
+
+子组件
+
+```vue
+<template>
+  <div class="child">
+    <h3>子组件</h3>
+		<h4>玩具：{{ toy }}</h4>
+		<button @click="emit('send-toy',toy)">测试</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Child">
+	import { ref } from "vue";
+	// 数据
+	let toy = ref('奥特曼')
+	// 声明事件
+	const emit =  defineEmits(['send-toy'])
+</script>
+
+```
 
 
 
+
+
+
+
+
+
+<br>
+
+
+
+## 6.3 通信方式三：mitt
+
+安装`mitt`
+
+```shell
+npm i mitt
+```
+
+【第一步】：新建文件：`src\utils\emitter.ts`
+
+```javascript
+// 引入mitt 
+import mitt from "mitt";
+
+// 创建emitter
+const emitter = mitt()
+
+/*
+  // 绑定事件
+  emitter.on('abc',(value)=>{
+    console.log('abc事件被触发',value)
+  })
+  emitter.on('xyz',(value)=>{
+    console.log('xyz事件被触发',value)
+  })
+
+  setInterval(() => {
+    // 触发事件
+    emitter.emit('abc',666)
+    emitter.emit('xyz',777)
+  }, 1000);
+
+  setTimeout(() => {
+    // 清理事件
+    emitter.all.clear()
+  }, 3000); 
+*/
+
+// 创建并暴露mitt
+export default emitter
+```
+
+mitt的对象实例化有四个内置方法：
+
+1. all，拿到所有绑定事件
+2. emit，触发某个事件
+3. off，解绑某个事件
+4. on，绑定某个事件
+
+【第二步】：接收数据的组件中：绑定事件、同时在销毁前解绑事件：
+
+```typescript
+import emitter from "@/utils/emitter";
+import { onUnmounted } from "vue";
+
+// 绑定事件
+emitter.on('send-toy',(value)=>{
+  console.log('send-toy事件被触发',value)
+})
+
+onUnmounted(()=>{
+  // 解绑事件
+  emitter.off('send-toy')
+})
+```
+
+【第三步】：提供数据的组件，在合适的时候触发事件
+
+```javascript
+import emitter from "@/utils/emitter";
+
+function sendToy(){
+  // 触发事件
+  emitter.emit('send-toy',toy.value)
+}
+```
+
+**注意这个重要的内置关系，总线依赖着这个内置关系**
+
+<br>
+
+综上所述：
+
+- 接收数据者：绑定事件（on）
+- 提供数据者：触发事件（emit）
+
+
+
+此外，上述的例子mitt只传传入的单个值，如果实现多个组件传入值？
+
+<br>
+
+## 6.4 通信方式四：v-model
+
+1. 概述：实现 **父↔子** 之间相互通信。
+
+2. 前序知识 —— `v-model`的本质
+
+   ```vue
+   <!-- 使用v-model指令 -->
+   <input type="text" v-model="userName">
+   
+   <!-- v-model的本质是下面这行代码 -->
+   <input 
+     type="text" 
+   <!-- 实现数据到页面 -->
+     :value="userName" 
+   <!-- 实现页面到数据 -->
+     @input="userName =(<HTMLInputElement>$event.target).value"
+   >
+   ```
+
+3. 组件标签上的`v-model`的本质：`:modelValue` ＋ `update:modelValue`事件。
+
+   ```vue
+   <!-- 组件标签上使用v-model指令 -->
+   <AtguiguInput v-model="userName"/>
+   
+   <!-- 组件标签上v-model的本质 -->
+   <AtguiguInput :modelValue="userName" @update:model-value="userName = $event"/>
+   ```
+
+   `AtguiguInput`组件中：
+
+   ```vue
+   <template>
+     <div class="box">
+       <!--将接收的value值赋给input元素的value属性，目的是：为了呈现数据 -->
+   		<!--给input元素绑定原生input事件，触发input事件时，进而触发update:model-value事件-->
+       <input 
+          type="text" 
+          :value="modelValue" 
+          @input="emit('update:model-value',$event.target.value)"
+       >
+     </div>
+   </template>
+   
+   <script setup lang="ts" name="AtguiguInput">
+     // 接收props
+     defineProps(['modelValue'])
+     // 声明事件
+     const emit = defineEmits(['update:model-value'])
+   </script>
+   ```
+
+4. 也可以更换`value`，例如改成`abc`
+
+   ```vue
+   <!-- 也可以更换value，例如改成abc-->
+   <AtguiguInput v-model:abc="userName"/>
+   
+   <!-- 上面代码的本质如下 -->
+   <AtguiguInput :abc="userName" @update:abc="userName = $event"/>
+   ```
+
+   `AtguiguInput`组件中：
+
+   ```vue
+   <template>
+     <div class="box">
+       <input 
+          type="text" 
+          :value="abc" 
+          @input="emit('update:abc',$event.target.value)"
+       >
+     </div>
+   </template>
+   
+   <script setup lang="ts" name="AtguiguInput">
+     // 接收props
+     defineProps(['abc'])
+     // 声明事件
+     const emit = defineEmits(['update:abc'])
+   </script>
+   ```
+
+5. 如果`value`可以更换，那么就可以在组件标签上多次使用`v-model`
+
+   ```vue
+   <AtguiguInput v-model:abc="userName" v-model:xyz="password"/>
+   ```
+
+
+<br>
+
+
+
+
+
+综上可以看出原理与props+mitt类似
+
+
+
+\$event到底是什么？什么时候可以`.target`
+
+对于原生事件，\$event就是事件对象（能target
+
+对于自定义是将，\$event就是触发事件时，传递的数据（不能target
+
+
+
+
+
+<br>
+
+## 6.5 通信方式五：\$attrs
+
+1. 概述：`$attrs`用于实现**当前组件的父组件**，向**当前组件的子组件**通信（**祖→孙**）。
+
+2. 具体说明：`$attrs`是一个对象，包含所有父组件传入的标签属性。
+
+   >  注意：`$attrs`会自动排除`props`中声明的属性(可以认为声明过的 `props` 被子组件自己“消费”了)
+
+父组件：
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+		<Child :a="a" :b="b" :c="c" :d="d" v-bind="{x:100,y:200}" :updateA="updateA"/>
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+	import Child from './Child.vue'
+	import { ref } from "vue";
+	let a = ref(1)
+	let b = ref(2)
+	let c = ref(3)
+	let d = ref(4)
+
+	function updateA(value){
+		a.value = value
+	}
+</script>
+```
+
+v-bind="{x:100,y:200}"相当于
+
+`:x="100" :y="200"`
+
+
+
+子组件：
+
+```vue
+<template>
+	<div class="child">
+		<h3>子组件</h3>
+		<GrandChild v-bind="$attrs"/>
+	</div>
+</template>
+
+<script setup lang="ts" name="Child">
+	import GrandChild from './GrandChild.vue'
+</script>
+```
+
+孙组件：
+
+```vue
+<template>
+	<div class="grand-child">
+		<h3>孙组件</h3>
+		<h4>a：{{ a }}</h4>
+		<h4>b：{{ b }}</h4>
+		<h4>c：{{ c }}</h4>
+		<h4>d：{{ d }}</h4>
+		<h4>x：{{ x }}</h4>
+		<h4>y：{{ y }}</h4>
+		<button @click="updateA(666)">点我更新A</button>
+	</div>
+</template>
+
+<script setup lang="ts" name="GrandChild">
+	defineProps(['a','b','c','d','x','y','updateA'])
+</script>
+```
+
+在v-bind参数传入子组件的时候，如果子组件没有获取props，那么参数将在\$attrs中可以读取。
+
+<br>
+
+## 6.6 通信方式六： \$refs与\$parent
+
+1. 概述：
+
+   * `$refs`用于 ：**父→子。**
+   * `$parent`用于：**子→父。**
+
+2. 原理如下：
+
+   | 属性      | 说明                                                     |
+   | --------- | -------------------------------------------------------- |
+   | `$refs`   | 值为对象，包含所有被`ref`属性标识的`DOM`元素或组件实例。 |
+   | `$parent` | 值为对象，当前组件的父组件实例对象。                     |
+
+通过ref标签（3.11内容）可以或者子组件实例，从而实现单个子组件的父->子。
+
+如果想要获取所有的子组件，可以使用\$refs。
+
+如果想要或者子组件的父组件，可以使用\$parent。
+
+注意如果想要获取其他组件的数据前提是，必须其他组件有暴露该数据。
+
+
+
+父组件
+
+```vue
+<template>
+	<div class="father">
+		<h3>父组件</h3>
+		<h4>房产：{{ house }}</h4>
+		<button @click="changeToy">修改Child1的玩具</button>
+		<button @click="changeComputer">修改Child2的电脑</button>
+		<button @click="getAllChild($refs)">让所有孩子的书变多</button>
+		<Child1 ref="c1"/>
+		<Child2 ref="c2"/>
+	</div>
+</template>
+
+<script setup lang="ts" name="Father">
+	import Child1 from './Child1.vue'
+	import Child2 from './Child2.vue'
+	import { ref,reactive } from "vue";
+	let c1 = ref()
+	let c2 = ref()
+
+	// 注意点：当访问obj.c的时候，底层会自动读取value属性，因为c是在obj这个响应式对象中的
+	/* let obj = reactive({
+		a:1,
+		b:2,
+		c:ref(3)
+	})
+	let x = ref(4)
+
+	console.log(obj.a)
+	console.log(obj.b)
+	console.log(obj.c)
+	console.log(x) */
+	
+
+	// 数据
+	let house = ref(4)
+	// 方法
+	function changeToy(){
+		c1.value.toy = '小猪佩奇'
+	}
+	function changeComputer(){
+		c2.value.computer = '华为'
+	}
+	function getAllChild(refs:{[key:string]:any}){
+		console.log(refs)
+		for (let key in refs){
+			refs[key].book += 3
+		}
+	}
+	// 向外部提供数据
+	defineExpose({house})
+</script>
+```
+
+refs:{[key:string]:any}这个类型声明是ref是对象，对象里面的key是string类型
+
+
+
+子组件1
+
+```vue
+<template>
+  <div class="child1">
+    <h3>子组件1</h3>
+		<h4>玩具：{{ toy }}</h4>
+		<h4>书籍：{{ book }} 本</h4>
+		<button @click="minusHouse($parent)">干掉父亲的一套房产</button>
+  </div>
+</template>
+
+<script setup lang="ts" name="Child1">
+	import { ref } from "vue";
+	// 数据
+	let toy = ref('奥特曼')
+	let book = ref(3)
+
+	// 方法
+	function minusHouse(parent:any){
+		parent.house -= 1
+	}
+
+	// 把数据交给外部
+	defineExpose({toy,book})
+
+</script>
+```
+
+子组件2
+
+```vue
+<template>
+  <div class="child2">
+    <h3>子组件2</h3>
+		<h4>电脑：{{ computer }}</h4>
+		<h4>书籍：{{ book }} 本</h4>
+  </div>
+</template>
+
+<script setup lang="ts" name="Child2">
+		import { ref } from "vue";
+		// 数据
+		let computer = ref('联想')
+		let book = ref(6)
+		// 把数据交给外部
+		defineExpose({computer,book})
+</script>
+```
+
+
+
+
+
+
+
+<br>
+
+## 6.7 通信方式七：provide和inject
+
+1. 概述：实现**祖孙组件**直接通信
+
+2. 具体使用：
+
+   * 在祖先组件中通过`provide`配置向后代组件提供数据
+   * 在后代组件中通过`inject`配置来声明接收数据
+
+3. 具体编码：
+
+   【第一步】父组件中，使用`provide`提供数据
+
+   ```vue
+   <template>
+     <div class="father">
+       <h3>父组件</h3>
+       <h4>资产：{{ money }}</h4>
+       <h4>汽车：{{ car }}</h4>
+       <button @click="money += 1">资产+1</button>
+       <button @click="car.price += 1">汽车价格+1</button>
+       <Child/>
+     </div>
+   </template>
+   
+   <script setup lang="ts" name="Father">
+     import Child from './Child.vue'
+     import { ref,reactive,provide } from "vue";
+     // 数据
+     let money = ref(100)
+     let car = reactive({
+       brand:'奔驰',
+       price:100
+     })
+     // 用于更新money的方法
+     function updateMoney(value:number){
+       money.value += value
+     }
+     // 提供数据
+     provide('moneyContext',{money,updateMoney})
+     provide('car',car)
+   </script>
+   ```
+
+   > 注意：子组件中不用编写任何东西，是不受到任何打扰的
+
+   【第二步】孙组件中使用`inject`配置项接受数据。
+
+   ```vue
+   <template>
+     <div class="grand-child">
+       <h3>我是孙组件</h3>
+       <h4>资产：{{ money }}</h4>
+       <h4>汽车：{{ car }}</h4>
+       <button @click="updateMoney(6)">点我</button>
+     </div>
+   </template>
+   
+   <script setup lang="ts" name="GrandChild">
+     import { inject } from 'vue';
+     // 注入数据
+    let {money,updateMoney} = inject('moneyContext',{money:0,updateMoney:(x:number)=>{}})
+     let car = inject('car')
+   </script>
+   ```
+
+问题：在inject接收数据并解构的时候，没有进行响应式处理操作，为什么不会丢失响应式？
+
+答案，因为inject返回就是provide的包裹，provide包裹的就是ref对象
+
+
+
+
+
+<br>
+
+向后代提供数据：provide(名，值)，其中传入数据的时候
+
+向祖辈接收数据：inject(名，默认值) ，其中默认值是没有传入才有效。
+
+<br>
+
+## 6.8 通信方式八：pinia
+
+参考5
+
+
+
+<br>
+
+
+
+## 6.9 通信方式九：slot插槽
+
+vue3中的插槽是什么？
+
+
+
+### 6.9.1 默认插槽
+
+父组件
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+    <div class="content">
+      <Category title="热门游戏列表">
+        <ul>
+          <li v-for="g in games" :key="g.id">{{ g.name }}</li>
+        </ul>
+      </Category>
+      <Category title="今日美食城市">
+        <img :src="imgUrl" alt="">
+      </Category>
+      <Category title="今日影视推荐">
+        <video :src="videoUrl" controls></video>
+      </Category>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+  import Category from './Category.vue'
+  import { ref,reactive } from "vue";
+
+  let games = reactive([
+    {id:'asgytdfats01',name:'英雄联盟'},
+    {id:'asgytdfats02',name:'王者农药'},
+    {id:'asgytdfats03',name:'红色警戒'},
+    {id:'asgytdfats04',name:'斗罗大陆'}
+  ])
+  let imgUrl = ref('https://z1.ax1x.com/2023/11/19/piNxLo4.jpg')
+  let videoUrl = ref('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4')
+
+</script>
+```
+
+注意这里编写的子组件是双标签，双标签内部的html标签编写，这个编写将会塞到子组件中（父组件调用子组件，双标签写到内部标签会赛到子组件中，而子组件本身会塞到父组件上的对应调用位置）
+
+<br>
+
+catagory子组件
+
+```vue
+<template>
+  <div class="category">
+    <h2>{{title}}</h2>
+    <slot>默认内容</slot>
+  </div>
+</template>
+
+<script setup lang="ts" name="Category">
+  defineProps(['title'])
+</script>
+```
+
+使用slot标签，将父组件调用时候的双标签内部塞到这个slot标签中，slot内部的内容是默认内容（即父组件没有塞数据时的展示）
+
+
+
+<br>
+
+### 6.9.2 具名插槽
+
+当你需要将双标签调用子组件的内部数据分别插入到子组件的不同位置时，需要进行插槽的命名（即需要多个插槽）
+
+父组件
+
+```vue
+<template>
+  <div class="father">
+    <h3>父组件</h3>
+    <div class="content">
+      <Category>
+        <template v-slot:s2>
+          <ul>
+            <li v-for="g in games" :key="g.id">{{ g.name }}</li>
+          </ul>
+        </template>
+        <template v-slot:s1>
+          <h2>热门游戏列表</h2>
+        </template>
+      </Category>
+
+      <Category>
+        <template v-slot:s2>
+          <img :src="imgUrl" alt="">
+        </template>
+        <template v-slot:s1>
+          <h2>今日美食城市</h2>
+        </template>
+      </Category>
+
+      <Category>
+        <template #s2>
+          <video video :src="videoUrl" controls></video>
+        </template>
+        <template #s1>
+          <h2>今日影视推荐</h2>
+        </template>
+      </Category>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts" name="Father">
+  import Category from './Category.vue'
+  import { ref,reactive } from "vue";
+
+  let games = reactive([
+    {id:'asgytdfats01',name:'英雄联盟'},
+    {id:'asgytdfats02',name:'王者农药'},
+    {id:'asgytdfats03',name:'红色警戒'},
+    {id:'asgytdfats04',name:'斗罗大陆'}
+  ])
+  let imgUrl = ref('https://z1.ax1x.com/2023/11/19/piNxLo4.jpg')
+  let videoUrl = ref('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4')
+
+</script>
+```
+
+注意：上面的父组件没有传入title（默认插槽使用props传入），使用了多个插槽传入
+
+
+
+子组件
+
+```vue
+<template>
+  <div class="category">
+    <slot name="s1">默认内容1</slot>
+    <slot name="s2">默认内容2</slot>
+  </div>
+</template>
+
+<script setup lang="ts" name="Category">
+  
+</script>
+```
+
+综上可知使用方式：
+
+- 父组件的组件标签内部通过多个template标签隔开，并使用命名（`v-slol:...` 或 `#xx`）
+- 子组件的对应位置使用用slot标签，并使用name属性命名
+
+此外默认插槽的名字时default
+
+<br>
+
+### 6.9.3 作用域插槽
+
+前面两个插槽是父传子的插槽，下面来介绍一种子传父的插槽。
+
+1. 理解：<span style="color:red">数据在组件的自身，但根据数据生成的结构需要组件的使用者来决定。</span>（新闻数据在`News`组件中，但使用数据所遍历出来的结构由`App`组件决定）
+
+2. 具体编码：
+
+   ```vue
+   父组件中：
+         <Game>
+           <template v-slot="params">
+             <ul>
+               <li v-for="y in params.youxi" :key="y.id">
+                 {{ y.name }}
+               </li>
+             </ul>
+           </template>
+         </Game>
+   
+         <Game>
+           <template v-slot="params">
+             <ol>
+               <li v-for="item in params.youxi" :key="item.id">
+                 {{ item.name }}
+               </li>
+             </ol>
+           </template>
+         </Game>
+   
+         <Game>
+           <template #default="{youxi}">
+             <h3 v-for="g in youxi" :key="g.id">{{ g.name }}</h3>
+           </template>
+         </Game>
+   
+   子组件中：
+         <template>
+           <div class="category">
+             <h2>今日游戏榜单</h2>
+             <slot :youxi="games" a="哈哈"></slot>
+           </div>
+         </template>
+   
+         <script setup lang="ts" name="Category">
+           import {reactive} from 'vue'
+           let games = reactive([
+             {id:'asgdytsa01',name:'英雄联盟'},
+             {id:'asgdytsa02',name:'王者荣耀'},
+             {id:'asgdytsa03',name:'红色警戒'},
+             {id:'asgdytsa04',name:'斗罗大陆'}
+           ])
+         </script>
+   ```
+
+注意事项：
+
+- 父组件每个插槽位置通过game双标签隔开
+- 父组件的插槽名字是任意的，接收到的子组件参数可以通过.访问
+- 父组件决定结构，子组件决定数据
+- 插槽同样可以命名（子组件slot），命名后父组件通过v-slot:xx访问
+
+
+
+
+
+综上所述，作用域插槽使用方法：
+
+- 子组件编写slot
+- 父组件编写接收参数
+
+
+
+v-slot:和v-slot=
+
+<br>
 
 
 
 # 7.其他API
 
+## 7.1 shallowRef 与 shallowReactive 
+
+### `shallowRef`
+
+1. 作用：创建一个响应式数据，但只对顶层属性进行响应式处理。
+
+2. 用法：
+
+   ```js
+   let myVar = shallowRef(initialValue);
+   ```
+
+3. 特点：只跟踪引用值的变化，不关心值内部的属性变化。
+
+### `shallowReactive`
+
+1. 作用：创建一个浅层响应式对象，只会使对象的最顶层属性变成响应式的，对象内部的嵌套属性则不会变成响应式的
+
+2. 用法：
+
+   ```js
+   const myObj = shallowReactive({ ... });
+   ```
+
+3. 特点：对象的顶层属性是响应式的，但嵌套对象的属性不是。
+
+
+
+总结
+
+通过使用 [`shallowRef()`](https://cn.vuejs.org/api/reactivity-advanced.html#shallowref) 和 [`shallowReactive()`](https://cn.vuejs.org/api/reactivity-advanced.html#shallowreactive) 来绕开深度响应。浅层式 `API` 创建的状态只在其顶层是响应式的，对所有深层的对象不会做任何处理，避免了对每一个内部属性做响应式所带来的性能成本，**这使得属性的访问变得更快，可提升性能**。
+
+
+
+<br>
+
+## 7.2 readonly 与 shallowReadonly
+
+### **`readonly`**
+
+1. 作用：用于创建一个对象的深只读副本。
+
+2. 用法：
+
+   ```js
+   const original = reactive({ ... });
+   const readOnlyCopy = readonly(original);
+   ```
+
+3. 特点：
+
+   * 对象的所有嵌套属性都将变为只读。
+   * 任何尝试修改这个对象的操作都会被阻止（在开发模式下，还会在控制台中发出警告）。
+
+4. 应用场景：
+
+   * 创建不可变的状态快照。
+   * 保护全局状态或配置不被修改。
+
+直接改变不行，改变原来的响应式数据，会造成readonly相应数据改变
+
+
+
+### **`shallowReadonly`**
+
+1. 作用：与 `readonly` 类似，但只作用于对象的顶层属性。
+
+2. 用法：
+
+   ```js
+   const original = reactive({ ... });
+   const shallowReadOnlyCopy = shallowReadonly(original);
+   ```
+
+3. 特点：
+
+   * 只将对象的顶层属性设置为只读，对象内部的嵌套属性仍然是可变的。
+
+   * 适用于只需保护对象顶层属性的场景。
+
+
+
+
+readonly和shallowReadonly传入的参数必须是响应式数据
+
+<br>
+
+## 7.3 toRaw 与 markRaw
+
+### `toRaw`
+
+1. 作用：用于获取一个响应式对象的原始对象， `toRaw` 返回的对象不再是响应式的，不会触发视图更新。
+
+   > 官网描述：这是一个可以用于临时读取而不引起代理访问/跟踪开销，或是写入而不触发更改的特殊方法。不建议保存对原始对象的持久引用，请谨慎使用。
+
+   > 何时使用？ —— 在需要将响应式对象传递给非 `Vue` 的库或外部系统时，使用 `toRaw` 可以确保它们收到的是普通对象
+
+2. 具体编码：
+
+   ```js
+   import { reactive,toRaw,markRaw,isReactive } from "vue";
+   
+   /* toRaw */
+   // 响应式对象
+   let person = reactive({name:'tony',age:18})
+   // 原始对象
+   let rawPerson = toRaw(person)
+   
+   
+   /* markRaw */
+   let citysd = markRaw([
+     {id:'asdda01',name:'北京'},
+     {id:'asdda02',name:'上海'},
+     {id:'asdda03',name:'天津'},
+     {id:'asdda04',name:'重庆'}
+   ])
+   // 根据原始对象citys去创建响应式对象citys2 —— 创建失败，因为citys被markRaw标记了
+   let citys2 = reactive(citys)
+   console.log(isReactive(person))
+   console.log(isReactive(rawPerson))
+   console.log(isReactive(citys))
+   console.log(isReactive(citys2))
+   ```
+
+可以将toRaw原始数据传送给后端时，可以使用
+
+### `markRaw`
+
+1. 作用：标记一个对象，使其**永远不会**变成响应式的。
+
+   > 例如使用`mockjs`时，为了防止误把`mockjs`变为响应式对象，可以使用 `markRaw` 去标记`mockjs`
+
+2. 编码：
+
+   ```js
+   /* markRaw */
+   let citys = markRaw([
+     {id:'asdda01',name:'北京'},
+     {id:'asdda02',name:'上海'},
+     {id:'asdda03',name:'天津'},
+     {id:'asdda04',name:'重庆'}
+   ])
+   // 根据原始对象citys去创建响应式对象citys2 —— 创建失败，因为citys被markRaw标记了
+   let citys2 = reactive(citys)
+   ```
+
+<br>
+
+## 7.4 customRef
+
+问题：vue3本身提供了ref，为什么还要自定义ref？
+
+回答：默认的ref无法实现，类似延迟同步数据展示的功能（例如改变数据后1s才在页面展示）
+
+
+
+作用：创建一个自定义的`ref`，并对其依赖项跟踪和更新触发进行逻辑控制。
+
+（防抖就是说频繁的输入时，开启了多个定时器，并拥挤在一起）
+
+实现防抖效果（`useMsgRef.ts`）：
+
+```typescript
+import {customRef } from "vue";
+
+export default function(initValue:string,delay:number){
+  let msg = customRef((track,trigger)=>{
+    let timer:number
+    return {
+      get(){
+        track() // 告诉Vue数据msg很重要，要对msg持续关注，一旦变化就更新
+        return initValue
+      },
+      set(value){
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          initValue = value
+          trigger() //通知Vue数据msg变化了
+        }, delay);
+      }
+    }
+  }) 
+  return {msg}
+}
+```
+
+clearTimeout(timer)这个代码是防抖的关键，使用了这个代码，只有输入停下的时候，计时器才会开始（其实就是不停的clear，直到最后一个字符）
+
+
+
+
+
+组件中使用：
+
+```vue
+<script setup lang="ts" name="App">
+	import useMsgRef from './useMsgRef'
+
+	let {msg} = useMsgRef('你好',2000)
+
+</script>
+```
+
+自定义的ref一般写成hooks
+
+
+
+
+
+<br>
+
+
+
+
+
+自定义ref使用：
+
+- 传入回调函数
+- 回调函数传入track和trigger（底层传入）
+- 必须返回对象
+- 返回对象里面必须要有get和set函数
+  - get函数，msg被读取时候调用，需要有返回值
+  - set函数，msg被修改时候调用，默认传入value（修改的最新值）
+- get函数返回前需要调用track函数，set函数返回去需要调用trigger函数
+
+<br>
+
+
+
+自定义ref中的trick和tragger如何理解？（msg是自定义ref的实例化对象）
+
+- trick：告诉Vue数据msg很重要，要对msg进行持续关注，一旦msg变化就去更新
+
+- trigger：通知Vue一下数据msg变化了
+
+只定义trick，不定义trigger：改变数据调用set函数时无法同步通知数据改变，即get函数无法收到数据改变通知
+
+只定义trigger，不定义trick：改变数据调用set函数时发送通知，但get函数无法接收这个通知，不进行页面更新
+
+
+
+<br>
+
+
+
+
+
 # 8.Vue3新组件
 
+## 8.1 Teleport
+
+- 什么是Teleport？—— Teleport 是一种能够将我们的**组件html结构**移动到指定位置的技术。
+
+```html
+<teleport to='body' >
+    <div class="modal2" v-show="isShow">
+      <h2>我是一个弹窗</h2>
+      <p>我是弹窗中的一些内容</p>
+      <button @click="isShow = false">关闭弹窗</button>
+    </div>
+</teleport>
+```
+
+注意：之前使用class="modal"无法展示这个css和div，后面修改了modal2可以展示，然后改回modal又可以了....，不知道是什么原因
+
+
+
+
+
+
+
+## 8.2 Suspense
+
+-  等待异步组件时渲染一些额外内容，让应用有更好的用户体验 
+-  使用步骤： 
+   -  异步引入组件
+   -  使用`Suspense`包裹组件，并配置好`default` 与 `fallback`
+
+```tsx
+import { defineAsyncComponent,Suspense } from "vue";
+const Child = defineAsyncComponent(()=>import('./Child.vue'))
+```
+
+```vue
+<template>
+    <div class="app">
+        <h3>我是App组件</h3>
+        <Suspense>
+          <template v-slot:default>
+            <Child/>
+          </template>
+          <template v-slot:fallback>
+            <h3>加载中.......</h3>
+          </template>
+        </Suspense>
+    </div>
+</template>
+```
+
+注意与插槽的区别：
+
+- 插槽调用子组件使用的双标签，suspense调用子组件使用的是单标签
+- 插槽使用子组件标签双标签包裹template，suspense使用template包裹单标签子组件
+
+
+
+
+
+使用如下：
+
+- 用Suspense包裹template，template包裹子组件调用
+
+
+
+
+
+## 8.3 全局API转移到应用对象
+
+- `app.component`：在main.ts中可以设置全局组件
+
+  ```vue
+  app.component('hello',hello)
+  ```
+
+  
+- `app.config`：在main.ts中可以配置全局变量
+
+  ```vue
+  app.config.globalOroperties.x= 99
+  ```
+
+  
+- `app.directive`：可以注册全局指令
+
+  ```vue
+  app.directive('beauty'()=>{})
+  
+  使用过程
+  <h2 v-beauty=“1”></h2>
+  ```
+
+  
+- `app.mount`：挂载应用
+- `app.unmount`：卸载应用
+- `app.use`：安装插件（之前用于安装路由）
+
+
+
+将vue2中的vue.=>app.
+
+## 8.4 其他
+
+- 过渡类名 `v-enter` 修改为 `v-enter-from`、过渡类名 `v-leave` 修改为 `v-leave-from`。
+
+
+- `keyCode` 作为 `v-on` 修饰符的支持。
+
+- `v-model` 指令在组件上的使用已经被重新设计，替换掉了 `v-bind.sync。`
+
+- `v-if` 和 `v-for` 在同一个元素身上使用时的优先级发生了变化。
+
+- 移除了`$on`、`$off` 和 `$once` 实例方法。
+
+- 移除了过滤器 `filter`。
+
+- 移除了`$children` 实例 `propert`。
+
+  ......
+
+
+
+更多详细可以从vue3迁移指南可以查询更多
