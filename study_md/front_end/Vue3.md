@@ -5336,14 +5336,12 @@ const Child = defineAsyncComponent(()=>import('./Child.vue'))
   app.component('hello',hello)
   ```
 
-  
 - `app.config`：在main.ts中可以配置全局变量
 
   ```vue
   app.config.globalOroperties.x= 99
   ```
 
-  
 - `app.directive`：可以注册全局指令
 
   ```vue
@@ -5353,7 +5351,6 @@ const Child = defineAsyncComponent(()=>import('./Child.vue'))
   <h2 v-beauty=“1”></h2>
   ```
 
-  
 - `app.mount`：挂载应用
 - `app.unmount`：卸载应用
 - `app.use`：安装插件（之前用于安装路由）

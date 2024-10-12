@@ -58,6 +58,13 @@ export default defineConfig({
                 ]
             },
             {
+                text: '面试经验',
+                items: [
+                    {text: 'python八股文', link: '/study_md/面试经验/python八股文'},
+                    {text: '华为od', link: '/study_md/面试经验/华为od'},
+                ]
+            },
+            {
                 text: '书籍阅读',
                 items: [
                     {text: '利用python进行数据分析', link: '/study_md/book/利用python进行数据分析'},
