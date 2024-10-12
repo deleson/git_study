@@ -58,11 +58,6 @@ export default defineConfig({
                 ]
             },
             {
-                text: 'net',
-                items: [
-                ]
-            },
-            {
                 text: '书籍阅读',
                 items: [
                     {text: '利用python进行数据分析', link: '/study_md/book/利用python进行数据分析'},
