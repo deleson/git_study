@@ -58,9 +58,8 @@ export default defineConfig({
                 ]
             },
             {
-                text: '面试经验',
+                text: 'net',
                 items: [
-                    {text: 'python八股文', link: '/study_md/面试经验/python八股文'},
                 ]
             },
             {
