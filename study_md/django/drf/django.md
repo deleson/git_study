@@ -144,7 +144,90 @@ app01
 - 静态文件默认在app里面的static中。
 - 静态文件引入一般使用`{%load static%}`
 
+### 4.4 CBV和FBV
 
+在Django中，视图(View)分为基于函数的视图（Function-Based Views，FBV）和基于类的视图（Class-Based Views，CBV）。这两种视图均用于处理请求和返回响应，但在组织代码和重用方面有所不同。以下是它们的调用和使用方法的对比：
+
+#### 基于函数的视图 (FBV)
+
+**定义和使用：**
+
+FBV是最为简单直接的方式，它是一个Python函数，接收一个`HttpRequest`对象并返回一个`HttpResponse`对象。
+
+示例代码：
+
+```python
+from django.http import HttpResponse
+from django.shortcuts import render
+
+def my_view(request):
+    if request.method == 'POST':
+        # 处理POST请求
+        return HttpResponse('This is a POST request')
+    else:
+        # 处理GET请求
+        return HttpResponse('This is a GET request')
+
+# 在urls.py中配置URL：
+from django.urls import path
+from .views import my_view
+
+urlpatterns = [
+    path('my-view/', my_view, name='my_view'),
+]
+```
+
+#### 基于类的视图 (CBV)
+
+**定义和使用：**
+
+CBV使用Python类实现视图，通过类的方法来处理请求。它提供了更好的代码组织和更灵活的重用性。
+
+示例代码：
+
+```python
+from django.http import HttpResponse
+from django.views import View
+
+class MyView(View):
+    def get(self, request):
+        # 处理GET请求
+        return HttpResponse('This is a GET request')
+
+    def post(self, request):
+        # 处理POST请求
+        return HttpResponse('This is a POST request')
+
+# 在urls.py中配置URL：
+from django.urls import path
+from .views import MyView
+
+urlpatterns = [
+    path('my-view/', MyView.as_view(), name='my_view'),
+]
+```
+
+优缺点对比
+
+| 特性           | 基于函数的视图 (FBV)                       | 基于类的视图 (CBV)                           |
+| -------------- | ------------------------------------------ | -------------------------------------------- |
+| **代码简洁性** | 简单直观，适合小型和简单的视图逻辑         | 代码相对复杂，但有助于组织和重用逻辑         |
+| **重用性**     | 困难，需要手工重用代码                     | 通过继承和Mixin机制实现代码重用              |
+| **类继承**     | 不适用                                     | 支持类的继承，有利于构建复杂的视图层次结构   |
+| **装饰器使用** | 可直接使用Django提供的函数装饰器           | 需要使用`method_decorator`将装饰器应用于方法 |
+| **可读性**     | 对简单和单一功能的视图，易于理解           | 对于复杂逻辑，类结构有助于分离职责和逻辑     |
+| **扩展性**     | 扩展能力有限，复杂逻辑需要更多的代码和方法 | 提供更多可扩展的框架，支持多种Pre-build功能  |
+
+
+
+- **FBV**适合简单的小型应用模块，快速实现简单功能。
+- **CBV**适合需要多功能、复杂逻辑的大型项目，可以通过面向对象的特性来组织和简化视图代码。
+
+根据项目的特定需求和复杂性，合理选择使用FBV或CBV，以提高开发效率和代码的可维护性。
+
+
+
+<br>
 
 ## 5.模板语法
 
@@ -328,7 +411,7 @@ def orm(request):
    - 使用 `OneToOneField` 实现。
    - 一个对象与另一个对象相互唯一关联。
 
-#### 7.2.1 一对多关系（Many-to-One）
+#### 7.2.1 一对多关系
 
 在一对多关系中，一个对象可以与多个对象相关，但多个对象只能与一个对象关联。比如，一个客户可以下多个订单。
 
@@ -372,7 +455,7 @@ orders = Order.objects.filter(customer=customer)
 print([order.order_date for order in orders])  # 输出: ['2024-05-01', '2024-05-02']
 ```
 
-#### 7.2.2 多对多关系（Many-to-Many）
+#### 7.2.2 多对多关系
 
 在多对多关系中，一个对象可以与多个对象关联，多个对象也可以与一个对象关联。比如，一个学生可以选修多门课程，每门课程也可以有多名学生。
 
@@ -423,7 +506,7 @@ courses = alice.courses.all()
 print([course.name for course in courses])  # 输出: ['Math 101']
 ```
 
-#### 7.2.3一对一关系（One-to-One）
+#### 7.2.3一对一关系
 
 在一对一关系中，一个对象与另一个对象相互唯一关联。比如，一个用户可以有一个唯一的用户档案。
 
@@ -492,6 +575,885 @@ print(user.userprofile.phone_number)  # 输出: '987-654-3210'
   - 使用 `Multi-table inheritance`。
 
 模型之间的关联不仅可以发生在同一个文件或应用中，还可以跨应用关联，这通常称为**跨文件关联**。主要的关联方式仍然是使用 `ForeignKey`、`OneToOneField` 和 `ManyToManyField`。它们与在同一个应用中的关联方式几乎完全相同。
+
+
+
+
+
+## 8.身份认证
+
+###  8.1 介绍 
+
+身份认证是验证用户身份的过程，确保用户是他们所声称的那个人。在Web应用程序中，身份认证通常涉及以下几个步骤：
+
+1. **用户输入凭据**：
+   - 用户使用用户名/密码组合、OAuth令牌或其他形式的凭据登录。
+
+2. **验证凭据**：
+   - 应用服务器检查用户提交的凭据是否与其数据库中存储的数据匹配。
+
+3. **创建会话或令牌**：
+   - 验证成功后，服务器通常会创建一个会话，或生成一个JWT（JSON Web Token）或其他令牌，以标识用户。这个令牌会在后续请求中用于验证用户身份。
+
+4. **访问控制**：
+   - 根据用户的身份及其权限等级，决定是否允许访问特定资源或功能。
+
+
+
+使用场景
+
+- **Web应用登录**：
+  - 用户通过身份认证登录到电商网站、社交媒体或企业应用。
+
+- **API访问**：
+  - 使用API密钥或OAuth令牌进行身份认证，保障API资源的安全。
+
+- **企业级应用**：
+  - 结合LDAP、SAML等方案，实现复杂的企业用户认证和单点登录（SSO）。
+
+
+
+Django中的身份认证
+
+在Django中，身份认证是通过`django.contrib.auth`模块进行管理的，其中包括：
+
+- **用户模型（User Model）**：用于存储用户信息和凭据。
+- **认证后端（Authentication Backends）**：处理凭据验证的逻辑，实现自定义认证方案。
+- **中间件**：自动管理用户登录状态和会话。
+- **装饰器和权限系统**：控制视图访问权限，确保只有授权用户能够访问。
+
+Django还支持集成第三方认证机制，如社会化登录（例如Google、Facebook登录）和第三方身份提供商的OAuth或OpenID连接。这些机制通常需要第三方库如`django-allauth`或`social-auth-app-django`。这些扩展大大简化了集成多种身份认证方法的过程。
+
+<br>
+
+### 8.2 身份验证vs表单验证
+
+身份认证和表单验证虽然都涉及用户数据的处理，但它们的目的、流程和作用略有不同。
+
+#### 表单验证
+
+**目的**：
+
+- 确保用户提交的表单数据符合预期格式和要求。
+
+**流程**：
+1. 用户提交表单数据。
+2. 服务器端进行验证，检查数据类型（如字符串、数字等）以及格式（如电子邮件格式、电话号码格式）。
+3. 验证通过：数据被进一步处理（如存储到数据库）。
+4. 验证失败：表单返回错误，用户需进行修改。
+
+**作用**：
+- 保证数据完整性及安全性，防止错误或恶意输入（如SQL注入）。
+
+#### 身份认证
+
+**目的**：
+- 确认用户的身份，确保他们有权访问系统中的资源或功能。
+
+**流程**：
+1. 用户提交凭据（如用户名和密码）。
+2. 服务器查验凭据与存储信息是否匹配。
+3. 匹配成功：创建会话或令牌，用户被识别为已登录。
+4. 匹配失败：拒绝访问，并可能要求重新输入凭据。
+
+**作用**：
+- 确保系统资源和信息的安全，防止未经授权的访问。
+
+#### 相似性和差异
+
+**相似性**：
+
+- 两者都涉及用户提交的数据。
+- 都需要对输入进行验证检查。
+- 在Web应用中都依赖后端逻辑处理。
+
+**差异**：
+- 表单验证专注于检查字段的格式和完整性，身份认证专注于验证用户身份。
+- 表单验证通常是身份认证的前一道关卡（确保凭据格式正确），但身份验证包含逻辑更为复杂。（检查凭据与系统信息是否匹配）
+
+虽然身份认证涉及表单数据，但它的目标和工作流程超出了单纯验证数据的正确性，强调用户身份的合法性和安全性。
+
+当然！以下是身份认证和表单验证在使用场景以及Django中的实现方式的对比表格：
+
+| 特性           | 身份认证                                          | 表单验证                                           |
+| -------------- | ------------------------------------------------- | -------------------------------------------------- |
+| **目的**       | 验证用户身份，确保用户是其声称的对象              | 验证表单输入的正确性和格式完整性                   |
+| **使用场景**   | 用户登录、权限管理、API访问控制                   | 用户注册、信息提交、数据输入校验                   |
+| **Django实现** | - 使用`django.contrib.auth`模块                   | - 使用`django.forms`模块                           |
+|                | - 使用默认用户模型或自定义用户模型                | - 定义自定义的表单类，包含字段及其验证逻辑         |
+|                | - 认证后端（如LDAP、OAuth）                       | - 使用内置验证器或自定义验证器进行字段验证         |
+|                | - 使用中间件管理用户会话和身份状态                | - 表单类负责整个验证逻辑，通常在视图中使用         |
+| **成功结果**   | 创建会话或返回JWT令牌，完成身份认证，提供访问权限 | 数据验证通过，通常会继续被保存或处理，如存入数据库 |
+| **失败结果**   | 拒绝访问，返回身份认证错误信息                    | 返回错误信息，要求用户修改其输入并重新提交         |
+| **相关组件**   | - 用户模型（User Model）                          | - Form类与ModelForm类                              |
+|                | - 认证后端、权限装饰器和中间件                    | - 各种字段验证器及自定义验证逻辑                   |
+| **安全性**     | 保护敏感资源及数据，防止未经授权的访问            | 保证数据输入的完整性和正确性，避免恶意输入或错误   |
+
+这张表格清晰地展示了身份认证和表单验证在使用目的、应用场景和Django实现方式上的不同之处。通过理解这些，可以更好地针对不同需求选择合适的技术实现。
+
+### 8.3 身份认证和权限控制
+
+身份认证和权限控制在Django中是息息相关但又有所不同的两部分。以下是两者的详细区别和联系：
+
+#### 身份认证
+
+**身份认证（Authentication）**：指的是确认用户的身份。主要关注的是“你是谁”。
+
+**Django中的实现**：
+
+- Django提供了`django.contrib.auth`模块用于处理用户的身份认证。
+- 用户需要输入用户名和密码来验证自己的身份。
+- 认证成功后，通常会创建一个用户会话或JWT令牌以维持用户的登录状态，确保只有经过身份认证的用户才能执行特定操作或访问某些页面。
+
+**场景**：
+
+- 用户登录时，系统检查凭据是否匹配。
+- 对于需要确保用户身份的API请求，每个请求都可能需要用户认证信息。
+
+#### 权限控制
+
+**权限控制（Authorization）**：是在身份认证之后进一步确认用户可以做什么。主要关注的是“你可以做什么”。
+
+**Django中的实现**：
+- 使用权限系统来定义不同用户或用户组能够访问哪些资源和执行哪些操作。
+- Django内置了一个权限系统与用户模型关联，可以为用户分配组和特定的权限。
+- 可以使用Django的`@permission_required`装饰器或者`PermissionRequiredMixin`类来保护特定视图，使得只有具有特定权限的用户才能访问这些视图。
+
+**场景**：
+- 在管理后台界面，只有管理员用户可以添加或删除其他用户。
+- 在博客平台中，普通用户可以创建和编辑自己的文章，但只有具有编辑作者权限的用户可以审核和发布其他用户的文章。
+
+#### 联系与整合
+
+1. **先身份认证，后权限控制**：
+   - 一个用户必须首先被认证（通过登录或其他方式确认身份），然后其权限才会被检查以确认其是否有权访问某些资源。
+
+2. **权限基于身份**：
+   - 用户的权限是附加在其身份上的，即在认证其身份后，系统会根据其身份分配的权限来授予或拒绝访问。
+
+3. **统一管理**：
+   - Django通过`django.contrib.auth`模块整合了身份认证和基本的权限管理，使得开发者可以较为轻松地维护应用的安全性。
+
+通过理解身份认证和权限控制的区别与联系，可以更有效地设计安全可靠的Web应用，确保只让合适的人访问合适的资源。这个体系在Django中被高度集成并且可扩展，以满足各种复杂应用的需求。
+
+
+
+### 8.4 身份认证的实现
+
+当然，我可以通过表格的形式来比较Django身份认证中的`auth`和中间件在实现身份认证时的优缺点。
+
+| 特点           | Django `auth`                                                | Django 中间件                                                |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **概述**       | `auth` 是Django内置的身份认证系统，提供标准且安全的方法进行用户验证、登录、登出等功能。 | 中间件是Django请求处理过程的一部分，可以自定义认证逻辑。     |
+| **使用便捷性** | 非常简便，提供一整套的认证和权限管理功能，只需简单配置即可使用。 | 需要自定义中间件，增加一定的复杂性，适合于需要复杂条件和额外处理的场景。 |
+| **安全性**     | 经过社区长期验证，安全机制较为健全，默认采用哈希密码存储等安全策略。 | 取决于自定义实现，安全性由开发人员负责，容易出错。           |
+| **灵活性**     | 提供基本和大多数常用的功能，支持扩展但需要遵循一定的接口。   | 高度灵活，可以完全根据需求自定义处理流程，但实现相对复杂。   |
+| **配置难度**   | 较低，只需配置认证后端和使用现有视图或表单即可。             | 较高，需要编写自定义中间件类以及处理请求和响应。             |
+| **维护难度**   | 较低，由于`auth`模块被广泛使用和测试，问题较少。             | 较高，自定义实现可能导致可维护性差，需要进行大量的测试。     |
+| **适用场景**   | 适用于大多数Web应用的标准用户认证需求，如用户登录、注册。    | 适合需要复杂的请求处理逻辑、额外验证步骤或多种认证方式结合的场景。 |
+| **性能影响**   | 标准实现效率较高，对性能影响较小。                           | 如果实现不当，可能对请求处理性能有一定影响。                 |
+
+
+
+- **使用 Django `auth`**:
+  - 比较适合于常规项目，可以快速集成并提供良好的安全保障。
+  - 在不需要特殊处理的情况下优先使用，因其稳定性和社区支持。
+
+- **使用 Django 中间件**:
+  - 如果你的项目具有特殊的认证需求，中间件提供了灵活性，可以在请求的各个阶段进行自定义处理。
+  - 适用于需要预处理请求或需要支持多种认证流的环境，但需注意安全和维护成本。
+
+根据项目的具体需求选择合适的身份认证方案，可以提升开发效率并确保安全性和可维护性。
+
+
+
+
+
+<br>
+
+#### 8.4.1 auth模块
+
+​	`django.contrib.auth`模块是Django内置的身份认证系统。这一模块实现了一整套用户身份验证和权限管理功能，非常适合开发中小型Web应用。
+
+常见功能
+
+1. **用户管理**：
+   - 用户创建、更新、删除。
+   - 用户分组及权限管理。
+   - 超级用户（管理员）和普通用户的区分。
+
+2. **身份验证**：
+   - 提供用于认证用户的功能（如登录和登出）。
+   - 支持会话管理系统。
+
+3. **密码管理**：
+   - 提供安全的密码加密和验证方法。
+   - 提供密码重设等功能。
+
+4. **权限管理**：
+   - 基于用户和组的权限系统。
+   - 可以限制用户执行特定操作的权限。
+
+##### 常用的组件和方法
+
+1. `User` 模型
+
+**功能**:
+
+- Django内置的用户模型，用于存储和管理用户信息。
+
+**常用字段**:
+
+- `username`: 用户名，唯一标识。
+- `password`: 加密存储的密码。
+- `email`: 用户电子邮件。
+- `is_staff`: 是否具有管理员权限。
+- `is_active`: 用户是否处于活跃状态。
+- `is_superuser`: 是否为超级用户，拥有所有权限。
+
+**常用方法**:
+- `create_user(username, password=None, **extra_fields)`: 创建一个新用户并将其保存到数据库中。
+
+- `set_password(raw_password)`: 设置用户的密码，自动处理哈希运算。
+  
+- `check_password(raw_password)`: 验证布贸or密码是否与存储的哈希密码匹配。
+
+**示例**:
+```python
+from django.contrib.auth.models import User
+
+# 创建一个用户
+user = User.objects.create_user(username='john', password='secret', email='john@example.com')
+
+# 验证密码
+if user.check_password('secret'):
+    print("Password is correct!")
+
+# 设置新密码
+user.set_password('new_password')
+user.save()
+```
+
+2. `authenticate()` 方法
+
+**功能**:
+- 验证提供的用户名和密码是否正确。
+
+**实现机制**:
+- 搜索匹配的用户并检查密码。
+- 调用时可能需要传递`request`对象和关键词参数。
+
+**示例**:
+```python
+from django.contrib.auth import authenticate
+
+user = authenticate(username='john', password='secret')
+if user is not None:
+    print("Authenticated successfully!")
+else:
+    print("Authentication failed.")
+```
+
+3. `login()` 方法
+
+**功能**:
+- 将用户标记为已登录，并建立会话。
+  
+
+**实现机制**:
+
+- 通过Django的会话框架管理用户会话。
+
+**示例**:
+```python
+from django.contrib.auth import login
+
+def user_login(request):
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)  # 开启用户会话
+        return redirect('home')
+    else:
+        print("Invalid login attempt")
+```
+
+4. `logout()` 方法
+
+**功能**:
+- 注销用户并结束会话。
+
+**实现机制**:
+- 清除当前用户的会话数据。
+
+**示例**:
+```python
+from django.contrib.auth import logout
+
+def user_logout(request):
+    logout(request)
+    return redirect('home')
+```
+
+5. `@login_required` 装饰器
+
+**功能**:
+- 限制视图函数只能被已登录用户访问。
+
+**实现机制**:
+- 如果用户未登录，自动重定向到登录页面。
+
+**示例**:
+```python
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def protected_view(request):
+    return render(request, 'protected.html')
+```
+
+<br>
+
+
+
+
+
+##### 不常用的组件和方法
+
+1. Permissions and Groups
+
+- **Permissions**:
+
+  **功能**:
+  - 设置和检验用于访问不同功能和资源的权限。
+  
+  **示例**:
+  ```python
+  user.has_perm('app_label.permission_codename')
+  ```
+
+- **Groups**:
+
+  **功能**:
+  - 将用户分组，并为组赋予权限以简化权限管理。
+
+  **示例**:
+  ```python
+  from django.contrib.auth.models import Group
+  
+  # 创建一个新的用户组
+  editors_group, created = Group.objects.get_or_create(name='Editors')
+  
+  # 将用户加入该组
+  user.groups.add(editors_group)
+  ```
+
+2. 自定义用户模型
+
+- **AbstractUser**:
+
+  **功能**:
+  - 对内置用户模型的简单扩展。
+  
+  **使用场景**:
+  - 添加额外字段，如年龄、地址等，同时保留密码和会话管理。
+  
+  **示例**:
+  ```python
+  from django.contrib.auth.models import AbstractUser
+
+  class CustomUser(AbstractUser):
+      bio = models.TextField(blank=True, null=True)
+  ```
+
+- **AbstractBaseUser**:
+
+  **功能**:
+  - 更灵活的基类，允许完全自定义用户模型，需自行实现用户名字段唯一性和身份验证方法。
+
+  **示例**:
+  ```python
+  from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+  
+  class CustomUserManager(BaseUserManager):
+      def create_user(self, email, password=None, **extra_fields):
+          email = self.normalize_email(email)
+          user = self.model(email=email, **extra_fields)
+          user.set_password(password)
+          user.save(using=self._db)
+          return user
+  
+  class CustomUser(AbstractBaseUser):
+      email = models.EmailField(unique=True)
+      USERNAME_FIELD = 'email'
+      objects = CustomUserManager()
+  ```
+
+3. 信号 (Signals)
+
+**功能**:
+- 监控用户登录事件。
+  
+
+**常用信号**:
+- `user_logged_in`, `user_logged_out`, `user_login_failed`.
+
+**示例**:
+```python
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+
+@receiver(user_logged_in)
+def on_user_logged_in(sender, request, user, **kwargs):
+    print(f"{user.username} has logged in.")
+```
+
+
+
+<br>
+
+##### auth基本使用流程
+
+以下是一般使用Django身份认证系统的标准流程。
+
+###### 1. 设置和配置
+
+确保项目中已经包含`django.contrib.auth`模块，且在`settings.py`的`INSTALLED_APPS`中已激活。
+
+###### 2. 用户模型
+
+- Django默认的用户模型可以满足大多数基本需求，但如果有特殊需求，可以扩展或替代默认的用户模型。
+- 对用户模型的操作，例如创建用户、检查用户密码等，通过Django的`User`模型来进行。
+
+###### 3. 用户注册和认证
+
+- **用户注册**：通常你需要允许用户自己注册账户。这可以通过创建一个自定义视图处理用户输入的注册信息。
+- **登录和登出**：使用Django内置的视图函数`auth.views.LoginView`和`auth.views.LogoutView`简单实现登录和登出功能。
+
+###### 4. 实现登录视图
+
+下面是如何用Django实现一个简单的登录视图：
+
+```python
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    return render(request, 'accounts/login.html')
+```
+
+###### 5. 授权管理
+
+基于权限的访问控制可以通过给用户分配权限或分组来实现。在视图中，你可以使用装饰器或者类来检查用户权限：
+
+- 使用装饰器`@login_required`确保视图只能被认证用户访问。
+- 使用装饰器`@permission_required`确保用户具有特定权限。
+
+###### 6. 登出功能
+
+使用Django的`logout`函数来实现用户登出功能：
+
+```python
+from django.contrib.auth import logout
+
+def user_logout(request):
+    logout(request)
+    return redirect('home')
+```
+
+> 为什么Django的auth系统有效
+>
+> 1. **安全性**：
+>    - 使用安全的密码存储方法（例如加盐的散列）。
+>    - 内置防护策略（如CSRF保护）和会话管理机制。
+>
+> 2. **易用性**：
+>    - 提供现成的类和函数，可以很容易定制。
+>    - 管理后台带有强大的用户和权限管理界面。
+>
+> 3. **集成性**：
+>    - 自带应用能与Django其他功能无缝集成，比如中间件、模板系统等。
+>
+
+
+
+Django的auth系统提供了一个全面且可扩展的框架来管理用户认证和权限控制。在此基础上，你可以根据需求增加自定义功能，使得Web应用的用户管理变得既安全又高效。了解其基本流程对开发更复杂的认证机制至关重要。
+
+
+
+### 8.5 身份认证的应用
+
+
+
+**故事背景**
+
+小明是一位业余摄影师，他热爱在网上分享他的摄影作品。为了展示和销售他的作品，小明决定创建一个线上博客网站。这个网站不仅允许小明上传和管理他的照片，还提供一个商城功能，让访问者可以购买他的作品。为了保护他的作品并确保只有他才能管理这些内容，身份认证成为了网站必要的功能之一。
+
+**需求场景**
+
+小明的网站需要一个用户账户系统，通过它能够区分普通访问者和他这个管理员。普通访问者可以浏览和购买照片，而小明需要拥有更高权限的管理员账户，以便能够：
+
+1. 登录后台上传、编辑或删除照片。
+2. 查看购买订单和发货管理。
+3. 管理访问者的评论和留言。
+
+为了使得这个账户系统不仅便利，还有助于保护小明的作品，网站需要实现严格的身份认证机制。
+
+**为何需要身份认证**
+
+- **保护管理功能**：小明是唯一的管理员，他需要通过身份认证来防止其他人未经授权地访问管理员功能。
+- **个性化用户体验**：提供给用户的个性化视图，使管理员看到不同于普通访问者的界面。
+- **保障安全交易**：确保支付和订单信息被妥善保护，避免数据被盗用。
+
+Django身份认证实现
+
+为了满足这个需求，小明的网站使用Django内置的身份认证系统。以下是实现的关键步骤示例：
+
+1. **用户登录视图**
+
+   小明的网站需要一个登录页面，只有通过正确的邮箱和密码认证后，才能访问管理员后台：
+
+   ```python
+   from django.shortcuts import render, redirect
+   from django.contrib.auth import authenticate, login
+   from django.contrib import messages
+
+   def admin_login(request):
+       if request.method == 'POST':
+           email = request.POST.get('email')
+           password = request.POST.get('password')
+           user = authenticate(request, username=email, password=password)
+           if user is not None and user.is_staff:  # 确保是管理员账户
+               login(request, user)
+               return redirect('admin_dashboard')  # 重定向到管理员后台
+           else:
+               messages.error(request, 'Invalid credentials or you do not have permission.')
+       return render(request, 'accounts/login.html')
+   ```
+
+2. **URL配置**
+
+   配置使得登录页面可以通过访问特定的URL：
+
+   ```python
+   from django.urls import path
+   from . import views
+
+   urlpatterns = [
+       path('login/', views.admin_login, name='admin_login'),
+   ]
+   ```
+
+3. **用户角色配置**
+
+   在用户管理系统中，确保小明的账户具备管理员权限（`is_staff=True`），以便他能够通过身份认证访问管理功能。
+
+
+
+### 8.6 auth认证 vs drf认证
+
+当然可以！以下是对 Django `auth` 系统和 DRF `authentication` 系统的更详细描述和比较，包括它们的定义、适用场景、优缺点、使用示例等。
+
+#### 1. 定义
+
+- **Django `auth` 系统**：
+  Django 提供了一个内置的用户认证系统，用于用户管理、权限控制和用户会话管理。它支持基本的用户注册、登录、注销、密码管理等功能。
+
+- **DRF `authentication` 系统**：
+  Django Rest Framework 提供了多种认证机制，专门为 RESTful API 设计。它支持多种认证方法，如 Token 认证、Session 认证、Basic 认证、JWT 认证等，方便 API 的用户身份验证。
+
+#### 2. 适用场景
+
+- **Django `auth` 系统**：
+  - 适用于传统的 Web 应用。
+  - 用于需要用户登录、注销和会话管理的场景。
+  - 适合那些使用 Django 的模板系统进行页面渲染的项目。
+
+- **DRF `authentication` 系统**：
+  - 适用于 RESTful API。
+  - 用于需要提供用户身份验证的 API 接口。
+  - 适合前后端分离的项目，尤其是需要跨域请求的场景。
+
+#### 3. 返回形式
+
+- **Django `auth` 系统**：
+  - 通常通过 `request.user` 来访问当前登录的用户对象。
+  - 返回的是 `User` 对象，包含用户的所有信息。
+
+- **DRF `authentication` 系统**：
+  - 通过认证类返回用户对象，返回值可以是 `User` 对象或 `None`（如果未认证）。
+  - 可以通过 `request.user` 访问当前用户。
+
+#### 4. 优缺点
+
+| 特性     | Django `auth` 系统                                           | DRF `authentication` 系统                                    |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **优点** | 1. 内置于 Django，使用简单 <br> 2. 提供全面的用户管理和权限控制 | 1. 支持多种认证方式 <br> 2. 更灵活，适应不同 API 需求        |
+| **缺点** | 1. 主要支持 session 认证，不适合 API <br> 2. 不适合跨域请求  | 1. 需要配置，增加复杂性 <br> 2. 不同认证方式的实现可能较繁琐 |
+
+#### 5. 使用示例
+
+**Django `auth` 系统 示例：**
+
+这是一个基本的登录视图，用户通过表单提交用户名和密码，进行认证。
+
+```python
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+
+def my_login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')  # 重定向到主页
+        else:
+            return render(request, 'login.html', {'error': 'Invalid credentials'})
+    return render(request, 'login.html')
+```
+
+**DRF `authentication` 系统 示例：**
+
+这是一个使用 Token 认证的 API 视图，只有经过身份验证的用户才能访问。
+
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+class MyProtectedView(APIView):
+    authentication_classes = [TokenAuthentication]  # 使用 Token 认证
+    permission_classes = [IsAuthenticated]  # 只有认证用户才能访问
+
+    def get(self, request):
+        content = {'message': 'Hello, {}'.format(request.user.username)}
+        return Response(content)
+```
+
+在 Django 中，DRF 认证返回的用户（`request.user`）和 Django `auth` 系统中的用户（`django.contrib.auth.models.User`）实际上是同一个用户对象。这是因为 DRF 认证系统是基于 Django 的 `auth` 系统构建的。
+
+1. **用户模型**：
+   - Django 的 `auth` 系统使用 `User` 模型来表示用户。该模型包含用户的基本信息（如用户名、密码、电子邮件等）。
+2. **DRF 认证**：
+   - 当使用 DRF 的认证机制（如 Token 认证或 Session 认证）时，认证过程会将请求的用户信息解析为 `User` 对象。
+   - 通过 `request.user` 可以访问当前认证的用户，该对象是 Django `auth` 系统中的同一个 `User` 实例。
+
+Django `auth` 系统和 DRF `authentication` 系统各自针对不同的应用场景提供了认证机制。Django `auth` 更适合传统 Web 应用，而 DRF `authentication` 则为 RESTful API 提供了灵活的认证方式。根据项目需求，开发者可以选择合适的认证机制。
+
+<br>
+
+
+
+
+
+### 8.6 其他
+
+
+
+#### 自定义用户模型
+
+如果需要自定义存储用户数据，可以通过自定义用户模型来实现，Django提供了扩展及替换默认用户模型的灵活性。以下是自定义用户模型的一般步骤：
+
+步骤一：自定义用户模型
+
+1. **使用`AbstractUser`扩展**
+
+   继承`AbstractUser`可以在保留现有功能的基础上拓展字段。
+
+   ```python
+   from django.contrib.auth.models import AbstractUser
+   from django.db import models
+
+   class CustomUser(AbstractUser):
+       # 添加自定义字段
+       bio = models.TextField(blank=True, null=True)
+       birth_date = models.DateField(null=True, blank=True)
+   ```
+
+2. **使用`AbstractBaseUser`创建全新用户模型**
+
+   如果需要完全自定义，可以继承`AbstractBaseUser`，同时需要指定`UserManager`。
+
+   ```python
+   from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+   from django.db import models
+   
+   class CustomUserManager(BaseUserManager):
+       def create_user(self, email, password=None, **extra_fields):
+           if not email:
+               raise ValueError('The Email field must be set')
+           email = self.normalize_email(email)
+           user = self.model(email=email, **extra_fields)
+           user.set_password(password)
+           user.save(using=self._db)
+           return user
+   
+       def create_superuser(self, email, password=None, **extra_fields):
+           extra_fields.setdefault('is_staff', True)
+           extra_fields.setdefault('is_superuser', True)
+           return self.create_user(email, password, **extra_fields)
+   
+   class CustomUser(AbstractBaseUser):
+       email = models.EmailField(unique=True)
+       name = models.CharField(max_length=50)
+       USERNAME_FIELD = 'email'
+       REQUIRED_FIELDS = ['name']
+   
+       objects = CustomUserManager()
+   ```
+
+步骤二：修改Django设置
+
+- 在项目的`settings.py`中，将默认的用户模型替换为自定义模型。
+
+  ```python
+  AUTH_USER_MODEL = 'yourapp.CustomUser'
+  ```
+
+  - 这里 `yourapp` 是包含 `CustomUser` 模型的应用名称。
+
+步骤三：应用迁移
+
+- 确保数据库结构符合自定义用户模型的定义。
+
+  ```bash
+  python manage.py makemigrations
+  python manage.py migrate
+  ```
+
+步骤四：使用自定义用户模型
+
+- 在整个项目中始终使用 `get_user_model()` 来获取用户模型，不要直接引用 `User` 模型。
+
+  ```python
+  from django.contrib.auth import get_user_model
+  
+  User = get_user_model()
+  ```
+
+小结
+
+- **扩展用户模型**: 若仅需添加字段，推荐继承 `AbstractUser`。
+- **重写用户模型**: 需要完全自定义身份认证的结构时，继承 `AbstractBaseUser`。
+- **确保一致性**: 一旦定义自定义用户模型，应在整个项目中始终使用，以确保数据一致性和功能的正常运作。
+
+利用自定义用户模型，你可以更好地适应项目的特定需求，同时保持与Django 的 `auth` 认证系统的完美集成。
+
+<br>
+
+
+
+#### create_user说明
+
+在Django中，对于创建用户实例，`create_user`方法与`create`方法的区别主要在于安全性和功能性，特别是在处理用户密码时：
+
+差异与原因
+
+1. **密码哈希处理**:
+   - **`create_user`**: 该方法会自动调用`set_password`来对用户的密码进行哈希处理。Django使用PBKDF2等安全的哈希算法来存储密码，以防止明文密码被存储。
+   - **`create`**: 使用`create`方法时，密码不会自动哈希处理。传递给`create`的密码将直接以明文形式存储在数据库中，在大多数情况下，这会导致安全隐患。
+
+2. **内置的额外逻辑**:
+   - **`create_user`**: 除了处理密码外，还可能包含额外的用户相关初始化逻辑，比如设置默认值、信号发送等。
+   - **`create`**: 主要功能是直接创建并保存数据库记录，适用于那些不需要额外处理的普通模型实例。
+
+使用场景
+
+- **`create_user`**: 应用于创建用户时，以确保密码安全且遵循用户模型创建的最佳实践。
+- **`create`**: 用于创建不涉及到特殊处理逻辑的其他模型实例。
+
+示例
+
+在创建用户时应使用`create_user`方法：
+
+```python
+user = User.objects.create_user(username='john', password='secure_password', email='john@example.com')
+```
+
+这确保密码通过Django的密码哈希系统存储，确保安全性。
+
+自定义扩展
+
+如果你自定义了用户模型并实现自定义管理器，你仍然可以定义类似的方法：
+
+```python
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+```
+
+这里的`set_password`确保密码哈希化并安全存储。
+
+#### @login_required默认登录url
+
+在Django的`@login_required`装饰器中，重定向到登录页面的URL是通过Django的设置来确定的，主要通过`LOGIN_URL`和`LOGIN_REDIRECT_URL`进行配置。在默认情况下，如果你使用`@login_required`装饰器限制访问，Django会自动将未登录用户重定向到配置的登录页面。
+
+确定登录页面的URL
+
+1. **LOGIN_URL 设置**
+
+   - `LOGIN_URL`是一个常量，你可以在你的Django项目的`settings.py`文件中配置它。
+   - 它指定了未登录用户在访问需要登录的页面时将被重定向到的URL。
+
+   ```python
+   # settings.py
+
+   LOGIN_URL = '/accounts/login/'  # 这里的URL是示例，请根据你的项目路径设置
+   ```
+
+2. **示例应用**
+
+   在视图函数中使用`@login_required`装饰器：
+
+   ```python
+   from django.contrib.auth.decorators import login_required
+   from django.http import HttpResponse
+
+   @login_required
+   def my_protected_view(request):
+       return HttpResponse("You are logged in and can see this content!")
+   ```
+
+3. **默认行为**
+
+   - 当一个未登录用户试图访问被`@login_required`修饰的视图时，Django会查找`settings.py`中的`LOGIN_URL`的值。
+   - 如果未设置`LOGIN_URL`，Django将使用`/accounts/login/`作为默认值。
+   - 要重定向到自定义登录页面，只需将`LOGIN_URL`设置为所需的登录页面的URL路径。
+
+4. **LOGIN_REDIRECT_URL 设置**
+
+   - 此设置指定了一旦登录成功后，用户将被重定向到的URL。
+   - 默认情况下，这是`/accounts/profile/`，但可以在`settings.py`中更改。
+   
+   ```python
+   # settings.py
+   
+   LOGIN_REDIRECT_URL = '/dashboard/'  # 登录成功后重定向的页面
+   ```
+
+通过配置`LOGIN_URL`和`LOGIN_REDIRECT_URL`，你可以灵活地控制未登录用户被重定向到哪个页面进行登录，以及登录成功后他们将被导向到哪个页面。确保将这些URL配置为与你项目的URL匹配的路径，以确保用户体验的顺畅。
+
+
 
 <br><br><br><br><br>
 

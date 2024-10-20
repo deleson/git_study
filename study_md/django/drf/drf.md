@@ -1693,6 +1693,50 @@ del obj.value     # 通过del关键字删除属性
 
 
 
+## 0.9 session和token
+
+> Session 认证和 Token 认证是两种常用的用户身份验证机制，它们在实现方式、状态管理和适用场景上有明显的区别。以下是这两者的详细对比：
+>
+> ### 1. 定义
+> - **Session 认证**：
+>   - 通过服务器端的会话管理，用户登录后，服务器为用户创建一个会话，并将会话 ID 存储在服务器上。客户端会将这个会话 ID 存储在 Cookie 中，随后的请求中会自动携带该 Cookie。
+>
+> - **Token 认证**：
+>   - 用户登录后，服务器生成一个唯一的 Token，并将其返回给客户端。客户端需要在后续请求中携带该 Token，通常放在 HTTP 请求的 `Authorization` 头中。
+>
+> ### 2. 状态管理
+> - **Session 认证**：
+>   - 是有状态的。服务器需要维护会话状态，存储用户的会话信息，适合传统的 Web 应用。
+>
+> - **Token 认证**：
+>   - 是无状态的。服务器不需要存储会话信息，Token 通常包含用户信息和过期时间。适合 RESTful API 和前后端分离的应用。
+>
+> ### 3. 安全性
+> - **Session 认证**：
+>   - 由于会话信息存储在服务器上，容易控制和管理，但如果攻击者获取了会话 ID，可能导致会话劫持。
+>
+> - **Token 认证**：
+>   - Token 通常是自包含的，包含用户身份和有效期。攻击者获取 Token 也可能会导致安全问题，因此 Token 应该设置合理的过期时间。
+>
+> ### 4. 适用场景
+> - **Session 认证**：
+>   - 适合传统的 Web 应用，尤其是需要用户会话和持续的身份验证的场景。
+>
+> - **Token 认证**：
+>   - 适合移动应用、单页应用（SPA）和需要跨域访问的 RESTful API，因其灵活性和无状态特性。
+>
+> ### 5. 实现复杂性
+> - **Session 认证**：
+>   - 实现相对简单，使用 Django 的 `auth` 系统和中间件即可。
+>
+> - **Token 认证**：
+>   - 实现相对复杂，需要生成 Token、管理 Token 的有效性和过期时间，通常还需要处理 Token 刷新机制。
+>
+> ### 总结
+> Session 认证和 Token 认证各有优缺点，选择时应根据项目需求和应用场景来决定。对于传统的 Web 应用，Session 认证可能更合适；对于现代的前后端分离应用，Token 认证则更为灵活。
+
+
+
 <br><br>
 
 <br>
@@ -2328,7 +2372,7 @@ request中的参数**kwargs，其实是url中的< int:v1 >传入的
 >
 >    ```
 >    pythonCopy codefrom oauth2_provider.contrib.rest_framework import OAuth2Authentication
->                                                 
+>                                                    
 >    class MyAPIView(APIView):
 >        authentication_classes = [OAuth2Authentication]
 >        ...
@@ -2991,14 +3035,14 @@ class NoAuthentication(BaseAuthentication):
 >
 >    ```
 >    pythonCopy codefrom rest_framework.permissions import BasePermission
->                                                 
+>                                                    
 >    class IsUploaderOrReadOnly(BasePermission):
 >        def has_object_permission(self, request, view, obj):
 >            # 允许上传者进行所有操作，其他用户只能查看
 >            if request.method in ['GET', 'HEAD', 'OPTIONS']:
 >                return True
 >            return obj.uploader == request.user
->                                                 
+>                                                    
 >    class MyPictureAPIView(APIView):
 >        permission_classes = [IsUploaderOrReadOnly]
 >        ...
@@ -3536,12 +3580,12 @@ path('avater/', views.AvaterView.as_view()),
 >
 >    ```
 >    pythonCopy codefrom rest_framework.throttling import BaseThrottle
->                                                 
+>                                                    
 >    class BurstRateThrottle(BaseThrottle):
 >        def allow_request(self, request, view):
 >            # 实现自定义限流逻辑
 >            return True
->                                                 
+>                                                    
 >    class MyBurstAPIView(APIView):
 >        throttle_classes = [BurstRateThrottle]
 >        ...
@@ -4373,14 +4417,14 @@ class HomeView(APIView):
 >    ```
 >    pythonCopy code# 使用 reverse() 在视图中反向生成
 >    from rest_framework.reverse import reverse
->                                                    
+>                                                       
 >    class ArticleSerializer(serializers.ModelSerializer):
 >        url = serializers.SerializerMethodField()
->                                                    
+>                                                       
 >        class Meta:
 >            model = Article
 >            fields = ('id', 'title', 'url')
->                                                    
+>                                                       
 >        def get_url(self, obj):
 >            return reverse('article-detail', args=[obj.pk], request=self.context.get('request'))
 >    ```
