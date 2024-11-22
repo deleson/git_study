@@ -125,7 +125,7 @@ Reids的主流功能可以分为以下几种：
 4. 缓存穿透、击穿、雪崩
 5. 分布式锁
 6. 队列(Redis提供list和set操作，是的Redis能作为一个很好的消息队列平台来使用)
-7. 排行版+点赞
+7. 排行+点赞
 8. ...
 
 <br>
@@ -371,4 +371,192 @@ listpack是用来替代ziplist的新数据结构，在7.0版本已经没有zipli
 <br>
 
 # 2.Redis安装和配置
+
+## 2.1 redis安装
+
+前提要求：
+
+- linux
+- 64位
+- gcc
+
+
+
+查看字节redis版本
+
+redis -server -v
+
+
+
+具体安装流程如下：
+
+- wget安装
+- 解压
+- make编译
+- 安装 sudo make install
+
+<br>
+
+安装的默认地址在usr/local/bin
+
+安装后可以查看到有以下几个文件
+
+| 文件名           | 描述                                             |
+| ---------------- | ------------------------------------------------ |
+| redis-benchmark  | 性能测试工具，服务启动后运行该命令可以查看性能。 |
+| redis-check-aof  | 修复有问题的 AOF 文件。                          |
+| redis-check-dump | 修复有问题的 dump.rdb 文件。                     |
+| redis-cli        | 客户端，操作入口。                               |
+| redis-sentinel   | Redis 集群使用工具。                             |
+| redis-server     | Redis 服务器启动命令。                           |
+
+
+
+## 2.2 配置redis.conf
+
+一般将redis.conf原来的配置文件复制一份进行修改，
+
+1.要配置的内容如下
+
+1. 默认daemonize no 改成daemonize yse
+2. 默认protected-mode yes 改为 protected-mode no
+3. 默认bind 127.0.0.1 改为注释掉或本机IP地址
+4. 添加redis密码，即改为requirepass 你自己的密码
+
+| 配置项           | 修改前                     | 修改后                                          | 说明                                     |
+| ---------------- | -------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `daemonize`      | `daemonize no`             | `daemonize yes`                                 | 将 Redis 以守护进程方式运行。            |
+| `protected-mode` | `protected-mode yes`       | `protected-mode no`                             | 关闭保护模式，允许外部连接。             |
+| `bind`           | `bind 127.0.0.1`           | `# bind 127.0.0.1` 或者 `bind <你的本机IP地址>` | 注释掉或绑定到本机IP地址以允许远程访问。 |
+| `requirepass`    | `# requirepass <password>` | `requirepass <你的密码>`                        | 设置 Redis 密码以增加安全性。            |
+
+> 1. **daemonize**
+>
+> - **默认值**：`daemonize no`
+> - **修改为**：`daemonize yes`
+>
+> 作用：
+>
+> - 将 Redis 服务器设置为后台运行（守护进程模式）。当设置为 `yes` 时，Redis 会在启动后转为后台运行，而不是在终端中占用当前会话。
+>
+> 为什么配置：
+>
+> - 在生产环境中，为了能够让 Redis 作为系统服务运行，通常建议将其配置为守护进程模式。这使得 Redis 能够独立于用户会话运行，在系统重启后也能自动启动服务。
+>
+> 2. **protected-mode**
+>
+> - **默认值**：`protected-mode yes`
+> - **修改为**：`protected-mode no`
+>
+> 作用：
+>
+> - 保护模式是 Redis 的一项安全特性。启用该模式时，如果 Redis 服务器没有配置绑定 IP 地址（`bind`）或没有设置密码（`requirepass`），它将拒绝来自外部的连接。
+>
+> 为什么配置：
+>
+> - **禁用保护模式**可能是为了让 Redis 能够允许外部连接（例如，当你在服务器上有多个 Redis 客户端连接时）。然而，这样做风险较大，因为如果没有妥善的安全配置（如设置密码和严格控制 IP 地址），可能会导致安全漏洞。因此，在生产环境中，通常建议依然开启保护模式，同时配置合适的安全策略（如绑定特定的 IP 地址和启用密码）。
+>
+> 3. **bind**
+>
+> - **默认值**：`bind 127.0.0.1`
+> - **修改为**：注释掉或设置为服务器的本机 IP 地址
+>
+> 作用：
+>
+> - `bind` 指定 Redis 服务器监听的 IP 地址。在默认配置下，Redis 只会接受来自本机（`127.0.0.1`）的连接。
+>
+> 为什么配置：
+>
+> - **注释掉**：允许 Redis 接受来自所有网络接口的连接（即来自任意 IP 的连接）。这在需要让其他机器连接到 Redis 服务器时是必要的。
+> - **设置为本机 IP 地址**：这样可以限制 Redis 只接受来自特定 IP 的连接，提高安全性。只有特定的客户端或服务能够连接到 Redis。
+>
+> 4. **requirepass**
+>
+> - **默认值**：未设置
+> - **修改为**：`requirepass 你自己的密码`
+>
+> 作用：
+>
+> - 为 Redis 添加访问密码，只有提供正确密码的客户端才能连接到 Redis 服务器。
+>
+> 为什么配置：
+>
+> - **安全性**：默认情况下，Redis 不要求密码，任何能够访问 Redis 服务器的用户都可以连接并执行命令。设置密码是为了防止未授权的访问。虽然 Redis 在生产环境中常用于内部通信，但增加密码保护可以增强安全性，尤其是在对外暴露的服务中。
+
+
+
+
+
+<br>
+
+2.配置redis运行的redis.conf文件，并启动redis服务
+
+redis-server /myredis/redis7.conf配置
+
+<br>
+
+3.ps命令查看是否启动进程（6379是否启动）
+
+ps -ef|grep redis|grep -v grep
+
+<br>
+
+4.连接服务
+
+redis-cli -a 123456 -p 6379（默认）
+
+<br>
+
+5.helloworld
+
+客户端设置
+
+127.0.0.1:6379> set k1 hellowrold
+OK
+127.0.0.1:6379> get k1
+"hellowrold"
+127.0.0.1:6379> 
+
+<br>
+
+6.退出redis连接（退出客户端）
+
+quit
+
+<br>
+
+7.关闭redis服务器
+
+单实例关闭：redis-cli -a 密码 shutdown
+
+多实例关闭，指定端口关闭：redis-cli -a 密码 -p 6379 shutdown
+
+
+
+
+
+
+
+
+
+
+
+# 3.redis 10大类型
+
+## 3.1总体概述
+
+10大数据类型均指value，key类型固定为字符串
+
+10大数据类型分别是：
+
+- 字符串string
+- 列表list
+- 哈希表hash
+- 集合Set
+- 有序集合ZSet
+- 地理空间GEO
+- 基数统计HyperLogLog
+- 位图bitmap
+- 位域bitfield
+- 流Stream
 

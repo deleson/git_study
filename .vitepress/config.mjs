@@ -48,7 +48,6 @@ export default defineConfig({
                     {text: 'PyTorch', link: '/study_directory/python/pytorch'}
                 ]
             },
-
             {
                 text: '前端',
                 items: [
@@ -56,13 +55,6 @@ export default defineConfig({
                     {text: 'javascript', link: '/study_md/front_end/javascript'},
                     {text: 'css', link: '/study_md/front_end/css'},
                     {text: 'html', link: '/study_md/front_end/html'},
-                ]
-            },
-            {
-                text: '面试',
-                items: [
-                    {text: 'python八股', link: '/study_md/面试经验/python八股文'},
-                    {text: '华为od', link: '/study_md/面试经验/华为od'}
                 ]
             },
             {
@@ -79,7 +71,11 @@ export default defineConfig({
           {
             text: 'Examples',
             items: [
-              { text: 'Markdown Examples', link: '/markdown-examples' },
+              { text: 'Markdown Example
+              ...........................................
+
+
+              0000.00s', link: '/markdown-examples' },
               { text: 'Runtime API Examples', link: '/api-examples' }
             ]
           }

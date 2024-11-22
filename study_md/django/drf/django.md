@@ -405,7 +405,13 @@ Django 的模型数据可以通过两种方式添加到数据库：
 
 这两种方法的区别是，`.create()` 是一步完成的，而实例化 + `.save()` 可以提供更多灵活性，比如允许你在保存之前设置额外的字段或执行一些逻辑。
 
-
+> 此外对于序列化器，可以采用 
+>
+> a =  序列化器类(data=xx)
+>
+> a.is_valid()
+> a.save()
+> 来添加数据
 
 通过上述内容可以看出，QuerySet对象可以自动动态的修改数据表中的数据
 
@@ -696,7 +702,7 @@ bob = Student.objects.create(name="Bob")
 course1 = Course.objects.create(name="Math 101")
 
 # 将学生添加到课程
-course1.students.add(alice, bob)
+course1.students.add(alice,bob)
 
 # 获取课程的所有学生
 students = course1.students.all()
@@ -942,6 +948,7 @@ Django还支持集成第三方认证机制，如社会化登录（例如Google�
 - 可以使用Django的`@permission_required`装饰器或者`PermissionRequiredMixin`类来保护特定视图，使得只有具有特定权限的用户才能访问这些视图。
 
 **场景**：
+
 - 在管理后台界面，只有管理员用户可以添加或删除其他用户。
 - 在博客平台中，普通用户可以创建和编辑自己的文章，但只有具有编辑作者权限的用户可以审核和发布其他用户的文章。
 
@@ -1851,6 +1858,41 @@ class CustomUserManager(BaseUserManager):
 
 <br>
 
+#### 常见的认证方式
+
+在 Django REST Framework (DRF) 中，身份认证是一个重要的组成部分。DRF 提供了多种身份认证方式，允许开发者根据具体需求选择合适的认证机制。以下是对 `JWTAuthentication`（JSON Web Token 认证）及其他一些常见认证方式的总结和对比。
+
+
+
+1. **JWT Authentication (JSON Web Token 认证)**:
+   - 使用 JWT 令牌来验证用户的身份。用户在登录成功后获得一个令牌，后续请求将此令牌作为认证标识。
+   - JWT 是一种自包含的令牌格式，包含用户身份信息和有效期。由于是无状态的，服务器无需存储会话。
+
+2. **Session Authentication (会话认证)**:
+   - 使用 Django 的会话框架进行身份验证。用户登录后，系统将用户信息存储在服务器的会话中，并在浏览器中设置 sessionid Cookie。
+   - 每次请求时，DRF 会检查该 Cookie，以验证用户身份。
+
+3. **Token Authentication (令牌认证)**:
+   - 用户登录后获得一个 token，该 token 需要在后续请求中作为请求头提供。
+   - 该 token 是一个单独的字符串，一般存储在数据库中。
+
+4. **Basic Authentication (基本认证)**:
+   - 使用 HTTP 基本身份认证。在请求的 `Authorization` 头中包含用户的基本信息（以 `username:password` 编码）。
+   - 简单，但相对不安全，因为没有加密，因此常与 HTTPS 结合使用。
+
+### 认证方式对比
+
+| 认证方式                   | 描述                                | 优点                                 | 缺点                       | 适用场景                                           |
+| -------------------------- | ----------------------------------- | ------------------------------------ | -------------------------- | -------------------------------------------------- |
+| **JWT Authentication**     | 使用 JSON Web Token 进行身份验证。  | 无状态认证、跨域支持和分布式系统友好 | 令牌泄露风险、处理复杂性   | 移动应用、单页应用、微服务架构。                   |
+| **Session Authentication** | 使用 Django session 进行身份验证。  | 易于实现和使用，Django 原生支持      | 需要存储会话数据，状态保持 | Web 应用、传统的服务器渲染应用。                   |
+| **Token Authentication**   | 使用 Token 进行用户身份验证。       | 简单、无状态，无需存储会话           | 常常需要额外的数据库查询   | API 接口、手机应用、轻量级服务端。                 |
+| **Basic Authentication**   | 使用 HTTP Basic Auth 进行身份验证。 | 简单易用                             | 不安全，需要 HTTPS         | 简化的 API、快速原型开发（受限于不暴露敏感数据）。 |
+
+
+
+
+
 <br>
 
 ## 9.权限控制
@@ -2076,11 +2118,11 @@ class CustomUserManager(BaseUserManager):
 >
 >      ```python
 >      from django.db import models
->                                         
+>                                                             
 >      class MyModel(models.Model):
 >          # 模型字段定义
 >          ...
->                                         
+>                                                             
 >          class Meta:
 >              permissions = [
 >                  ("can_publish", "Can Publish Content"),
@@ -2100,7 +2142,7 @@ class CustomUserManager(BaseUserManager):
 >
 >      ```python
 >      from django.contrib.auth.decorators import permission_required
->                                         
+>                                                             
 >      @permission_required('myapp.can_publish', login_url='/login/')
 >      def my_view(request):
 >          ...
@@ -2126,7 +2168,7 @@ class CustomUserManager(BaseUserManager):
 >
 >      ```python
 >      from django.contrib.auth.models import User, Permission
->                                         
+>                                                             
 >      user = User.objects.get(username='john')
 >      permission = Permission.objects.get(codename='can_publish')
 >      user.user_permissions.add(permission)
@@ -4763,12 +4805,12 @@ class UserList(APIView):
 >    - 示例：
 >      ```python
 >      from rest_framework import serializers
->      
+>                          
 >      class AccountSerializer(serializers.Serializer):
 >          email = serializers.EmailField()
 >          username = serializers.CharField(max_length=100)
 >          date_joined = serializers.DateTimeField()
->      
+>                          
 >          def validate_username(self, value):
 >              if 'admin' in value.lower():
 >                  raise serializers.ValidationError("Username may not contain 'admin'")
@@ -4783,7 +4825,7 @@ class UserList(APIView):
 >      ```python
 >      from django.contrib.auth.models import User
 >      from rest_framework import serializers
->      
+>                          
 >      class UserSerializer(serializers.ModelSerializer):
 >          class Meta:
 >              model = User
@@ -4822,7 +4864,7 @@ class UserList(APIView):
 >      class CustomSerializer(serializers.BaseSerializer):
 >          def to_internal_value(self, data):
 >              return CustomObject(**data)
->      
+>                          
 >          def to_representation(self, obj):
 >              return {'data': obj.data}
 >      ```
@@ -4939,6 +4981,813 @@ ModelForm 仍然适合哪些场景？
   
 
 如果您正在开发一个前后端分离的系统，建议全面使用 **序列化器** 来进行数据的验证和处理。它能帮助您更好地适应现代的开发需求，简化数据的验证、序列化和反序列化的逻辑，实现更加灵活和强大的 API。
+
+
+
+<br>
+
+## 11.视图类
+
+视图类是 Django 和 Django REST Framework (DRF) 中处理 HTTP 请求和生成 HTTP 响应的核心组件。它们允许开发者以面向对象的方式定义应用程序的行为和逻辑。以下是关于视图类的一些基本概念和定义：
+
+<br>
+
+什么是视图类？
+
+1. **定义**：
+   - 视图类是一种用于处理特定 URL 请求的 Python 类。它封装了与请求和响应相关的逻辑，使得代码更易于管理和重用。
+
+2. **功能**：
+   - 视图类包含处理特定请求（如 GET、POST、PUT、DELETE）的逻辑。
+   - 它们负责执行业务逻辑、查询数据库、处理用户输入和返回正确的 HTTP 响应。
+   - 支持数据序列化，可以将 Python 对象转换为 JSON 或其他格式，以便在 API 中返回。
+
+3. **类型**：
+   - 在 Django 中，视图可以分为两大类：
+     - **基于函数的视图 (Function-Based Views, FBV)**：以函数的形式定义视图逻辑。
+     - **基于类的视图 (Class-Based Views, CBV)**：以类的形式定义视图逻辑，这种方式更灵活，支持继承和重用。
+
+4. **优点**：
+   - **组织性**：通过类将相关的逻辑组织在一起，便于理解和维护。
+   - **重用性**：可以通过继承和组合实现代码的重用，减少重复代码。
+   - **可扩展性**：可以方便地扩展和定制视图行为。
+
+<br>
+
+视图类的基本结构
+
+在 Django 中创建一个基于类的视图通常包括以下步骤：
+
+1. **导入视图类**：
+   导入 Django 或 DRF 提供的视图类。
+
+2. **定义类**：
+   创建一个新的类，继承自 Django 或 DRF 提供的基本视图类。
+
+3. **定义请求处理方法**：
+   在类中定义处理请求的方法，例如 `get`、`post`、`put` 和 `delete`。
+
+4. **返回响应**：
+   在方法中执行相关逻辑，并返回一个 HTTP 响应对象。
+
+<br>
+
+以下是一个简单的 Django 视图类示例：
+
+```python
+from django.http import JsonResponse
+from django.views import View
+
+class MyView(View):
+    def get(self, request):
+        data = {
+            "message": "Hello, world!"
+        }
+        return JsonResponse(data)
+
+    def post(self, request):
+        # 处理 POST 请求数据
+        # request.body 可以获取请求的原始数据
+        return JsonResponse({"received": request.body}, status=201)
+```
+
+在这个示例中，我们定义了一个 `MyView` 类来处理 HTTP 请求。当收到 GET 请求时，它会返回一个 JSON 响应；当收到 POST 请求时，它会返回请求体的数据。
+
+<br>
+
+视图类是构建 Django 和 DRF 应用程序的重要组成部分，可以帮助开发者有效地处理 HTTP 请求、执行业务逻辑并返回响应。通过使用视图类，开发者可以组织代码、重用逻辑并提高可维护性。
+
+<br>
+
+### 11.1 常见视图类
+
+#### Django 视图类详细说明
+
+1. **View**
+   
+   - **描述**: 所有基于类的视图的基类，允许自定义请求处理逻辑。
+   - **特点**:
+     - 基础类，支持多种 HTTP 方法。
+     - 可以使用装饰器或中间件进行额外的响应处理。
+   - **示例代码**:
+     ```python
+     from django.http import JsonResponse
+     from django.views import View
+     
+     class CustomView(View):
+         def get(self, request):
+             data = {"message": "Hello, world!"}
+             return JsonResponse(data)
+         
+         def post(self, request):
+             return JsonResponse({"received": request.POST})
+     ```
+   
+2. **TemplateView**
+   - **描述**: 用于渲染 HTML 模板并返回静态网页。
+   - **特点**:
+     - 处理 GET 请求并渲染指定的 HTML 模板。
+     - 可以通过 `get_context_data` 方法传递上下文数据。
+   - **示例代码**:
+     ```python
+     from django.views.generic import TemplateView
+     
+     class HomePageView(TemplateView):
+         template_name = "home.html"
+     
+         def get_context_data(self, **kwargs):
+             context = super().get_context_data(**kwargs)
+             context['greeting'] = "Hello, world!"
+             return context
+     ```
+
+3. **ListView**
+   - **描述**: 显示模型对象列表的视图。
+   - **特点**:
+     - 自动支持分页和过滤。
+     - 使用 `get_queryset` 方法自定义要展示的数据。
+   - **示例代码**:
+     ```python
+     from django.views.generic import ListView
+     from .models import Book
+     
+     class BookListView(ListView):
+         model = Book
+         template_name = "book_list.html"
+         context_object_name = "books"
+         paginate_by = 10  # 每页显示10本书
+     
+         def get_queryset(self):
+             return Book.objects.filter(is_published=True)
+     ```
+
+4. **DetailView**
+   - **描述**: 显示单个对象的详细信息。
+   - **特点**:
+     - 自动从 URL 中获取参数并查找对象。
+     - 提供详细信息的视图，处理对象不存在的情况。
+   - **示例代码**:
+     ```python
+     from django.views.generic import DetailView
+     from .models import Book
+     
+     class BookDetailView(DetailView):
+         model = Book
+         template_name = "book_detail.html"
+         context_object_name = "book"
+     ```
+
+#### Django REST Framework 视图类详细说明
+
+1. **APIView**
+   
+   - **描述**: DRF 中的基础视图，用于处理 RESTful API 请求。
+   - **特点**:
+     - 为处理 HTTP 方法提供基础支持。
+     - 支持数据序列化和反序列化，处理权限和认证。
+   - **示例代码**:
+     ```python
+     from rest_framework.views import APIView
+     from rest_framework.response import Response
+     from rest_framework import status
+     
+     class HelloWorldView(APIView):
+         def get(self, request):
+             return Response({"message": "Hello, world!"})
+     
+         def post(self, request):
+             return Response({"received": request.data}, status=status.HTTP_201_CREATED)
+     ```
+   
+2. **GenericAPIView**
+   
+   - **描述**: 通用的 API 视图基础，提供快速实现 CRUD 操作的能力。
+   - **特点**:
+     - 支持 QuerySet 和序列化，自定义数据处理。
+     - 允许用户重写请求处理和数据序列化逻辑。
+   - **示例代码**:
+     
+     ```python
+     from rest_framework.generics import GenericAPIView
+     from rest_framework.mixins import ListModelMixin, CreateModelMixin
+     from .models import Book
+     from .serializers import BookSerializer
+     
+     class BookListCreateView(GenericAPIView, ListModelMixin, CreateModelMixin):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer
+     
+         def get(self, request, *args, **kwargs):
+             return self.list(request, *args, **kwargs)
+     
+         def post(self, request, *args, **kwargs):
+             return self.create(request, *args, **kwargs)
+     ```
+   
+   上面的代码除了GenericAPIView，还使用了Mixin
+   
+   
+   
+   > 知乎资料：[16.Django · DRF入门 - 通用视图类 GenericAPIView DRF超强视图封装！ - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/647835821)
+   
+3. **ListAPIView**
+   - **描述**: 用于返回模型对象列表的 API 视图。
+   - **特点**:
+     - 自动支持分页、过滤和排序。
+     - 简单地扩展以满足特定需求。
+   - **示例代码**:
+     ```python
+     from rest_framework.generics import ListAPIView
+     from .models import Book
+     from .serializers import BookSerializer
+     
+     class BookListView(ListAPIView):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer
+         pagination_class = YourPaginationClass  # 自定义分页类
+     ```
+
+4. **CreateAPIView**
+   - **描述**: 用于创建新对象的 API 视图。
+   - **特点**:
+     - 自动处理请求数据的验证和序列化。
+     - 返回创建的对象，支持见外部响应格式。
+   - **示例代码**:
+     ```python
+     from rest_framework.generics import CreateAPIView
+     from .models import Book
+     from .serializers import BookSerializer
+     
+     class BookCreateView(CreateAPIView):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer
+     ```
+
+5. **RetrieveAPIView**
+   - **描述**: 用于检索单个对象的 API 视图。
+   - **特点**:
+     - 支持通过 URL 参数来自动查找对象。
+     - 处理对象不存在时返回404错误。
+   - **示例代码**:
+     ```python
+     from rest_framework.generics import RetrieveAPIView
+     from .models import Book
+     from .serializers import BookSerializer
+     
+     class BookDetailView(RetrieveAPIView):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer
+     ```
+
+6. **UpdateAPIView**
+   - **描述**: 用于更新现有对象的 API 视图。
+   - **特点**:
+     - 支持 PUT 和 PATCH 方法进行全量更新和部分更新。
+     - 自动处理对象不存在时的异常。
+   - **示例代码**:
+     ```python
+     from rest_framework.generics import UpdateAPIView
+     from .models import Book
+     from .serializers import BookSerializer
+     
+     class BookUpdateView(UpdateAPIView):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer
+     ```
+
+7. **DestroyAPIView**
+   - **描述**: 用于删除对象的 API 视图。
+   - **特点**:
+     - 提供简单的 API 接口来删除单个对象。
+     - 自动处理找不到对象时返回404错误。
+   - **示例代码**:
+     ```python
+     from rest_framework.generics import DestroyAPIView
+     from .models import Book
+     
+     class BookDeleteView(DestroyAPIView):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer  # 可选，通常不需要
+     ```
+
+8. **RetrieveUpdateDestroyAPIView**
+   - **描述**: 同时处理检索、更新和删除操作的 API 视图。
+   - **特点**:
+     - 整合了多个基本操作的功能，提高了代码的复用性。
+     - 适合需要在一个视图中同时支持查询和修改的场景。
+   - **示例代码**:
+     ```python
+     from rest_framework.generics import RetrieveUpdateDestroyAPIView
+     from .models import Book
+     from .serializers import BookSerializer
+     
+     class BookDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+         queryset = Book.objects.all()
+         serializer_class = BookSerializer
+     ```
+
+
+
+<br>
+
+#### 视图类实现细节
+
+
+
+##### GenericAPIView封装
+
+GenericAPIView是继承基础视图类的APIView的通用视图类，只需配置好类熟悉，就可以实现一整套的增删改查
+
+
+
+原本的APIView实现增删改查
+
+```python
+# 使用APIView实现
+
+class BookDetailView(APIView):
+    """
+        单个Book查询，Url中传入pk(主键id)
+    """
+    def get(self, request, pk):
+        book = Book.objects.get(pk=pk) # 用了一次objects.get
+        serializer = BookSerializer(instance=book)
+        return Response(serializer.data)
+
+    def patch(self, request, pk):
+        book = Book.objects.get(pk=pk) # 又用了一次objects.get
+        serializer = BookSerializer(instance=book,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)           
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        Book.objects.get(pk=pk).delete() # 又用了一次objects.get
+        return Response()
+
+
+class BookListView(APIView):
+    """
+        书籍列表查询,不传入id,直接创建/查询所有  
+    """
+    def get(self, request):
+        books = Book.objects.all()
+        serializer = BookSerializer(instance=books,many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        data = request.data
+        serializer = BookSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors.values(),status=status.HTTP_400_BAD_REQUEST)
+```
+
+对于上述代码存在非常多重复代码，且逻辑为增删改查
+
+对于不同字段实现增删改查区别在于：
+
+- 模型的区别
+- 序列化器的区别
+
+此外逻辑没有任何区别
+
+因此有了GenericApIView通用视图类
+
+<br>
+
+GenericAPIView实现增删改查
+
+```python
+class BookListView(GenericAPIView):
+    """
+        多个书籍的类视图
+    """
+    
+    # 使用GenericAPIView，需要定义两个类属性(名字不能错)
+    # queryset: 模型类对象的.all()
+    queryset = Book.objects.all()
+    # serializer_class: 序列化器类
+    serializer_class = BookSerializer
+    
+    # 这就相当于，把上面我们说的模型以及序列化类进行了类级别的定义
+    # 我们后面的逻辑代码，实现一次，后面再去继承的时候，只需要把类属性改了就行了
+    
+    def get(self, request):
+        # self.get_serializer ---> 返回的就是我们类属性中的 serializer_class 的实例化对象
+        serializer = self.get_serializer(instance=self.get_queryset(), many=True)
+        # self.self.get_queryset() ---> 返回的就是 类属性中的queryset ---> Book.objects.all()
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class BookDetailView(GenericAPIView):
+    # 和上面一样的定义方法
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    
+    def get(self, request, pk):
+        serializer = self.get_serializer(instance=self.get_object())
+        # get_object就等同于Book.objects.all().filter(pk=pk)
+        # 相当于帮你完成了查询操作
+        return Response(serializer.data)
+    def put(self, request, pk):
+        serializer = self.get_serializer(instance=self.get_object(), data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+可以看到，配置了模型和序列化器，使其可以进行通用配置
+
+
+
+GenericAPIView中有些自定义的方法
+
+- self.get_queryset()，返回lei属性中的queryset
+- self.get_serializer()，类属性中的序列化器的实例化对象传入的数据的返回结果
+- self.get_object()，相当于原本的queryset又进行了get查询（因此需要提供pk）
+
+
+
+
+
+
+
+<br>
+
+##### Mixin封装
+
+Mixin是一种插件，脱离于所有子类数据
+
+使用Mixin可以提供增删改查的各种方法
+
+
+
+使用Mixin实现增删改查
+
+```python
+from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, ListModelMixin, RetrieveModelMixin,DestroyModelMixin
+class AuthorListView(CreateModelMixin, ListModelMixin, GenericAPIView):
+    """
+        因为ListView需要使用两种方式:
+            1.get请求获取全部数据
+            2.post创建数据      
+        所以,直接继承CreateModelMixin(创建数据插件),ListModelMixin(列表模型插件)
+    """
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+    def get(self, requset):
+        """
+            使用了Mixin，我们直接返回一个self.list就可以
+        """
+        return self.list(requset)
+
+    def post(self, request):
+        # 直接返回self.create就是实现了我们的创建数据
+        return self.create(request)
+```
+
+<br>
+
+Mixin源码解析
+
+Post->CreateModelMixin源码->create方法
+
+```python
+class CreateModelMixin:
+    """
+    Create a model instance. 
+    翻译: 创建一个模型示例
+    """
+    def create(self, request, *args, **kwargs):
+        """
+            其实可以看到，这里的实现，和我们之前自己去create是类似的
+            所以其实就是帮我们直接把创建的方法封装起来了
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        # 最后返回的就是一个Response
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+```
+
+<br>
+
+get->ListModelMixin源码->list方法
+
+```python
+class ListModelMixin:
+    """
+        ListModelMixin和我们之前自己写的GET也是非常类似
+    """
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+```
+
+<br>
+
+1. CreateModelMixin 创建数据的Mixin(一般对应POST请求)
+   ---> 返回 self.create(request) 即可
+2. ListModelMixin 获取多个数据的Mixin(对应GET请求无主键id的情况)
+   ---> 返回 self.list(request) 即可
+3. UpdateModelMixin更新数据的Mixin(对于PUT/PATCH请求)
+   ---> 返回 self.update(request) 即可
+4. RetrieveModelMixin 获取单个数据的Mixin(对应GET请求有主键id的情况)
+   ----> 返回 self.retrieve(request) 即可
+5. DestroyModelMixin 删除数据的Mixin(对应DELETE请求)
+   ----> 返回 self.destroy(request) 即可
+
+<br>
+
+为了避免在继承的时候写太多，drf有APIView+Mixin的类（其实是GenericAPIView）
+
+- LiistCreateAPIView
+- RetrieveUpdateDestroyAPIView
+
+记住List、Create、Retrieve、Update、Destroy这几个对应功能即可
+
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+
+
+##### ViewSet
+
+这个ViewSet的出现是为了方便接口的编写
+
+> **之前我们使用普通的或者封装的APIView开发接口时，总是需要分两类情况处理**
+>
+> 1. 有主键 /user/20/ (id=20的用户)
+> 2. 无主键 /user/ (实现get所有或者post创建)
+>
+> **我们总是需要分两种接口去写，然后还要进行两次类的封装，其实代码的冗余还是比较高，那有没有办法，直接写一个类就能实现呢？**
+>
+> **ViewSet类就是DRF给我们的解决方案！**
+
+首先定义url
+
+```python
+from django.urls import path,re_path
+from BookManage.views import *
+urlpatterns = [    path("booknew/<int:pk>/",BookView.as_view({"get":"get_one_data","delete":"delete_date","put":"update_data"})),
+ # 对于有pk的，我们 get -> get_one_data | delete -> delete_date | put -> update_data
+ path("booknew/",BookView.as_view({"get":"get_all_data","post":"create_data"})),
+ # 对于没有pk的，get -> get_all_data | post -> create_data
+]
+```
+
+<br>
+
+其次定义视图类
+
+```python
+from rest_framework.viewsets import ViewSet # 导入ViewSet
+class BookViewSet(ViewSet):
+    """
+        继承ViewSet
+    """
+    def get_all_data(self, request): # 对应get无pk方法(查询多个)
+        return Response('返回所有书籍')
+
+    def create_data(self, request): # 对应post创建方法
+        return Response('创建一个书籍')
+
+    def get_one_data(self, request, pk): # 对应get有pk方法(查询单个)
+        return Response(f'返回pk={pk}的书籍')
+
+    def update_data(self, request, pk): # 对应put/patch有pk更新方法
+        return Response(f'更新pk={pk}的书籍')
+
+    def delete_date(self, request, pk): # 对应delete有pk删除
+        return Response(f'删除pk={pk}的书籍')
+```
+
+注意的是ViewSet的其中的方法是没有简化的，即没有继承GenericAPIView和Mixin
+
+<br>
+
+##### ModelViewSet
+
+> **其实ViewSet与APIView类似，他也有对应的GenericViewSet，并且也支持继承Mixin**
+>
+> **所以为了我们的方法便，这里直接引入ModelViewSet**
+>
+> **其实ModelViewSet本质上就是帮我们继承了所有的Mixins，让我们只需要在定义路由的时候，分别定义不同的方法就够了！**
+
+```python
+class ModelViewSet(mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   GenericViewSet):
+    # 它就是帮我们把五种Mixins全部继承，并且继承了GenericViewSet
+    # GenericViewSet和我们的GenericAPIView几乎一样，就是多了可以自定义不同方法使用哪个函数
+    pass
+```
+
+<br>
+
+首先创建路由url
+
+```python
+from rest_framework import routers # 导入路由函数
+route = routers.DefaultRouter() # 创建路由
+route.register('book', viewset=BookView)
+# 注册路由，viewset是我们创建的ViewSet视图(必须是继承自viewset/派生类的视图，不能是APIView)
+# 注册的第一个参数填写名称即可
+# 填写book则会关联 /book/ 以及 /book/<pk>/
+
+urlpatterns = []
+urlpatterns += route.urls # 将创建的路由添加到列表
+
+
+
+
+--------也可以这样--------
+
+
+urlpatterns = [
+    path('',include(route.urls)), # 用include进行路由分发,可以用到名称空间
+]
+```
+
+
+
+<br>
+
+然后编写视图类
+
+```python
+from rest_framework.viewsets import ModelViewSet
+class BookViewSet(ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+    def get_all_data(self, request):  # 对应get无pk方法(查询多个)
+        return self.list(request)
+
+    def create_data(self, request):  # 对应post创建方法
+        return self.create(request)
+
+    def get_one_data(self, request, pk):  # 对应get有pk方法(查询单个)
+        return self.retrieve(request)
+
+    def update_data(self, request, pk):  # 对应put/patch有pk更新方法
+        return self.update(request)
+
+    def delete_date(self, request, pk):  # 对应delete有pk删除
+        return self.destroy(request)
+```
+
+
+
+
+
+<br>
+
+下面是Minxi插件实现的CRUD的对应
+
+| 简化方法     | HTTP 方法 | 功能描述                                                     |
+| ------------ | --------- | ------------------------------------------------------------ |
+| **create**   | POST      | 用于创建一个新的资源。例如，添加新的投票、问题或评论。       |
+| **list**     | GET       | 用于获取资源的列表。例如，获取所有问题、所有投票记录或所有评论。 |
+| **retrieve** | GET       | 用于获取单个资源的详细信息。例如，获取某个特定问题的详细信息。 |
+| **update**   | PUT/PATCH | 用于更新现有资源的所有或部分信息。例如，更新投票类型或问题标题。 |
+| **destroy**  | DELETE    | 用于删除资源。例如，删除特定的投票、问题或评论。             |
+
+功能细节
+
+1. **create（POST）**:
+   - **功能**: 创建一个新的资源。通常在请求体中包含要创建的对象的详细信息。
+   - **示例**: 用户提交新的投票数据，发送请求到端点 `/votes/`。
+
+2. **list（GET）**:
+   - **功能**: 返回资源的列表，通常提供分页功能。
+   - **示例**: 请求 `/questions/` 来获取所有问题的列表。
+
+3. **retrieve（GET）**:
+   - **功能**: 返回单个资源的详细信息，通过资源的 ID 定位。
+   - **示例**: 请求 `/questions/1/` 获取 ID 为 1 的问题的详细信息。
+
+4. **update（PUT/PATCH）**:
+   - **功能**: 更新现有资源的数据，`PUT` 通常要求提供完整数据，`PATCH` 允许部分更新。
+   - **示例**: 通过发送数据到 `/votes/1/` 来更新 ID 为 1 的投票的类型。
+
+5. **destroy（DELETE）**:
+   - **功能**: 删除指定的资源。
+   - **示例**: 请求 `/votes/1/` 来删除 ID 为 1 的投票。
+
+<br>
+
+以下是一些不适合使用 Django REST Framework 自带的 CRUD 的场景，并详细解释了每种情况的原因。
+
+1. 复杂的业务逻辑
+
+**不适合使用的原因**:
+
+- **默认逻辑不足**: 自带的CRUD方法通常是直接操作数据库的，无法处理复杂的业务规则（如用户资格验证、字段依赖等）。
+- **自定义性差**: 当业务逻辑涉及多个步骤或条件时，默认的 `create`、`update` 方法无法满足条件。
+
+**示例场景**: 在一个银行系统中，转账操作需要检查账户余额是否足够、转账的合法性等。这些逻辑无法通过简单的 CRUD 方法实现。
+
+<br>
+
+2. 自定义字段或响应格式
+
+**不适合使用的原因**:
+
+- **返回格式固定**: 默认的CRUD方法返回的是标准化的响应，这可能会限制灵活性，例如需要返回额外的统计信息或额外的元数据。
+- **定制性限制**: 当需要的响应格式与标准不符时，必须重写方法以达到特定的输出效果。
+
+**示例场景**: 在电商平台的产品列表页面，可能需要同时返回产品的数量、分类信息等附加数据，而默认的 `list` 方法只返回列表数据。
+
+<br>
+
+3. 多模型交互
+
+**不适合使用的原因**:
+
+- **事务性问题**: 默认的CRUD方法通常只针对单一模型的操作，无法处理多个模型之间的关系，特别是在涉及到原子性（事务）时。
+- **复杂的依赖关系**: 当创建或更新某个模型需要同时操作其他模型（如减少库存、更新状态等）时，默认的方法不支持这种复杂交互。
+
+**示例场景**: 在一个订单处理系统中，创建订单时需要同时更新产品的库存数量，如果库存不足则需要取消订单。自带的CRUD方法无法处理这种情况下的复杂逻辑。
+
+<br>
+
+4. 安全与权限控制
+
+**不适合使用的原因**:
+
+- **权限检测不足**: 默认的权限和认证机制无法满足特定安全性需求，尤其是在多角色应用中，需要根据用户角色动态决定权限。
+- **灵活性差**: 自带的CRUD方法可能不允许细粒度的权限控制，无法针对不同用户、角色或请求场景进行精细化的权限设计。
+
+**示例场景**: 在企业内部管理系统中，普通用户只应能够查看自己的数据，而管理员可以管理所有数据，必须实施更严密的权限检查。
+
+<br>
+
+5. 性能优化
+
+**不适合使用的原因**:
+
+- **性能瓶颈**: 默认的CRUD方法可能未针对性能问题进行优化，特别是对于大量数据的处理。
+- **复杂查询**: 当需要进行复杂的数据库查询（如联接、聚合、分页等）时，默认方法可能不适用。
+
+**示例场景**: 在一个社交媒体应用中，检索用户的朋友列表可能需要复杂的关联合并（JOIN），而直接使用自带的 `list` 方法会导致性能问题。
+
+<br>
+
+6. 特殊需求的端点
+
+**不适合使用的原因**:
+
+- **不满足标准操作**: 默认CRUD方法定义了一套标准的RESTful操作，但一些功能性需求可能并不符合这个标准，如报告生成、数据导出等。
+- **单一职责原则**: 当某些功能与模型操作逻辑脱节时，使用原 CRUD 逻辑可能会导致接口变得臃肿和杂乱。
+
+**示例场景**: 在一个数据分析平台上，用户可能需要下载分析的报告，这个操作与数据的基本创建和删除逻辑没有直接关系，适合定义一个独立的API。
+
+<br>
+
+7. 组合逻辑
+
+**不适合使用的原因**:
+
+- **缺乏灵活性**: 默认的CRUD操作适合简单的分开处理，无法支持多项操作的组合，比如同时处理多个资源的创建。
+- **业务场景限制**: 批量操作、合并操作等复杂逻辑必须自定义实现，以保证业务的完整性和正确性。
+
+**示例场景**: 在员工管理系统中，可能需要同时上传和创建多个员工的资料，这时可自定义一个批量创建的方法，而不是分别调用 `create` 方法。
 
 
 
