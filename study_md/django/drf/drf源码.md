@@ -24,7 +24,7 @@ def initialize_request(self, request, *args, **kwargs):
 
 request中的参数**kwargs，其实是url中的< int:v1 >传入的
 
-![request源码](E:/studyWork/git_study/public/django_img/drf/request源码.png)
+![request源码](../../../public/django_img/drf/request源码.png)
 
 > 在 Django REST Framework（DRF）中，处理HTTP请求的方式稍有不同于标准的Django处理方式，主要是因为它使用了一个定制的`Request`对象来提供一些额外功能，特别是针对API开发的需求。以下是DRF中`Request`对象的调用和初始化过程：
 >
@@ -804,12 +804,6 @@ class MyView(APIView):
 - 客户端发起请求 -> Django 路由系统匹配 URL -> 调用 `as_view()` 返回的视图函数 -> 创建视图类实例 -> 调用 `dispatch()` -> 调用对应的 `get()` 或 `post()` 方法 -> 返回响应
 
 通过这种方式，Django 能够根据请求的 HTTP 方法选择并执行对应的视图方法，而这都发生在 **路由匹配** 和 **请求分发** 之后。
-
-
-
-
-
-
 
 
 
