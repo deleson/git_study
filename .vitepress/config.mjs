@@ -57,13 +57,6 @@ export default defineConfig({
                     {text: 'html', link: '/study_md/front_end/html'},
                 ]
             },
-            {
-                text: '书籍阅读',
-                items: [
-                    {text: '利用python进行数据分析', link: '/study_md/book/利用python进行数据分析'},
-                    {text: 'Python编程快速上手_让繁琐工作自动化', link: '/study_md/book/利用python进行数据分析'}
-                ]
-            }
         ],
 
 
