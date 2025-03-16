@@ -2118,11 +2118,11 @@ class CustomUserManager(BaseUserManager):
 >
 >      ```python
 >      from django.db import models
->                                                             
+>                                                                  
 >      class MyModel(models.Model):
 >          # 模型字段定义
 >          ...
->                                                             
+>                                                                  
 >          class Meta:
 >              permissions = [
 >                  ("can_publish", "Can Publish Content"),
@@ -2142,7 +2142,7 @@ class CustomUserManager(BaseUserManager):
 >
 >      ```python
 >      from django.contrib.auth.decorators import permission_required
->                                                             
+>                                                                  
 >      @permission_required('myapp.can_publish', login_url='/login/')
 >      def my_view(request):
 >          ...
@@ -2168,7 +2168,7 @@ class CustomUserManager(BaseUserManager):
 >
 >      ```python
 >      from django.contrib.auth.models import User, Permission
->                                                             
+>                                                                  
 >      user = User.objects.get(username='john')
 >      permission = Permission.objects.get(codename='can_publish')
 >      user.user_permissions.add(permission)
@@ -4805,12 +4805,12 @@ class UserList(APIView):
 >    - 示例：
 >      ```python
 >      from rest_framework import serializers
->                          
+>                               
 >      class AccountSerializer(serializers.Serializer):
 >          email = serializers.EmailField()
 >          username = serializers.CharField(max_length=100)
 >          date_joined = serializers.DateTimeField()
->                          
+>                               
 >          def validate_username(self, value):
 >              if 'admin' in value.lower():
 >                  raise serializers.ValidationError("Username may not contain 'admin'")
@@ -4825,7 +4825,7 @@ class UserList(APIView):
 >      ```python
 >      from django.contrib.auth.models import User
 >      from rest_framework import serializers
->                          
+>                               
 >      class UserSerializer(serializers.ModelSerializer):
 >          class Meta:
 >              model = User
@@ -4864,7 +4864,7 @@ class UserList(APIView):
 >      class CustomSerializer(serializers.BaseSerializer):
 >          def to_internal_value(self, data):
 >              return CustomObject(**data)
->                          
+>                               
 >          def to_representation(self, obj):
 >              return {'data': obj.data}
 >      ```
@@ -5643,6 +5643,11 @@ urlpatterns = [
     path('',include(route.urls)), # 用include进行路由分发,可以用到名称空间
 ]
 ```
+
+route = routers.DefaultRouter() # 创建路由
+route.register('book', viewset=BookView)
+
+上面这个代码导致get-list、get/id-retrieve对应
 
 
 
